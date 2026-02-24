@@ -1,0 +1,24 @@
+import type { Href } from "expo-router";
+
+const asHref = (value: unknown) => value as Href;
+
+export const ROUTES = {
+  home: asHref("/(root)/(tabs)/home"),
+  donationsCampaigns: asHref("/(root)/(tabs)/donations-campaigns"),
+  donationsTab: asHref({
+    pathname: "/(root)/(tabs)/donations-campaigns",
+    params: { tab: "donations" },
+  }),
+  volunteeringTab: asHref({
+    pathname: "/(root)/(tabs)/donations-campaigns",
+    params: { tab: "volunteering" },
+  }),
+  jobs: asHref("/(root)/(tabs)/jobs"),
+  profile: asHref("/(root)/(tabs)/profile"),
+  donationDetails: (id: string) =>
+    asHref({ pathname: "/(root)/donation/[id]", params: { id } }),
+  volunteerDetails: (id: string) =>
+    asHref({ pathname: "/(root)/volunteer/[id]", params: { id } }),
+  jobDetails: (id: string) =>
+    asHref({ pathname: "/(root)/job/[id]", params: { id } }),
+} as const;
