@@ -96,7 +96,7 @@ const PostsScreen = () => {
           description="إضافة منشور جديد"
           icon={<icons.plus size={24} color="#3B82F6" />}
           color="#3B82F6"
-          onPress={() => console.log("Create post pressed")}
+          onPress={() => NavigationHelper.goToCreatePost(router)}
         />
 
         <SettingsCard
@@ -120,3 +120,4 @@ const PostsScreen = () => {
 };
 
 export default PostsScreen;
+

@@ -2,13 +2,20 @@ import { SettingsCard } from "@/components/pages/settings";
 import { Header } from "@/components/sections";
 import { Card } from "@/components/ui";
 import Button from "@/components/ui/Button";
+import Dialog from "@/components/ui/Dialog";
 import Text from "@/components/ui/Text";
 import { icons } from "@/constants";
 import { NavigationHelper } from "@/lib/helpers";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Platform, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  View,
+} from "react-native";
 import { getAuthToken, removeAuthToken } from "@/utils/auth";
 
 const SettingsScreen = () => {
@@ -16,6 +23,8 @@ const SettingsScreen = () => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isLogoutDialogVisible, setIsLogoutDialogVisible] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const checkAuth = useCallback(async () => {
     const token = await getAuthToken();
@@ -60,10 +69,22 @@ const SettingsScreen = () => {
     NavigationHelper.goToSignIn(router);
   };
 
-  const handleLogoutPress = async () => {
-    await removeAuthToken();
-    setIsAuthenticated(false);
-    NavigationHelper.goToSignIn(router);
+  const handleLogoutPress = () => {
+    setIsLogoutDialogVisible(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    try {
+      setIsLoggingOut(true);
+      await removeAuthToken();
+      setIsAuthenticated(false);
+      setIsLogoutDialogVisible(false);
+      NavigationHelper.goToSignIn(router);
+    } catch (error) {
+      Alert.alert("خطأ", "تعذر تسجيل الخروج. حاول مرة أخرى.");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   if (isAuthenticated === null) {
@@ -238,6 +259,31 @@ const SettingsScreen = () => {
           </View>
         ) : null}
       </ScrollView>
+
+      <Dialog
+        visible={isLogoutDialogVisible}
+        onClose={() => {
+          if (!isLoggingOut) {
+            setIsLogoutDialogVisible(false);
+          }
+        }}
+        title="تسجيل الخروج"
+        message="هل أنت متأكد أنك تريد تسجيل الخروج من الحساب؟"
+        icon={<icons.logOut size={28} color="#EF4444" />}
+        cancelable={!isLoggingOut}
+        buttons={[
+          {
+            text: "إلغاء",
+            variant: "outline",
+            onPress: () => setIsLogoutDialogVisible(false),
+          },
+          {
+            text: "تسجيل الخروج",
+            onPress: handleLogoutConfirm,
+            loading: isLoggingOut,
+          },
+        ]}
+      />
     </View>
   );
 };

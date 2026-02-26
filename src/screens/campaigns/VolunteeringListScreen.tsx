@@ -1,6 +1,5 @@
-import BottomSheet from "@gorhom/bottom-sheet";
 import { useRouter } from "expo-router";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, FlatList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -27,9 +26,9 @@ const initialFilters: VolunteeringFilters = {
 export const VolunteeringListScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const filterSheetRef = useRef<BottomSheet>(null);
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<VolunteeringFilters>(initialFilters);
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
 
   const { volunteeringCampaigns, userRole, currentPublisherId, closeItem } =
     useAppData();
@@ -64,9 +63,7 @@ export const VolunteeringListScreen = () => {
             data={item}
             onPrimaryAction={() => router.push(ROUTES.volunteerDetails(item.id))}
             onSave={() => Alert.alert("حفظ", "تم حفظ الحملة التطوعية")}
-            onAddToCalendar={() =>
-              Alert.alert("التقويم", "تمت إضافة الحملة للتقويم")
-            }
+            onAddToCalendar={() => Alert.alert("التقويم", "تمت إضافة الحملة للتقويم")}
             showPublisherMenu={
               userRole === "publisher" && item.publisherId === currentPublisherId
             }
@@ -84,7 +81,7 @@ export const VolunteeringListScreen = () => {
             value={query}
             onChangeText={setQuery}
             placeholder="ابحث في الحملات التطوعية"
-            onPressFilter={() => filterSheetRef.current?.snapToIndex(0)}
+            onPressFilter={() => setIsFilterModalVisible(true)}
             activeFiltersCount={activeFilters}
           />
         }
@@ -93,7 +90,8 @@ export const VolunteeringListScreen = () => {
 
       <FilterBottomSheet
         variant="volunteer"
-        sheetRef={filterSheetRef}
+        visible={isFilterModalVisible}
+        onClose={() => setIsFilterModalVisible(false)}
         cities={cities}
         volunteeringFilters={filters}
         onVolunteeringFiltersChange={setFilters}

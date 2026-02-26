@@ -1,6 +1,5 @@
-import BottomSheet from "@gorhom/bottom-sheet";
 import { useRouter } from "expo-router";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, FlatList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -28,9 +27,9 @@ const initialFilters: DonationFilters = {
 export const DonationsListScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const filterSheetRef = useRef<BottomSheet>(null);
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<DonationFilters>(initialFilters);
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
 
   const { donations, userRole, currentPublisherId, closeItem } = useAppData();
 
@@ -82,7 +81,7 @@ export const DonationsListScreen = () => {
             value={query}
             onChangeText={setQuery}
             placeholder="ابحث في حملات التبرع"
-            onPressFilter={() => filterSheetRef.current?.snapToIndex(0)}
+            onPressFilter={() => setIsFilterModalVisible(true)}
             activeFiltersCount={activeFilters}
           />
         }
@@ -91,7 +90,8 @@ export const DonationsListScreen = () => {
 
       <FilterBottomSheet
         variant="donation"
-        sheetRef={filterSheetRef}
+        visible={isFilterModalVisible}
+        onClose={() => setIsFilterModalVisible(false)}
         cities={cities}
         donationFilters={filters}
         onDonationFiltersChange={setFilters}

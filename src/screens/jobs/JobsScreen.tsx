@@ -26,10 +26,10 @@ const initialFilters: JobFilters = {
 export const JobsScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const filterSheetRef = useRef<BottomSheet>(null);
   const createSheetRef = useRef<BottomSheet>(null);
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<JobFilters>(initialFilters);
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
 
   const {
     jobs,
@@ -88,7 +88,7 @@ export const JobsScreen = () => {
             value={query}
             onChangeText={setQuery}
             placeholder="ابحث في الوظائف"
-            onPressFilter={() => filterSheetRef.current?.snapToIndex(0)}
+            onPressFilter={() => setIsFilterModalVisible(true)}
             activeFiltersCount={activeFilters}
           />
         }
@@ -101,7 +101,8 @@ export const JobsScreen = () => {
 
       <FilterBottomSheet
         variant="job"
-        sheetRef={filterSheetRef}
+        visible={isFilterModalVisible}
+        onClose={() => setIsFilterModalVisible(false)}
         cities={cities}
         jobFilters={filters}
         onJobFiltersChange={setFilters}

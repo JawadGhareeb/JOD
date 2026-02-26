@@ -14,6 +14,7 @@ export default function RootLayout() {
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="posts/create/index" options={{ headerShown: false }} />
       <Stack.Screen name="donation/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="volunteer/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="job/[id]" options={{ headerShown: false }} />

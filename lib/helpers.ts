@@ -36,6 +36,10 @@ export class NavigationHelper {
     this.navigate(router, ROUTES.TABS.POSTS);
   }
 
+  static goToCreatePost(router: ReturnType<typeof useRouter>) {
+    this.navigate(router, ROUTES.ROOT.CREATE_POST);
+  }
+
   static goToDonations(router: ReturnType<typeof useRouter>) {
     this.navigate(router, ROUTES.TABS.DONATIONS);
   }

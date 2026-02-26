@@ -9,6 +9,7 @@ export const ROUTES = {
   ROOT: {
     HOME: "/(root)/(tabs)/home",
     POSTS: "/(root)/(tabs)/posts",
+    CREATE_POST: "/(root)/posts/create",
   },
 
   SETTINGS: {
@@ -86,6 +87,12 @@ export const ROUTE_OBJECTS: RouteObject[] = [
     path: ROUTES.ROOT.POSTS,
     category: "root",
     title: "Posts",
+    requiresAuth: true,
+  },
+  {
+    path: ROUTES.ROOT.CREATE_POST,
+    category: "root",
+    title: "Create Post",
     requiresAuth: true,
   },
   //tabs pages

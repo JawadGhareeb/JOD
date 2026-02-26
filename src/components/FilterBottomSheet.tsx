@@ -1,10 +1,8 @@
-import BottomSheet, {
-  BottomSheetBackdrop,
-  type BottomSheetBackdropProps,
-} from "@gorhom/bottom-sheet";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import {
   I18nManager,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -50,7 +48,8 @@ const workTypes: WorkType[] = ["دوام كامل", "دوام جزئي", "عن �
 
 interface FilterBottomSheetProps {
   variant: "donation" | "volunteer" | "job";
-  sheetRef: React.RefObject<BottomSheet | null>;
+  visible: boolean;
+  onClose: () => void;
   cities: string[];
   donationFilters?: DonationFilters;
   volunteeringFilters?: VolunteeringFilters;
@@ -60,7 +59,13 @@ interface FilterBottomSheetProps {
   onJobFiltersChange?: (value: JobFilters) => void;
 }
 
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+const Section = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
   <View style={styles.section}>
     <Text style={styles.sectionTitle}>{title}</Text>
     <View style={styles.sectionBody}>{children}</View>
@@ -83,7 +88,8 @@ const Pill = ({
 
 export const FilterBottomSheet = ({
   variant,
-  sheetRef,
+  visible,
+  onClose,
   cities,
   donationFilters,
   volunteeringFilters,
@@ -92,7 +98,6 @@ export const FilterBottomSheet = ({
   onVolunteeringFiltersChange,
   onJobFiltersChange,
 }: FilterBottomSheetProps) => {
-  const snapPoints = useMemo(() => ["64%"], []);
   const [draftDonation, setDraftDonation] =
     useState<DonationFilters>(defaultDonationFilters);
   const [draftVolunteering, setDraftVolunteering] =
@@ -117,35 +122,21 @@ export const FilterBottomSheet = ({
     }
   }, [jobFilters]);
 
-  const renderBackdrop = useCallback(
-    (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-        pressBehavior="close"
-      />
-    ),
-    [],
-  );
-
-  const close = () => sheetRef.current?.close();
-
   const apply = () => {
     if (variant === "donation") {
       onDonationFiltersChange?.(draftDonation);
-      close();
+      onClose();
       return;
     }
 
     if (variant === "volunteer") {
       onVolunteeringFiltersChange?.(draftVolunteering);
-      close();
+      onClose();
       return;
     }
 
     onJobFiltersChange?.(draftJobs);
-    close();
+    onClose();
   };
 
   const reset = () => {
@@ -363,53 +354,84 @@ export const FilterBottomSheet = ({
   );
 
   return (
-    <BottomSheet
-      ref={sheetRef}
-      index={-1}
-      snapPoints={snapPoints}
-      backdropComponent={renderBackdrop}
-      enablePanDownToClose
-      backgroundStyle={styles.background}
-      handleIndicatorStyle={styles.indicator}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={onClose}
     >
-      <View style={styles.content}>
-        <Text style={styles.title}>تصفية النتائج</Text>
+      <View style={styles.modalRoot}>
+        <Pressable style={styles.backdrop} onPress={onClose} />
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          {commonCitySection}
-          {variant === "donation" ? donationContent : null}
-          {variant === "volunteer" ? volunteeringContent : null}
-          {variant === "job" ? jobsContent : null}
-        </ScrollView>
+        <View style={styles.sheetContainer}>
+          <View style={styles.headerRow}>
+            <Pressable onPress={onClose} style={styles.closeButton}>
+              <Ionicons name="close" size={20} color={colors.textSecondary} />
+            </Pressable>
+            <Text style={styles.title}>تصفية النتائج</Text>
+            <View style={styles.closeButtonPlaceholder} />
+          </View>
 
-        <View style={styles.actionsRow}>
-          <Pressable style={styles.secondaryButton} onPress={reset}>
-            <Text style={styles.secondaryButtonText}>إعادة ضبط</Text>
-          </Pressable>
-          <Pressable style={styles.primaryButton} onPress={apply}>
-            <Text style={styles.primaryButtonText}>تطبيق</Text>
-          </Pressable>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {commonCitySection}
+            {variant === "donation" ? donationContent : null}
+            {variant === "volunteer" ? volunteeringContent : null}
+            {variant === "job" ? jobsContent : null}
+          </ScrollView>
+
+          <View style={styles.actionsRow}>
+            <Pressable style={styles.secondaryButton} onPress={reset}>
+              <Text style={styles.secondaryButtonText}>إعادة ضبط</Text>
+            </Pressable>
+            <Pressable style={styles.primaryButton} onPress={apply}>
+              <Text style={styles.primaryButtonText}>تطبيق</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
-    </BottomSheet>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
+  modalRoot: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
+  },
+  sheetContainer: {
+    maxHeight: "86%",
     backgroundColor: colors.surface,
     borderTopLeftRadius: radius.card,
     borderTopRightRadius: radius.card,
-  },
-  indicator: {
-    backgroundColor: colors.border,
-  },
-  content: {
-    flex: 1,
     paddingHorizontal: spacing.l,
     paddingTop: spacing.s,
     paddingBottom: spacing.m,
     gap: spacing.m,
+  },
+  headerRow: {
+    flexDirection: I18nManager.isRTL ? "row-reverse" : "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  closeButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F3F6FA",
+  },
+  closeButtonPlaceholder: {
+    width: 30,
+    height: 30,
   },
   title: {
     fontSize: 16,
@@ -469,6 +491,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textPrimary,
     textAlign: I18nManager.isRTL ? "right" : "left",
+    writingDirection: I18nManager.isRTL ? "rtl" : "ltr",
     fontFamily: "NotoKufiArabic-Regular",
   },
   switchRow: {
