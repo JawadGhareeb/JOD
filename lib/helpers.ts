@@ -32,6 +32,10 @@ export class NavigationHelper {
     this.navigate(router, ROUTES.TABS.HOME);
   }
 
+  static goToPosts(router: ReturnType<typeof useRouter>) {
+    this.navigate(router, ROUTES.TABS.POSTS);
+  }
+
   static goToDonations(router: ReturnType<typeof useRouter>) {
     this.navigate(router, ROUTES.TABS.DONATIONS);
   }
@@ -69,6 +73,14 @@ export class NavigationHelper {
 
   static goToProfile(router: ReturnType<typeof useRouter>) {
     this.navigate(router, ROUTES.SETTINGS.PROFILE);
+  }
+
+  static goToMyPosts(router: ReturnType<typeof useRouter>) {
+    this.navigate(router, ROUTES.SETTINGS.MY_POSTS);
+  }
+
+  static goToSavedPosts(router: ReturnType<typeof useRouter>) {
+    this.navigate(router, ROUTES.SETTINGS.SAVED_POSTS);
   }
 
   static goToNotifications(router: ReturnType<typeof useRouter>) {

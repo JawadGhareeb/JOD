@@ -2,6 +2,7 @@ import { Button, Input, Logo, PhoneNumberInput, Text } from "@/components/ui";
 import { icons } from "@/constants/icons";
 import { NavigationHelper } from "@/lib/helpers";
 import { useRTL } from "@/providers/RTLProvider";
+import { setAuthToken } from "@/utils/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
@@ -59,6 +60,7 @@ const SignInScreen = () => {
 
   const onSubmit = async (values: SignInFormValues) => {
     try {
+      await setAuthToken(`demo-${values.phoneNumber}`);
       NavigationHelper.goToHome(router);
     } catch {
       // Errors are surfaced through the global toast service

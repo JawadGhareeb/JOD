@@ -8,10 +8,13 @@ export const ROUTES = {
 
   ROOT: {
     HOME: "/(root)/(tabs)/home",
+    POSTS: "/(root)/(tabs)/posts",
   },
 
   SETTINGS: {
     PROFILE: "/(root)/settings/profile",
+    MY_POSTS: "/(root)/settings/my-posts",
+    SAVED_POSTS: "/(root)/settings/saved-posts",
     NOTIFICATIONS: "/(root)/settings/notifications",
     LANGUAGE: "/(root)/settings/language",
     SUPPORT: "/(root)/settings/support",
@@ -22,6 +25,7 @@ export const ROUTES = {
 
   TABS: {
     HOME: "/(root)/(tabs)/home",
+    POSTS: "/(root)/(tabs)/posts",
     DONATIONS: "/(root)/(tabs)/donations",
     OPPORTUNITIES: "/(root)/(tabs)/opportunities",
     ACCOUNT: "/(root)/(tabs)/account",
@@ -78,12 +82,23 @@ export const ROUTE_OBJECTS: RouteObject[] = [
     title: "الرئيسية",
     requiresAuth: true,
   },
-
+  {
+    path: ROUTES.ROOT.POSTS,
+    category: "root",
+    title: "Posts",
+    requiresAuth: true,
+  },
   //tabs pages
   {
     path: ROUTES.TABS.HOME,
     category: "tabs",
     title: "الرئيسية",
+    requiresAuth: true,
+  },
+  {
+    path: ROUTES.TABS.POSTS,
+    category: "tabs",
+    title: "Posts",
     requiresAuth: true,
   },
   {
@@ -110,6 +125,18 @@ export const ROUTE_OBJECTS: RouteObject[] = [
     path: ROUTES.SETTINGS.PROFILE,
     category: "settings",
     title: "الملف الشخصي",
+    requiresAuth: true,
+  },
+  {
+    path: ROUTES.SETTINGS.MY_POSTS,
+    category: "settings",
+    title: "My Posts",
+    requiresAuth: true,
+  },
+  {
+    path: ROUTES.SETTINGS.SAVED_POSTS,
+    category: "settings",
+    title: "Saved Posts",
     requiresAuth: true,
   },
   {
@@ -149,3 +176,4 @@ export const ROUTE_OBJECTS: RouteObject[] = [
     requiresAuth: true,
   },
 ];
+

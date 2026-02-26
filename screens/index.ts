@@ -1,5 +1,8 @@
 export { default as DonationsScreen } from "./DonationsScreen";
 export { default as HomeScreen } from "./HomeScreen";
+export { default as MyPostsScreen } from "./MyPostsScreen";
 export { default as OpportunitiesScreen } from "./OpportunitiesScreen";
+export { default as PostsScreen } from "./PostsScreen";
+export { default as SavedPostsScreen } from "./SavedPostsScreen";
 export { default as SettingsScreen } from "./SettingsScreen";
 export { default as SignInScreen } from "./SignInScreen";
