@@ -11,13 +11,14 @@ import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Platform, ScrollView, TouchableOpacity, View } from "react-native";
+import { Alert, Platform, ScrollView, TouchableOpacity, View } from "react-native";
 import { z } from "zod";
 
 const profileSchema = z.object({
   firstName: z.string().min(2, "يرجى إدخال الاسم الأول"),
   lastName: z.string().min(2, "يرجى إدخال اسم العائلة"),
   email: z.string().email("يرجى إدخال بريد إلكتروني صالح"),
+  phoneNumber: z.string().min(8, "يرجى إدخال رقم هاتف صالح"),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -33,22 +34,25 @@ const Profile = () => {
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
+      firstName: "مستخدم",
+      lastName: "عطاء",
+      email: "user@ataa.app",
+      phoneNumber: "+9639******",
     },
   });
 
   const watchedFirstName = watch("firstName");
   const watchedLastName = watch("lastName");
   const watchedEmail = watch("email");
+  const watchedPhone = watch("phoneNumber");
 
   const handleSave = () => {
     setIsEditing(false);
+    Alert.alert("تم الحفظ", "تم حفظ التغييرات بنجاح.");
   };
 
   const handleChangePhoto = () => {
-    console.log("Change photo");
+    Alert.alert("قريبًا", "ميزة تغيير الصورة ستتوفر قريبًا.");
   };
 
   const { colorScheme } = useColorScheme();
@@ -187,16 +191,15 @@ const Profile = () => {
               {isEditing ? (
                 <Controller
                   control={control}
-                  name="email"
+                  name="phoneNumber"
                   render={({ field: { value, onChange, onBlur } }) => (
                     <Input
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
-                      placeholder="example@email.com"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      error={errors.email?.message}
+                      placeholder="+9639******"
+                      keyboardType="phone-pad"
+                      error={errors.phoneNumber?.message}
                       fullWidth
                     />
                   )}
@@ -207,7 +210,7 @@ const Profile = () => {
                   className={`${isDark ? "text-gray-400" : "text-gray-800"}`}
                   rtlAlign="left"
                 >
-                  {watchedEmail || "-"}
+                  {watchedPhone || "-"}
                 </Text>
               )}
             </View>

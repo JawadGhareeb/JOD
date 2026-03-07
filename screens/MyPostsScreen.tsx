@@ -1,45 +1,26 @@
 import { Header } from "@/components/sections";
-import { Card } from "@/components/ui";
-import Button from "@/components/ui/Button";
 import Text from "@/components/ui/Text";
 import { NavigationHelper } from "@/lib/helpers";
-import { useFocusEffect, useRouter } from "expo-router";
+import { AuthRequiredState, PostCard } from "@/src/components";
+import { useAppData } from "@/src/context";
+import { useAuthStatus } from "@/src/hooks/useAuthStatus";
+import { getNextPostStatuses } from "@/src/utils/postHelpers";
+import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import React, { useCallback, useState } from "react";
+import React from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
-import { getAuthToken } from "@/utils/auth";
-
-const myPosts = [
-  {
-    id: "1",
-    title: "حملة دعم التعليم",
-    description: "منشور لدعم الطلاب المحتاجين للمستلزمات الدراسية.",
-  },
-  {
-    id: "2",
-    title: "فرصة تطوعية جديدة",
-    description: "دعوة للمتطوعين للمشاركة في حملة خدمة مجتمعية.",
-  },
-];
 
 const MyPostsScreen = () => {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { isLoading, isAuthenticated } = useAuthStatus();
+  const { posts, currentPublisherId, updatePostStatus, toggleSavePost, savedPostIds } =
+    useAppData();
 
-  const checkAuth = useCallback(async () => {
-    const token = await getAuthToken();
-    setIsAuthenticated(!!token);
-  }, []);
+  const myPosts = posts.filter((post) => post.ownerId === currentPublisherId);
 
-  useFocusEffect(
-    useCallback(() => {
-      checkAuth();
-    }, [checkAuth]),
-  );
-
-  if (isAuthenticated === null) {
+  if (isLoading) {
     return (
       <View className={`flex-1 ${isDark ? "bg-dark-300" : "bg-gray-50"}`}>
         <Header pageTitle="منشوراتي" showBackButton={true} />
@@ -54,18 +35,10 @@ const MyPostsScreen = () => {
     return (
       <View className={`flex-1 ${isDark ? "bg-dark-300" : "bg-gray-50"}`}>
         <Header pageTitle="منشوراتي" showBackButton={true} />
-        <View className="px-4 py-6">
-          <Card>
-            <View className="gap-3">
-              <Text size="sm" weight="semibold" rtlAlign="left">
-                تسجيل الدخول مطلوب
-              </Text>
-              <Button onPress={() => NavigationHelper.goToSignIn(router)}>
-                تسجيل الدخول
-              </Button>
-            </View>
-          </Card>
-        </View>
+        <AuthRequiredState
+          message="يجب تسجيل الدخول لعرض منشوراتك."
+          onPressSignIn={() => NavigationHelper.goToSignIn(router)}
+        />
       </View>
     );
   }
@@ -81,19 +54,35 @@ const MyPostsScreen = () => {
           paddingBottom: 40,
         }}
       >
-        {myPosts.map((post) => (
-          <Card key={post.id} className="mx-4 mb-3">
-            <Text size="sm" weight="semibold" rtlAlign="left">
-              {post.title}
-            </Text>
+        <Text
+          size="sm"
+          className={`${isDark ? "text-gray-400" : "text-gray-500"} px-4 mb-2`}
+          rtlAlign="left"
+        >
+          {`إجمالي منشوراتي: ${myPosts.length}`}
+        </Text>
+
+        {myPosts.length === 0 ? (
+          <View className="px-4 py-4">
             <Text
-              size="xs"
+              size="sm"
               className={`${isDark ? "text-gray-400" : "text-gray-500"}`}
               rtlAlign="left"
             >
-              {post.description}
+              لا يوجد منشورات حتى الآن. ابدأ بإنشاء منشور جديد.
             </Text>
-          </Card>
+          </View>
+        ) : null}
+
+        {myPosts.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            isSaved={savedPostIds.includes(post.id)}
+            statusActions={getNextPostStatuses(post.status)}
+            onPressStatusAction={(nextStatus) => updatePostStatus(post.id, nextStatus)}
+            onToggleSave={() => toggleSavePost(post.id)}
+          />
         ))}
       </ScrollView>
     </View>

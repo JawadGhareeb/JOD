@@ -1,26 +1,50 @@
 import { Button, Logo, Text, VerificationCodeInput } from "@/components/ui";
 import { NavigationHelper } from "@/lib/helpers";
-import { useRouter } from "expo-router";
+import { setAuthToken } from "@/utils/auth";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React from "react";
-import { ScrollView, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, TouchableOpacity, View } from "react-native";
 
 const VerifyCode = () => {
   const router = useRouter();
+  const params = useLocalSearchParams<{
+    phoneNumber?: string;
+    flow?: "register" | "reset";
+  }>();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const [code, setCode] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const handleResendCode = () => {
-    console.log("Resending code...");
+    Alert.alert("إعادة الإرسال", "تم إرسال رمز تحقق جديد.");
   };
 
   const handleBackToReset = () => {
     NavigationHelper.goToResetPassword(router);
   };
 
-  const handleVerifyCode = () => {
-    // Handle verify code logic here
-    console.log("Code verified successfully");
-    NavigationHelper.goToSignIn(router);
+  const handleVerifyCode = async () => {
+    if (code.length !== 4) {
+      Alert.alert("رمز غير مكتمل", "يرجى إدخال رمز التحقق المكوّن من 4 أرقام.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      if (params.flow === "register") {
+        await setAuthToken(`demo-${params.phoneNumber || "user"}`);
+        NavigationHelper.goToHome(router);
+        return;
+      }
+
+      Alert.alert("تم التحقق", "يمكنك الآن إعادة تعيين كلمة المرور وتسجيل الدخول.");
+      NavigationHelper.goToSignIn(router);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -51,7 +75,7 @@ const VerifyCode = () => {
               size="xs"
               className={`${isDark ? "text-light-50" : "text-gray-600"} text-center leading-6`}
             >
-              أدخل الرمز المكون من 4 أرقام الذي تم إرساله إلى رقم هاتفك
+              {`أدخل الرمز المكون من 4 أرقام الذي تم إرساله إلى ${params.phoneNumber || "رقم هاتفك"}`}
             </Text>
           </View>
 
@@ -63,13 +87,18 @@ const VerifyCode = () => {
             >
               رمز التحقق
             </Text>
-            <VerificationCodeInput length={4} />
+            <VerificationCodeInput
+              length={4}
+              onChange={setCode}
+              onComplete={setCode}
+            />
           </View>
 
           <Button
             variant="primary"
             size="medium"
             fullWidth
+            loading={isSubmitting}
             onPress={handleVerifyCode}
           >
             تأكيد الرمز

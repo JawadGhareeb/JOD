@@ -17,15 +17,15 @@ const Support = () => {
       description: "ابحث عن إجابات للأسئلة الأكثر شيوعاً",
       icon: <icons.helpCircle size={24} color="#3B82F6" />,
       color: "#3B82F6",
-      action: () => console.log("FAQ pressed"),
+      action: () => Linking.openURL("https://ataa.app/faq"),
     },
     {
       id: "email",
       title: "البريد الإلكتروني",
-      description: "support@quizzy.com",
+      description: "support@ataa.app",
       icon: <icons.mail size={24} color="#10B981" />,
       color: "#10B981",
-      action: () => Linking.openURL("mailto:support@quizzy.com"),
+      action: () => Linking.openURL("mailto:support@ataa.app"),
     },
     {
       id: "phone",
@@ -46,10 +46,10 @@ const Support = () => {
     {
       id: "telegram",
       title: "تيليجرام",
-      description: "@QuizzySupport",
+      description: "@AtaaSupport",
       icon: <icons.send size={24} color="#0088CC" />,
       color: "#0088CC",
-      action: () => Linking.openURL("https://t.me/QuizzySupport"),
+      action: () => Linking.openURL("https://t.me/AtaaSupport"),
     },
   ];
 

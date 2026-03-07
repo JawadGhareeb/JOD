@@ -71,7 +71,10 @@ const SignUp = () => {
   };
 
   const onSubmit = async (values: SignUpFormValues) => {
-   
+    NavigationHelper.goToVerifyCode(router, {
+      phoneNumber: values.phoneNumber,
+      flow: "register",
+    });
   };
 
   return (
@@ -107,7 +110,7 @@ const SignUp = () => {
               size="xs"
               className={`${isDark ? "text-light-50" : "text-gray-600"} text-center`}
             >
-              انضم إلينا وابدأ رحلتك التعليمية
+              أنشئ حسابك للبدء بالمشاركة في منصة عطاء
             </Text>
           </View>
 

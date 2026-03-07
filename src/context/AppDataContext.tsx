@@ -11,12 +11,18 @@ import {
   mockJobs,
   mockVolunteeringCampaigns,
 } from "@/src/data/mockData";
+import { mockPosts, mockSavedPostIds } from "@/src/data/mockPosts";
 import type {
   DonationCampaign,
   JobItem,
   UserRole,
   VolunteeringCampaign,
 } from "@/src/types/models";
+import type {
+  CreatePostInput,
+  PostItem,
+  PostStatus,
+} from "@/src/types/posts";
 
 type ManagedType = "donation" | "volunteer" | "job";
 
@@ -30,10 +36,15 @@ interface AppDataContextValue {
   userRole: UserRole;
   setUserRole: (role: UserRole) => void;
   currentPublisherId: string;
+  posts: PostItem[];
+  savedPostIds: string[];
   donations: DonationCampaign[];
   volunteeringCampaigns: VolunteeringCampaign[];
   jobs: JobItem[];
   closeItem: (type: ManagedType, id: string) => void;
+  createPost: (input: CreatePostInput) => PostItem;
+  updatePostStatus: (postId: string, status: PostStatus) => void;
+  toggleSavePost: (postId: string) => void;
   createDonationCampaign: () => void;
   createVolunteeringCampaign: () => void;
   createJob: () => void;
@@ -48,11 +59,41 @@ const createId = (prefix: string) => `${prefix}-${Date.now()}`;
 
 export const AppDataProvider = ({ children }: { children: ReactNode }) => {
   const [userRole, setUserRole] = useState<UserRole>("user");
+  const [posts, setPosts] = useState<PostItem[]>(mockPosts);
+  const [savedPostIds, setSavedPostIds] = useState<string[]>(mockSavedPostIds);
   const [donations, setDonations] =
     useState<DonationCampaign[]>(mockDonationCampaigns);
   const [volunteeringCampaigns, setVolunteeringCampaigns] =
     useState<VolunteeringCampaign[]>(mockVolunteeringCampaigns);
   const [jobs, setJobs] = useState<JobItem[]>(mockJobs);
+
+  const createPost = useCallback((input: CreatePostInput): PostItem => {
+    const newPost: PostItem = {
+      ...input,
+      id: createId("p"),
+      ownerId: CURRENT_PUBLISHER_ID,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+    };
+
+    setPosts((prev) => [newPost, ...prev]);
+
+    return newPost;
+  }, []);
+
+  const updatePostStatus = useCallback((postId: string, status: PostStatus) => {
+    setPosts((prev) =>
+      prev.map((post) => (post.id === postId ? { ...post, status } : post)),
+    );
+  }, []);
+
+  const toggleSavePost = useCallback((postId: string) => {
+    setSavedPostIds((prev) =>
+      prev.includes(postId)
+        ? prev.filter((id) => id !== postId)
+        : [postId, ...prev],
+    );
+  }, []);
 
   const closeItem = useCallback((type: ManagedType, id: string) => {
     if (type === "donation") {
@@ -156,10 +197,15 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       userRole,
       setUserRole,
       currentPublisherId: CURRENT_PUBLISHER_ID,
+      posts,
+      savedPostIds,
       donations,
       volunteeringCampaigns,
       jobs,
       closeItem,
+      createPost,
+      updatePostStatus,
+      toggleSavePost,
       createDonationCampaign,
       createVolunteeringCampaign,
       createJob,
@@ -167,12 +213,17 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
     }),
     [
       closeItem,
+      createPost,
       createDonationCampaign,
       createJob,
       createVolunteeringCampaign,
       donations,
       jobs,
+      posts,
       publisherStats,
+      savedPostIds,
+      toggleSavePost,
+      updatePostStatus,
       userRole,
       volunteeringCampaigns,
     ],

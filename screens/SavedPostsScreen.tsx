@@ -1,45 +1,24 @@
 import { Header } from "@/components/sections";
-import { Card } from "@/components/ui";
-import Button from "@/components/ui/Button";
 import Text from "@/components/ui/Text";
 import { NavigationHelper } from "@/lib/helpers";
-import { useFocusEffect, useRouter } from "expo-router";
+import { AuthRequiredState, PostCard } from "@/src/components";
+import { useAppData } from "@/src/context";
+import { useAuthStatus } from "@/src/hooks/useAuthStatus";
+import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import React, { useCallback, useState } from "react";
+import React from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
-import { getAuthToken } from "@/utils/auth";
-
-const savedPosts = [
-  {
-    id: "1",
-    title: "وظيفة مطور تطبيقات",
-    description: "تم حفظ هذا المنشور للمتابعة لاحقًا.",
-  },
-  {
-    id: "2",
-    title: "حملة تنظيف الأحياء",
-    description: "منشور محفوظ للمشاركة في وقت لاحق.",
-  },
-];
 
 const SavedPostsScreen = () => {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { isLoading, isAuthenticated } = useAuthStatus();
+  const { posts, savedPostIds, toggleSavePost } = useAppData();
 
-  const checkAuth = useCallback(async () => {
-    const token = await getAuthToken();
-    setIsAuthenticated(!!token);
-  }, []);
+  const savedPosts = posts.filter((post) => savedPostIds.includes(post.id));
 
-  useFocusEffect(
-    useCallback(() => {
-      checkAuth();
-    }, [checkAuth]),
-  );
-
-  if (isAuthenticated === null) {
+  if (isLoading) {
     return (
       <View className={`flex-1 ${isDark ? "bg-dark-300" : "bg-gray-50"}`}>
         <Header pageTitle="المنشورات المحفوظة" showBackButton={true} />
@@ -54,18 +33,10 @@ const SavedPostsScreen = () => {
     return (
       <View className={`flex-1 ${isDark ? "bg-dark-300" : "bg-gray-50"}`}>
         <Header pageTitle="المنشورات المحفوظة" showBackButton={true} />
-        <View className="px-4 py-6">
-          <Card>
-            <View className="gap-3">
-              <Text size="sm" weight="semibold" rtlAlign="left">
-                تسجيل الدخول مطلوب
-              </Text>
-              <Button onPress={() => NavigationHelper.goToSignIn(router)}>
-                تسجيل الدخول
-              </Button>
-            </View>
-          </Card>
-        </View>
+        <AuthRequiredState
+          message="يجب تسجيل الدخول لعرض المنشورات المحفوظة."
+          onPressSignIn={() => NavigationHelper.goToSignIn(router)}
+        />
       </View>
     );
   }
@@ -81,19 +52,25 @@ const SavedPostsScreen = () => {
           paddingBottom: 40,
         }}
       >
-        {savedPosts.map((post) => (
-          <Card key={post.id} className="mx-4 mb-3">
-            <Text size="sm" weight="semibold" rtlAlign="left">
-              {post.title}
-            </Text>
+        {savedPosts.length === 0 ? (
+          <View className="px-4 py-4">
             <Text
-              size="xs"
+              size="sm"
               className={`${isDark ? "text-gray-400" : "text-gray-500"}`}
               rtlAlign="left"
             >
-              {post.description}
+              لا توجد منشورات محفوظة حاليًا.
             </Text>
-          </Card>
+          </View>
+        ) : null}
+
+        {savedPosts.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            isSaved
+            onToggleSave={() => toggleSavePost(post.id)}
+          />
         ))}
       </ScrollView>
     </View>

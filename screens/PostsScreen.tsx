@@ -1,34 +1,29 @@
 import { SettingsCard } from "@/components/pages/settings";
 import { Header } from "@/components/sections";
 import { Card } from "@/components/ui";
-import Button from "@/components/ui/Button";
 import Text from "@/components/ui/Text";
 import { icons } from "@/constants";
 import { NavigationHelper } from "@/lib/helpers";
-import { useFocusEffect, useRouter } from "expo-router";
+import { AuthRequiredState } from "@/src/components";
+import { useAppData } from "@/src/context";
+import { useAuthStatus } from "@/src/hooks/useAuthStatus";
+import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import React, { useCallback, useState } from "react";
+import React from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
-import { getAuthToken } from "@/utils/auth";
 
 const PostsScreen = () => {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { isLoading, isAuthenticated } = useAuthStatus();
+  const { posts, savedPostIds, currentPublisherId } = useAppData();
 
-  const checkAuth = useCallback(async () => {
-    const token = await getAuthToken();
-    setIsAuthenticated(!!token);
-  }, []);
+  const myPostsCount = posts.filter(
+    (post) => post.ownerId === currentPublisherId,
+  ).length;
 
-  useFocusEffect(
-    useCallback(() => {
-      checkAuth();
-    }, [checkAuth]),
-  );
-
-  if (isAuthenticated === null) {
+  if (isLoading) {
     return (
       <View className={`flex-1 ${isDark ? "bg-dark-300" : "bg-gray-50"}`}>
         <Header pageTitle="المنشورات" />
@@ -43,30 +38,10 @@ const PostsScreen = () => {
     return (
       <View className={`flex-1 ${isDark ? "bg-dark-300" : "bg-gray-50"}`}>
         <Header pageTitle="المنشورات" />
-        <View className="px-4 py-6">
-          <Card>
-            <View className="gap-3">
-              <Text
-                size="sm"
-                weight="semibold"
-                className={`${isDark ? "text-light-50" : "text-gray-800"}`}
-                rtlAlign="left"
-              >
-                تسجيل الدخول مطلوب
-              </Text>
-              <Text
-                size="xs"
-                className={`${isDark ? "text-gray-400" : "text-gray-500"}`}
-                rtlAlign="left"
-              >
-                للوصول إلى صفحة المنشورات، يرجى تسجيل الدخول أولًا.
-              </Text>
-              <Button onPress={() => NavigationHelper.goToSignIn(router)}>
-                تسجيل الدخول
-              </Button>
-            </View>
-          </Card>
-        </View>
+        <AuthRequiredState
+          message="للوصول إلى إدارة المنشورات، يرجى تسجيل الدخول أولًا."
+          onPressSignIn={() => NavigationHelper.goToSignIn(router)}
+        />
       </View>
     );
   }
@@ -91,9 +66,23 @@ const PostsScreen = () => {
           إدارة المنشورات
         </Text>
 
+        <Card className="mx-4 mb-4" bordered={false} background={isDark ? "bg-dark-500" : "bg-primary-300"}>
+          <View className="gap-1">
+            <Text size="xs" weight="semibold" color="accent" rtlAlign="left">
+              ملخص سريع
+            </Text>
+            <Text size="xs" color="accent" rtlAlign="left">
+              {`منشوراتي: ${myPostsCount}`}
+            </Text>
+            <Text size="xs" color="accent" rtlAlign="left">
+              {`المحفوظة: ${savedPostIds.length}`}
+            </Text>
+          </View>
+        </Card>
+
         <SettingsCard
           title="إنشاء منشور"
-          description="إضافة منشور جديد"
+          description="نشر عرض أو طلب جديد"
           icon={<icons.plus size={24} color="#3B82F6" />}
           color="#3B82F6"
           onPress={() => NavigationHelper.goToCreatePost(router)}
@@ -101,7 +90,7 @@ const PostsScreen = () => {
 
         <SettingsCard
           title="منشوراتي"
-          description="عرض المنشورات التي قمت بنشرها"
+          description="إدارة الحالة والتعديل وإعادة الإرسال"
           icon={<icons.bookOpen size={24} color="#10B981" />}
           color="#10B981"
           onPress={() => NavigationHelper.goToMyPosts(router)}

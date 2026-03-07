@@ -5,10 +5,12 @@ import Input from "@/components/ui/Input";
 import Text from "@/components/ui/Text";
 import { icons } from "@/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Platform, ScrollView, View } from "react-native";
+import { toastService } from "@/services/toastService";
 import { z } from "zod";
 
 const passwordSchema = z
@@ -50,6 +52,7 @@ const changePasswordSchema = z
 type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
 const ChangePassword = () => {
+  const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const [oldPasswordVisible, setOldPasswordVisible] = useState(false);
@@ -68,11 +71,13 @@ const ChangePassword = () => {
     },
   });
 
-  const onSubmit = async (values: ChangePasswordFormValues) => {
+  const onSubmit = async (_values: ChangePasswordFormValues) => {
     try {
-      
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      toastService.success("تم بنجاح", "تم تغيير كلمة المرور بنجاح.");
+      router.back();
     } catch {
-      // handled globally via toast service
+      toastService.error("حدث خطأ", "تعذر تغيير كلمة المرور، حاول مرة أخرى.");
     }
   };
 

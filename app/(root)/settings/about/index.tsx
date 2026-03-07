@@ -21,39 +21,39 @@ const About = () => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const appInfo: AppInfo = {
-    name: "Quizzy",
+    name: "منصة عطاء",
     version: "1.0.0",
-    build: "2024.12.15",
-    developer: "Quizzy Team",
-    website: "https://quizzy.com",
-    email: "info@quizzy.com",
+    build: "2026.03.07",
+    developer: "Ataa Team",
+    website: "https://ataa.app",
+    email: "info@ataa.app",
   };
 
   const features = [
-    "اختبارات تفاعلية في جميع المواد",
-    "نظام تقييم ذكي للطلاب",
-    "إحصائيات مفصلة للتقدم",
-    "مساعد ذكي لحل الأسئلة",
-    "واجهة سهلة الاستخدام",
-    "دعم متعدد اللغات",
+    "نشر عروض وطلبات التبرع بسهولة",
+    "متابعة الحملات الخيرية والتطوعية",
+    "فلترة متقدمة حسب التصنيف والموقع",
+    "إدارة حالة المنشور حتى الاكتمال",
+    "نظام إشعارات للأحداث المهمة",
+    "إمكانية الإبلاغ والحظر لرفع الأمان",
   ];
 
   const socialLinks: SocialLink[] = [
     {
       name: "الموقع الرسمي",
-      url: "https://quizzy.com",
+      url: "https://ataa.app",
       icon: <icons.globe size={20} color="#3B82F6" />,
       color: "#3B82F6",
     },
     {
       name: "فيسبوك",
-      url: "https://facebook.com/quizzy",
+      url: "https://facebook.com/ataaapp",
       icon: <icons.facebook size={20} color="#1877F2" />,
       color: "#1877F2",
     },
     {
       name: "إنستغرام",
-      url: "https://instagram.com/quizzy",
+      url: "https://instagram.com/ataaapp",
       icon: <icons.instagram size={20} color="#E4405F" />,
       color: "#E4405F",
     },
@@ -75,9 +75,9 @@ const About = () => {
   ];
 
   const appStats: StatItem[] = [
-    { value: "10K+", label: "مستخدم نشط" },
-    { value: "50K+", label: "اختبار مكتمل" },
-    { value: "4.8", label: "تقييم المستخدمين" },
+    { value: "12K+", label: "مستخدم نشط" },
+    { value: "3.5K+", label: "منشور مكتمل" },
+    { value: "4.8", label: "تقييم المجتمع" },
   ];
 
   const handleLinkPress = (url: string) => {
@@ -121,7 +121,7 @@ const About = () => {
 
         <InfoCard
           title="عن التطبيق"
-          content="Quizzy هو تطبيق تعليمي متطور يساعد الطلاب على تحسين أدائهم الأكاديمي من خلال اختبارات تفاعلية ونظام تقييم ذكي. نحن نؤمن بأن التعلم يجب أن يكون ممتعاً وفعالاً"
+          content="منصة عطاء تربط بين المحتاجين والمتبرعين والمنظمات من خلال منشورات واضحة وحملات منظمة. هدفنا تسهيل الوصول للمساعدة ورفع الشفافية في المجتمع."
         />
 
         <FeaturesCard title="الميزات الرئيسية" features={features} />
@@ -143,7 +143,7 @@ const About = () => {
         <ContactCard title="معلومات التواصل" items={contactItems} />
 
         <LegalCard
-          copyright="© 2024 Quizzy. جميع الحقوق محفوظة"
+          copyright="© 2026 Ataa. جميع الحقوق محفوظة"
           description="هذا التطبيق محمي بموجب قوانين حقوق الطبع والنشر"
         />
 
