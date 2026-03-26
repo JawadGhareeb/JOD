@@ -51,7 +51,7 @@ export const VolunteeringListScreen = () => {
         data={filteredItems}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{
-          paddingBottom: insets.bottom + 120,
+          paddingBottom: insets.bottom + 72,
           paddingHorizontal: spacing.l,
           gap: spacing.m,
         }}

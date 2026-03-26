@@ -51,7 +51,7 @@ export const DonationsListScreen = () => {
         data={filteredItems}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{
-          paddingBottom: insets.bottom + 120,
+          paddingBottom: insets.bottom + 72,
           paddingHorizontal: spacing.l,
           gap: spacing.m,
         }}
@@ -85,7 +85,9 @@ export const DonationsListScreen = () => {
             activeFiltersCount={activeFilters}
           />
         }
-        ListEmptyComponent={<EmptyState message="لا توجد حملات مطابقة للبحث أو الفلترة" />}
+        ListEmptyComponent={
+          <EmptyState message="لا توجد حملات مطابقة للبحث أو الفلترة" />
+        }
       />
 
       <FilterBottomSheet

@@ -1,22 +1,25 @@
 import BottomSheet from "@gorhom/bottom-sheet";
-import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { useLocalSearchParams } from "expo-router";
-import { useMemo, useRef } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { I18nManager, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CreateSheet, PublisherFab } from "@/src/components";
 import { useAppData } from "@/src/context";
-import type { DonationsTopTabsParamList } from "@/src/navigation";
 import { colors, spacing } from "@/src/theme";
 import { DonationsListScreen } from "./DonationsListScreen";
 import { VolunteeringListScreen } from "./VolunteeringListScreen";
 
-const TopTabs = createMaterialTopTabNavigator<DonationsTopTabsParamList>();
+type CampaignTab = "donations" | "volunteering";
+
+const resolveTab = (tab?: string): CampaignTab =>
+  tab === "volunteering" ? "volunteering" : "donations";
 
 export const DonationsTopTabsScreen = () => {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ tab?: string }>();
   const createSheetRef = useRef<BottomSheet>(null);
+  const initialTab = useMemo(() => resolveTab(params.tab), [params.tab]);
+  const [activeTab, setActiveTab] = useState<CampaignTab>(initialTab);
 
   const {
     userRole,
@@ -25,37 +28,36 @@ export const DonationsTopTabsScreen = () => {
     createJob,
   } = useAppData();
 
-  const initialRouteName = useMemo<keyof DonationsTopTabsParamList>(
-    () => (params.tab === "volunteering" ? "VolunteeringTab" : "DonationsTab"),
-    [params.tab],
-  );
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + spacing.s }]}> 
+      <View style={[styles.header, { paddingTop: insets.top + spacing.s }]}>
         <Text style={styles.headerTitle}>التبرعات والحملات</Text>
       </View>
 
-      <TopTabs.Navigator
-        key={initialRouteName}
-        initialRouteName={initialRouteName}
-        screenOptions={{
-          tabBarStyle: styles.topTabs,
-          tabBarIndicatorStyle: styles.indicator,
-          tabBarLabelStyle: styles.topTabLabel,
-        }}
-      >
-        <TopTabs.Screen
-          name="DonationsTab"
-          component={DonationsListScreen}
-          options={{ title: "التبرعات" }}
+      <View style={styles.tabsRow}>
+        <TabButton
+          label="التبرعات"
+          isActive={activeTab === "donations"}
+          onPress={() => setActiveTab("donations")}
         />
-        <TopTabs.Screen
-          name="VolunteeringTab"
-          component={VolunteeringListScreen}
-          options={{ title: "التطوع" }}
+        <TabButton
+          label="التطوع"
+          isActive={activeTab === "volunteering"}
+          onPress={() => setActiveTab("volunteering")}
         />
-      </TopTabs.Navigator>
+      </View>
+
+      <View style={styles.content}>
+        {activeTab === "donations" ? (
+          <DonationsListScreen key="donations-tab" />
+        ) : (
+          <VolunteeringListScreen key="volunteering-tab" />
+        )}
+      </View>
 
       {userRole === "publisher" ? (
         <PublisherFab onPress={() => createSheetRef.current?.snapToIndex(0)} />
@@ -70,6 +72,25 @@ export const DonationsTopTabsScreen = () => {
     </View>
   );
 };
+
+const TabButton = ({
+  label,
+  isActive,
+  onPress,
+}: {
+  label: string;
+  isActive: boolean;
+  onPress: () => void;
+}) => (
+  <Pressable
+    onPress={onPress}
+    style={[styles.tabButton, isActive ? styles.tabButtonActive : null]}
+  >
+    <Text style={[styles.tabLabel, isActive ? styles.tabLabelActive : null]}>
+      {label}
+    </Text>
+  </Pressable>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -87,17 +108,33 @@ const styles = StyleSheet.create({
     fontFamily: "NotoKufiArabic-Bold",
     textAlign: "right",
   },
-  topTabs: {
+  tabsRow: {
+    flexDirection: I18nManager.isRTL ? "row-reverse" : "row",
     backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
+    paddingHorizontal: spacing.l,
   },
-  indicator: {
-    backgroundColor: colors.primary,
-    height: 3,
+  tabButton: {
+    flex: 1,
+    minHeight: 46,
+    justifyContent: "center",
+    alignItems: "center",
+    borderBottomWidth: 3,
+    borderBottomColor: "transparent",
   },
-  topTabLabel: {
+  tabButtonActive: {
+    borderBottomColor: colors.primary,
+  },
+  tabLabel: {
     fontSize: 13,
+    color: colors.textSecondary,
     fontFamily: "NotoKufiArabic-SemiBold",
+  },
+  tabLabelActive: {
+    color: colors.primary,
+  },
+  content: {
+    flex: 1,
   },
 });

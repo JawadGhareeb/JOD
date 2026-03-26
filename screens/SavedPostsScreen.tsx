@@ -49,7 +49,7 @@ const SavedPostsScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingTop: 15,
-          paddingBottom: 40,
+          paddingBottom: 24,
         }}
       >
         {savedPosts.length === 0 ? (
@@ -59,7 +59,7 @@ const SavedPostsScreen = () => {
               className={`${isDark ? "text-gray-400" : "text-gray-500"}`}
               rtlAlign="left"
             >
-              لا توجد منشورات محفوظة حاليًا.
+              لا توجد منشورات محفوظة حالياً.
             </Text>
           </View>
         ) : null}

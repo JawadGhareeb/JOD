@@ -1,8 +1,5 @@
-import { PostsScreen } from "@/screens";
-import React from "react";
+import { Redirect } from "expo-router";
 
-const Posts = () => {
-  return <PostsScreen />;
-};
-
-export default Posts;
+export default function PostsRoute() {
+  return <Redirect href="/(root)/posts/create" />;
+}

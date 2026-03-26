@@ -39,7 +39,7 @@ const PostsScreen = () => {
       <View className={`flex-1 ${isDark ? "bg-dark-300" : "bg-gray-50"}`}>
         <Header pageTitle="المنشورات" />
         <AuthRequiredState
-          message="للوصول إلى إدارة المنشورات، يرجى تسجيل الدخول أولًا."
+          message="للوصول إلى إدارة المنشورات، يرجى تسجيل الدخول أولاً."
           onPressSignIn={() => NavigationHelper.goToSignIn(router)}
         />
       </View>
@@ -54,7 +54,7 @@ const PostsScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingTop: 15,
-          paddingBottom: 80,
+          paddingBottom: 28,
         }}
       >
         <Text
@@ -109,4 +109,3 @@ const PostsScreen = () => {
 };
 
 export default PostsScreen;
-

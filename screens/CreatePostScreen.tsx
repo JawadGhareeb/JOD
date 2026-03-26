@@ -19,7 +19,14 @@ import {
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React, { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  I18nManager,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 
 const CreatePostScreen = () => {
   const router = useRouter();
@@ -161,15 +168,12 @@ const CreatePostScreen = () => {
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 15, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingTop: 15, paddingBottom: 28 }}
       >
         <Card className="mx-4">
           <View className="gap-4">
-            {renderOptions(
-              "نوع المنشور",
-              POST_TYPE_OPTIONS,
-              form.type,
-              (next) => updateField("type", next),
+            {renderOptions("نوع المنشور", POST_TYPE_OPTIONS, form.type, (next) =>
+              updateField("type", next),
             )}
 
             <Input
@@ -215,9 +219,17 @@ const CreatePostScreen = () => {
                 className={`${isDark ? "text-light-50" : "text-gray-700"}`}
                 rtlAlign="left"
               >
-                التصنيف
+                التصنيفات
               </Text>
-              <View className="flex-row flex-wrap gap-2">
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                  flexDirection: I18nManager.isRTL ? "row-reverse" : "row",
+                  gap: 8,
+                  paddingVertical: 2,
+                }}
+              >
                 {POST_CATEGORIES.map((category) => {
                   const isActive = form.category === category;
 
@@ -238,7 +250,7 @@ const CreatePostScreen = () => {
                     </Pressable>
                   );
                 })}
-              </View>
+              </ScrollView>
             </View>
 
             <Input
@@ -249,18 +261,12 @@ const CreatePostScreen = () => {
               fullWidth
             />
 
-            {renderOptions(
-              "طريقة الاستلام",
-              PICKUP_METHOD_OPTIONS,
-              form.pickupMethod,
-              (next) => updateField("pickupMethod", next),
+            {renderOptions("طريقة الاستلام", PICKUP_METHOD_OPTIONS, form.pickupMethod, (next) =>
+              updateField("pickupMethod", next),
             )}
 
-            {renderOptions(
-              "طريقة التواصل",
-              CONTACT_METHOD_OPTIONS,
-              form.contactMethod,
-              (next) => updateField("contactMethod", next),
+            {renderOptions("طريقة التواصل", CONTACT_METHOD_OPTIONS, form.contactMethod, (next) =>
+              updateField("contactMethod", next),
             )}
 
             <Button

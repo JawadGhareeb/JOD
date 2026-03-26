@@ -107,7 +107,7 @@ const SettingsScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingTop: 15,
-          paddingBottom: 100,
+          paddingBottom: 36,
         }}
       >
         {isAuthenticated ? (

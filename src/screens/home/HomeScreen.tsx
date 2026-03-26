@@ -1,5 +1,4 @@
 import BottomSheet from "@gorhom/bottom-sheet";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -23,13 +22,6 @@ import { useAppData } from "@/src/context";
 import { ROUTES } from "@/src/navigation";
 import { colors, radius, shadows, spacing } from "@/src/theme";
 import { formatCurrency } from "@/src/utils/formatters";
-
-interface QuickAction {
-  id: string;
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  onPress: () => void;
-}
 
 export const HomeScreen = () => {
   const router = useRouter();
@@ -100,53 +92,21 @@ export const HomeScreen = () => {
 
   const campaignsCount = donations.length + volunteeringCampaigns.length;
 
-  const quickActions = useMemo<QuickAction[]>(() => {
-    const actions: QuickAction[] = [
-      {
-        id: "donate",
-        label: "تبرع",
-        icon: "heart-outline",
-        onPress: () => router.push(ROUTES.donationsTab),
-      },
-      {
-        id: "volunteer",
-        label: "تطوع",
-        icon: "people-outline",
-        onPress: () => router.push(ROUTES.volunteeringTab),
-      },
-      {
-        id: "jobs",
-        label: "وظائف",
-        icon: "briefcase-outline",
-        onPress: () => router.push(ROUTES.jobs),
-      },
-    ];
-
-    if (userRole === "publisher") {
-      actions.push({
-        id: "publish",
-        label: "نشر",
-        icon: "add-circle-outline",
-        onPress: () => createSheetRef.current?.snapToIndex(0),
-      });
-    }
-
-    return actions;
-  }, [router, userRole]);
-
   return (
     <View style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingTop: insets.top + spacing.s,
-          paddingBottom: insets.bottom + 120,
+          paddingBottom: insets.bottom + 72,
           gap: spacing.l,
         }}
       >
         <View style={styles.pagePadding}>
           <Text style={styles.greeting}>مرحباً بك في منصة جود</Text>
-          <Text style={styles.subGreeting}>تبرعات، تطوع، وظائف خيرية في مكان واحد</Text>
+          <Text style={styles.subGreeting}>
+            تصفح أحدث الحملات وفرص التطوع والوظائف الخيرية بسرعة
+          </Text>
         </View>
 
         <SearchBar
@@ -156,24 +116,13 @@ export const HomeScreen = () => {
         />
 
         <View style={styles.pagePadding}>
-          <View style={styles.quickGrid}>
-            {quickActions.map((action) => (
-              <Pressable key={action.id} style={styles.quickAction} onPress={action.onPress}>
-                <Ionicons name={action.icon} size={22} color={colors.primary} />
-                <Text style={styles.quickActionText}>{action.label}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.pagePadding}>
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
               <Text style={styles.statTitle}>عدد الحملات</Text>
               <Text style={styles.statValue}>{campaignsCount}</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statTitle}>إجمالي التبرعات (مبلغ)</Text>
+              <Text style={styles.statTitle}>إجمالي التبرعات</Text>
               <Text style={styles.statValue}>{formatCurrency(totalDonationsAmount)}</Text>
             </View>
           </View>
@@ -185,6 +134,7 @@ export const HomeScreen = () => {
         />
         <FlatList
           horizontal
+          inverted={I18nManager.isRTL}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.horizontalListContent}
           data={featuredDonations}
@@ -213,6 +163,7 @@ export const HomeScreen = () => {
         />
         <FlatList
           horizontal
+          inverted={I18nManager.isRTL}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.horizontalListContent}
           data={nearbyVolunteering}
@@ -238,6 +189,7 @@ export const HomeScreen = () => {
         <SectionHeader title="وظائف جديدة" onPress={() => router.push(ROUTES.jobs)} />
         <FlatList
           horizontal
+          inverted={I18nManager.isRTL}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.horizontalListContent}
           data={newJobs}
@@ -283,7 +235,7 @@ const SectionHeader = ({
   onPress: () => void;
 }) => (
   <View style={[styles.pagePadding, styles.sectionHeader]}>
-    <Pressable onPress={onPress}>
+    <Pressable onPress={onPress} hitSlop={8}>
       <Text style={styles.sectionAction}>عرض الكل</Text>
     </Pressable>
     <Text style={styles.sectionTitle}>{title}</Text>
@@ -310,29 +262,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: "right",
     fontFamily: "NotoKufiArabic-Regular",
-  },
-  quickGrid: {
-    flexDirection: I18nManager.isRTL ? "row-reverse" : "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: spacing.s,
-  },
-  quickAction: {
-    width: "48%",
-    minHeight: 88,
-    borderRadius: radius.card,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    ...shadows.card,
-  },
-  quickActionText: {
-    fontSize: 14,
-    color: colors.textPrimary,
-    fontFamily: "NotoKufiArabic-SemiBold",
+    lineHeight: 24,
   },
   statsRow: {
     flexDirection: I18nManager.isRTL ? "row-reverse" : "row",
@@ -340,7 +270,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    minHeight: 92,
+    minHeight: 90,
     borderRadius: radius.card,
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -380,7 +310,6 @@ const styles = StyleSheet.create({
   horizontalListContent: {
     paddingHorizontal: spacing.l,
     gap: spacing.s,
-    flexDirection: I18nManager.isRTL ? "row-reverse" : "row",
   },
   horizontalCard: {
     width: 260,

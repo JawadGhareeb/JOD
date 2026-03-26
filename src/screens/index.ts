@@ -4,6 +4,7 @@ export * from "./campaigns/DonationsListScreen";
 export * from "./campaigns/VolunteeringListScreen";
 export * from "./jobs/JobsScreen";
 export * from "./profile/ProfileScreen";
+export * from "./profile/PublisherProfileScreen";
 export * from "./details/DonationDetailsScreen";
 export * from "./details/VolunteerDetailsScreen";
 export * from "./details/JobDetailsScreen";

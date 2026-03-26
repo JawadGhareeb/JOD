@@ -4,19 +4,20 @@ import { NavigationHelper } from "@/lib/helpers";
 import { AuthRequiredState, PostCard } from "@/src/components";
 import { useAppData } from "@/src/context";
 import { useAuthStatus } from "@/src/hooks/useAuthStatus";
-import { getNextPostStatuses } from "@/src/utils/postHelpers";
+import type { PostStatus } from "@/src/types/posts";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
+
+const statusActions: PostStatus[] = ["published", "in_progress", "completed", "removed"];
 
 const MyPostsScreen = () => {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { isLoading, isAuthenticated } = useAuthStatus();
-  const { posts, currentPublisherId, updatePostStatus, toggleSavePost, savedPostIds } =
-    useAppData();
+  const { posts, currentPublisherId, updatePostStatus } = useAppData();
 
   const myPosts = posts.filter((post) => post.ownerId === currentPublisherId);
 
@@ -51,16 +52,19 @@ const MyPostsScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingTop: 15,
-          paddingBottom: 40,
+          paddingBottom: 24,
         }}
       >
-        <Text
-          size="sm"
-          className={`${isDark ? "text-gray-400" : "text-gray-500"} px-4 mb-2`}
-          rtlAlign="left"
-        >
-          {`إجمالي منشوراتي: ${myPosts.length}`}
-        </Text>
+        <View className="px-4 mb-3">
+          <Text
+            size="sm"
+            weight="semibold"
+            className={`${isDark ? "text-light-50" : "text-gray-700"}`}
+            rtlAlign="left"
+          >
+            {`إجمالي منشوراتي: ${myPosts.length}`}
+          </Text>
+        </View>
 
         {myPosts.length === 0 ? (
           <View className="px-4 py-4">
@@ -78,10 +82,8 @@ const MyPostsScreen = () => {
           <PostCard
             key={post.id}
             post={post}
-            isSaved={savedPostIds.includes(post.id)}
-            statusActions={getNextPostStatuses(post.status)}
-            onPressStatusAction={(nextStatus) => updatePostStatus(post.id, nextStatus)}
-            onToggleSave={() => toggleSavePost(post.id)}
+            statusActions={statusActions}
+            onPressStatusAction={(status) => updatePostStatus(post.id, status)}
           />
         ))}
       </ScrollView>

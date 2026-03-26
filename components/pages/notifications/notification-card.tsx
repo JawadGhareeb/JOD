@@ -2,7 +2,7 @@ import { Card, Logo } from "@/components/ui";
 import Text from "@/components/ui/Text";
 import { useColorScheme } from "nativewind";
 import React from "react";
-import { Platform, View } from "react-native";
+import { I18nManager, Platform, View } from "react-native";
 import { NotificationCardProps } from "./types";
 
 const NotificationCard: React.FC<NotificationCardProps> = ({
@@ -17,7 +17,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
   return (
     <Card
       onPress={onPress}
-      className="mx-4 mb-4 gap-3 flex-row items-center"
+      className={`mx-4 mb-4 gap-3 items-center ${I18nManager.isRTL ? "flex-row-reverse" : "flex-row"}`}
       padding="md"
       radius="xl"
       elevated={Platform.OS === "android"}
@@ -46,7 +46,9 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
         </Text>
       </View>
 
-      {!isRead && <View className="w-2 h-2 bg-primary-400 rounded-full ml-2" />}
+      {!isRead && (
+        <View className={`w-2 h-2 bg-primary-400 rounded-full ${I18nManager.isRTL ? "mr-2" : "ml-2"}`} />
+      )}
     </Card>
   );
 };

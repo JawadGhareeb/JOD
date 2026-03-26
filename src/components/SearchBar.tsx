@@ -17,34 +17,52 @@ export const SearchBar = ({
   onPressFilter,
   activeFiltersCount = 0,
 }: SearchBarProps) => {
-  const filterLabel =
-    activeFiltersCount > 0 ? `فلترة (${activeFiltersCount})` : "فلترة";
+  const isRTL = I18nManager.isRTL;
+  const filterLabel = activeFiltersCount > 0 ? `فلترة (${activeFiltersCount})` : "فلترة";
 
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
-        <Ionicons name="search" size={18} color={colors.textMuted} />
-        <TextInput
-          placeholder={placeholder}
-          value={value}
-          onChangeText={onChangeText}
-          placeholderTextColor={colors.textMuted}
-          style={styles.input}
-        />
-        {value.length > 0 ? (
-          <Pressable onPress={() => onChangeText("")} hitSlop={10}>
-            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
-          </Pressable>
-        ) : null}
+        {isRTL ? (
+          <>
+            {value.length > 0 ? (
+              <Pressable onPress={() => onChangeText("")} hitSlop={10}>
+                <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+              </Pressable>
+            ) : null}
+            <TextInput
+              placeholder={placeholder}
+              value={value}
+              onChangeText={onChangeText}
+              placeholderTextColor={colors.textMuted}
+              style={styles.input}
+              textAlign="right"
+            />
+            <Ionicons name="search" size={18} color={colors.textMuted} />
+          </>
+        ) : (
+          <>
+            <Ionicons name="search" size={18} color={colors.textMuted} />
+            <TextInput
+              placeholder={placeholder}
+              value={value}
+              onChangeText={onChangeText}
+              placeholderTextColor={colors.textMuted}
+              style={styles.input}
+              textAlign="left"
+            />
+            {value.length > 0 ? (
+              <Pressable onPress={() => onChangeText("")} hitSlop={10}>
+                <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+              </Pressable>
+            ) : null}
+          </>
+        )}
       </View>
 
       {onPressFilter ? (
         <Pressable style={styles.filterButton} onPress={onPressFilter}>
-          <Ionicons
-            name={I18nManager.isRTL ? "options-outline" : "options-outline"}
-            size={16}
-            color={colors.primary}
-          />
+          <Ionicons name="options-outline" size={16} color={colors.primary} />
           <Text style={styles.filterText}>{filterLabel}</Text>
         </Pressable>
       ) : null}
@@ -72,6 +90,7 @@ const styles = StyleSheet.create({
     flexDirection: I18nManager.isRTL ? "row-reverse" : "row",
     alignItems: "center",
     gap: spacing.s,
+    direction: I18nManager.isRTL ? "rtl" : "ltr",
   },
   input: {
     flex: 1,

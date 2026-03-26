@@ -15,6 +15,8 @@ export const ROUTES = {
   }),
   jobs: asHref("/(root)/(tabs)/jobs"),
   profile: asHref("/(root)/(tabs)/profile"),
+  publisherProfile: (id: string) =>
+    asHref({ pathname: "/(root)/publisher/[id]", params: { id } }),
   donationDetails: (id: string) =>
     asHref({ pathname: "/(root)/donation/[id]", params: { id } }),
   volunteerDetails: (id: string) =>
