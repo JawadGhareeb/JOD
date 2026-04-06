@@ -5,6 +5,8 @@ module.exports = {
     "./app/**/*.{js,jsx,ts,tsx}",
     "./components/**/*.{js,jsx,ts,tsx}",
     "./providers/**/*.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,jsx,ts,tsx}",
+    "./screens/**/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
   corePlugins: {
@@ -27,6 +29,23 @@ module.exports = {
         "noto-black": ["NotoKufiArabic-Black", "system-ui", "sans-serif"],
       },
       colors: {
+        jod: {
+          background: "#F3F6F8",
+          surface: "#FFFFFF",
+          text: "#12202F",
+          "text-secondary": "#4F6375",
+          muted: "#6E8190",
+          border: "#D4DEE6",
+          primary: "#15616D",
+          "primary-dark": "#0E4A53",
+          accent: "#F08A24",
+          success: "#2E7D32",
+          warning: "#C97A00",
+          danger: "#C23B22",
+          "chip-donation": "#E3F2FD",
+          "chip-volunteer": "#E8F5E9",
+          "chip-job": "#FFF3E0",
+        },
         primary: {
           100: "#eaedef",
           200: "#9faeb8",
