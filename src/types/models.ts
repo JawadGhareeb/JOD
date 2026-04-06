@@ -6,6 +6,10 @@ export type CampaignStatusTag =
   | "اكتملت"
   | `باقي ${number} أيام`;
 
+export type CampaignLifecycleStatus = "active" | "completed";
+
+export type VolunteerJoinStatus = "not_joined" | "pending" | "accepted";
+
 export type WorkType = "دوام كامل" | "دوام جزئي" | "عن بعد";
 
 export interface BaseItem {
@@ -23,6 +27,12 @@ export interface DonationCampaign extends BaseItem {
   endDate: string;
   goalAmount: number;
   raisedAmount: number;
+  campaignStatus: CampaignLifecycleStatus;
+  donationChannelLabel: string;
+  donationChannelUrl?: string;
+  followersCount: number;
+  resultSummary?: string;
+  resultBeneficiaries?: number;
 }
 
 export interface VolunteeringCampaign extends BaseItem {
@@ -30,6 +40,8 @@ export interface VolunteeringCampaign extends BaseItem {
   time: string;
   requiredVolunteers: number;
   joinedVolunteers: number;
+  campaignStatus: CampaignLifecycleStatus;
+  joinStatus: VolunteerJoinStatus;
 }
 
 export interface JobItem extends BaseItem {

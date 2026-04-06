@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, FlatList, StyleSheet, View } from "react-native";
+import { Alert, FlatList, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   CampaignCard,
@@ -10,7 +10,6 @@ import {
 } from "@/src/components";
 import { useAppData } from "@/src/context";
 import { ROUTES } from "@/src/navigation";
-import { colors, spacing } from "@/src/theme";
 import type { VolunteeringFilters } from "@/src/types/filters";
 import {
   filterVolunteering,
@@ -23,11 +22,14 @@ const initialFilters: VolunteeringFilters = {
   seatsAvailable: false,
 };
 
+type ListStatusFilter = "all" | "active" | "completed";
+
 export const VolunteeringListScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<VolunteeringFilters>(initialFilters);
+  const [listStatus, setListStatus] = useState<ListStatusFilter>("all");
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
 
   const { volunteeringCampaigns, userRole, currentPublisherId, closeItem } =
@@ -38,22 +40,23 @@ export const VolunteeringListScreen = () => {
     [volunteeringCampaigns],
   );
 
-  const filteredItems = useMemo(
-    () => filterVolunteering(volunteeringCampaigns, query, filters),
-    [volunteeringCampaigns, query, filters],
-  );
+  const filteredItems = useMemo(() => {
+    const base = filterVolunteering(volunteeringCampaigns, query, filters);
+    if (listStatus === "all") return base;
+    return base.filter((item) => item.campaignStatus === listStatus);
+  }, [volunteeringCampaigns, query, filters, listStatus]);
 
   const activeFilters = volunteeringActiveFiltersCount(filters);
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-jod-background pt-2">
       <FlatList
         data={filteredItems}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{
           paddingBottom: insets.bottom + 72,
-          paddingHorizontal: spacing.l,
-          gap: spacing.m,
+          paddingHorizontal: 16,
+          gap: 12,
         }}
         stickyHeaderIndices={[0]}
         showsVerticalScrollIndicator={false}
@@ -77,13 +80,33 @@ export const VolunteeringListScreen = () => {
           />
         )}
         ListHeaderComponent={
-          <SearchBar
-            value={query}
-            onChangeText={setQuery}
-            placeholder="ابحث في الحملات التطوعية"
-            onPressFilter={() => setIsFilterModalVisible(true)}
-            activeFiltersCount={activeFilters}
-          />
+          <View className="bg-jod-background pb-2">
+            <SearchBar
+              value={query}
+              onChangeText={setQuery}
+              placeholder="ابحث في الحملات التطوعية"
+              onPressFilter={() => setIsFilterModalVisible(true)}
+              activeFiltersCount={activeFilters}
+            />
+
+            <View className="mt-2 flex-row-reverse gap-2">
+              <StatusPill
+                label="الكل"
+                active={listStatus === "all"}
+                onPress={() => setListStatus("all")}
+              />
+              <StatusPill
+                label="نشطة"
+                active={listStatus === "active"}
+                onPress={() => setListStatus("active")}
+              />
+              <StatusPill
+                label="مكتملة"
+                active={listStatus === "completed"}
+                onPress={() => setListStatus("completed")}
+              />
+            </View>
+          </View>
         }
         ListEmptyComponent={<EmptyState message="لا توجد حملات مطابقة" />}
       />
@@ -100,10 +123,29 @@ export const VolunteeringListScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    paddingTop: spacing.s,
-  },
-});
+const StatusPill = ({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) => (
+  <Pressable
+    className={`rounded-full border px-3 py-2 ${
+      active
+        ? "border-jod-primary bg-jod-primary"
+        : "border-jod-border bg-jod-surface"
+    }`}
+    onPress={onPress}
+  >
+    <Text
+      className={`font-noto-semibold text-xs ${
+        active ? "text-white" : "text-jod-text-secondary"
+      }`}
+    >
+      {label}
+    </Text>
+  </Pressable>
+);

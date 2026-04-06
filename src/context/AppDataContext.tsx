@@ -38,6 +38,8 @@ interface AppDataContextValue {
   currentPublisherId: string;
   posts: PostItem[];
   savedPostIds: string[];
+  followedDonationIds: string[];
+  submittedDonationProofIds: string[];
   donations: DonationCampaign[];
   volunteeringCampaigns: VolunteeringCampaign[];
   jobs: JobItem[];
@@ -45,6 +47,9 @@ interface AppDataContextValue {
   createPost: (input: CreatePostInput) => PostItem;
   updatePostStatus: (postId: string, status: PostStatus) => void;
   toggleSavePost: (postId: string) => void;
+  toggleFollowDonation: (campaignId: string) => void;
+  submitDonationProof: (campaignId: string) => void;
+  requestVolunteerJoin: (campaignId: string) => void;
   createDonationCampaign: () => void;
   createVolunteeringCampaign: () => void;
   createJob: () => void;
@@ -61,6 +66,10 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
   const [userRole, setUserRole] = useState<UserRole>("user");
   const [posts, setPosts] = useState<PostItem[]>(mockPosts);
   const [savedPostIds, setSavedPostIds] = useState<string[]>(mockSavedPostIds);
+  const [followedDonationIds, setFollowedDonationIds] = useState<string[]>([]);
+  const [submittedDonationProofIds, setSubmittedDonationProofIds] = useState<
+    string[]
+  >([]);
   const [donations, setDonations] =
     useState<DonationCampaign[]>(mockDonationCampaigns);
   const [volunteeringCampaigns, setVolunteeringCampaigns] =
@@ -95,11 +104,60 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
     );
   }, []);
 
+  const toggleFollowDonation = useCallback((campaignId: string) => {
+    setFollowedDonationIds((prev) => {
+      const isFollowing = prev.includes(campaignId);
+
+      setDonations((donationPrev) =>
+        donationPrev.map((campaign) => {
+          if (campaign.id !== campaignId) return campaign;
+
+          return {
+            ...campaign,
+            followersCount: Math.max(
+              campaign.followersCount + (isFollowing ? -1 : 1),
+              0,
+            ),
+          };
+        }),
+      );
+
+      return isFollowing
+        ? prev.filter((id) => id !== campaignId)
+        : [campaignId, ...prev];
+    });
+  }, []);
+
+  const submitDonationProof = useCallback((campaignId: string) => {
+    setSubmittedDonationProofIds((prev) =>
+      prev.includes(campaignId) ? prev : [campaignId, ...prev],
+    );
+  }, []);
+
+  const requestVolunteerJoin = useCallback((campaignId: string) => {
+    setVolunteeringCampaigns((prev) =>
+      prev.map((campaign) =>
+        campaign.id === campaignId && campaign.joinStatus === "not_joined"
+          ? { ...campaign, joinStatus: "pending" }
+          : campaign,
+      ),
+    );
+  }, []);
+
   const closeItem = useCallback((type: ManagedType, id: string) => {
     if (type === "donation") {
       setDonations((prev) =>
         prev.map((item) =>
-          item.id === id ? { ...item, statusTag: "اكتملت" } : item,
+          item.id === id
+            ? {
+                ...item,
+                statusTag: "اكتملت",
+                campaignStatus: "completed",
+                resultSummary:
+                  item.resultSummary ??
+                  "تم إغلاق الحملة بعد تحقيق أهدافها التشغيلية وتسليم الدعم للمستفيدين.",
+              }
+            : item,
         ),
       );
       return;
@@ -108,7 +166,17 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
     if (type === "volunteer") {
       setVolunteeringCampaigns((prev) =>
         prev.map((item) =>
-          item.id === id ? { ...item, statusTag: "اكتملت" } : item,
+          item.id === id
+            ? {
+                ...item,
+                statusTag: "اكتملت",
+                campaignStatus: "completed",
+                joinStatus:
+                  item.joinStatus === "accepted"
+                    ? item.joinStatus
+                    : "pending",
+              }
+            : item,
         ),
       );
       return;
@@ -133,6 +201,10 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         endDate: "2026-04-05",
         goalAmount: 150000,
         raisedAmount: 12000,
+        campaignStatus: "active",
+        donationChannelLabel: "رابط تبرع خارجي معتمد",
+        donationChannelUrl: "https://jod.app/donate/new",
+        followersCount: 0,
         statusTag: "باقي 20 أيام",
         publisherId: CURRENT_PUBLISHER_ID,
       },
@@ -151,6 +223,8 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         time: "06:00 م",
         requiredVolunteers: 35,
         joinedVolunteers: 4,
+        campaignStatus: "active",
+        joinStatus: "not_joined",
         statusTag: "باقي 18 أيام",
         publisherId: CURRENT_PUBLISHER_ID,
       },
@@ -199,6 +273,8 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       currentPublisherId: CURRENT_PUBLISHER_ID,
       posts,
       savedPostIds,
+      followedDonationIds,
+      submittedDonationProofIds,
       donations,
       volunteeringCampaigns,
       jobs,
@@ -206,6 +282,9 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       createPost,
       updatePostStatus,
       toggleSavePost,
+      toggleFollowDonation,
+      submitDonationProof,
+      requestVolunteerJoin,
       createDonationCampaign,
       createVolunteeringCampaign,
       createJob,
@@ -218,11 +297,16 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       createJob,
       createVolunteeringCampaign,
       donations,
+      followedDonationIds,
       jobs,
       posts,
       publisherStats,
       savedPostIds,
+      submittedDonationProofIds,
+      requestVolunteerJoin,
+      submitDonationProof,
       toggleSavePost,
+      toggleFollowDonation,
       updatePostStatus,
       userRole,
       volunteeringCampaigns,

@@ -1,4 +1,4 @@
-import type { CampaignStatusTag, WorkType } from "./models";
+import type { CampaignLifecycleStatus, WorkType } from "./models";
 
 export type DateRangeFilter = "all" | "week" | "month";
 
@@ -7,7 +7,7 @@ export interface BaseFilters {
 }
 
 export interface DonationFilters extends BaseFilters {
-  status: CampaignStatusTag | null;
+  status: CampaignLifecycleStatus | null;
   minGoal: number | null;
   endingSoon: boolean;
 }

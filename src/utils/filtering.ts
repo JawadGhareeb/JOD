@@ -23,7 +23,8 @@ export const filterDonations = (
       matchesText(campaign.city, normalizedQuery);
 
     const matchesCity = !filters.city || campaign.city === filters.city;
-    const matchesStatus = !filters.status || campaign.statusTag === filters.status;
+    const matchesStatus =
+      !filters.status || campaign.campaignStatus === filters.status;
     const matchesGoal =
       filters.minGoal === null || campaign.goalAmount >= filters.minGoal;
     const matchesEndingSoon =

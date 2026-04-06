@@ -23,4 +23,6 @@ export const ROUTES = {
     asHref({ pathname: "/(root)/volunteer/[id]", params: { id } }),
   jobDetails: (id: string) =>
     asHref({ pathname: "/(root)/job/[id]", params: { id } }),
+  campaignResults: (id: string) =>
+    asHref({ pathname: "/(root)/campaign-results/[id]", params: { id } }),
 } as const;

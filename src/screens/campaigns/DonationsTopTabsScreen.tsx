@@ -1,11 +1,10 @@
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { I18nManager, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CreateSheet, PublisherFab } from "@/src/components";
 import { useAppData } from "@/src/context";
-import { colors, spacing } from "@/src/theme";
 import { DonationsListScreen } from "./DonationsListScreen";
 import { VolunteeringListScreen } from "./VolunteeringListScreen";
 
@@ -33,12 +32,14 @@ export const DonationsTopTabsScreen = () => {
   }, [initialTab]);
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + spacing.s }]}>
-        <Text style={styles.headerTitle}>التبرعات والحملات</Text>
+    <View className="flex-1 bg-jod-background">
+      <View className="bg-jod-background px-4 pb-2" style={{ paddingTop: insets.top + 8 }}>
+        <Text className="text-right font-noto-bold text-xl text-jod-text">
+          التبرعات والحملات
+        </Text>
       </View>
 
-      <View style={styles.tabsRow}>
+      <View className="flex-row-reverse border-b border-jod-border bg-jod-surface px-4">
         <TabButton
           label="التبرعات"
           isActive={activeTab === "donations"}
@@ -51,7 +52,7 @@ export const DonationsTopTabsScreen = () => {
         />
       </View>
 
-      <View style={styles.content}>
+      <View className="flex-1">
         {activeTab === "donations" ? (
           <DonationsListScreen key="donations-tab" />
         ) : (
@@ -83,58 +84,17 @@ const TabButton = ({
   onPress: () => void;
 }) => (
   <Pressable
+    className={`flex-1 items-center justify-center border-b-2 py-3 ${
+      isActive ? "border-jod-primary" : "border-transparent"
+    }`}
     onPress={onPress}
-    style={[styles.tabButton, isActive ? styles.tabButtonActive : null]}
   >
-    <Text style={[styles.tabLabel, isActive ? styles.tabLabelActive : null]}>
+    <Text
+      className={`font-noto-semibold text-sm ${
+        isActive ? "text-jod-primary" : "text-jod-text-secondary"
+      }`}
+    >
       {label}
     </Text>
   </Pressable>
 );
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    paddingHorizontal: spacing.l,
-    paddingBottom: spacing.s,
-    backgroundColor: colors.background,
-  },
-  headerTitle: {
-    fontSize: 20,
-    color: colors.textPrimary,
-    fontFamily: "NotoKufiArabic-Bold",
-    textAlign: "right",
-  },
-  tabsRow: {
-    flexDirection: I18nManager.isRTL ? "row-reverse" : "row",
-    backgroundColor: colors.surface,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    paddingHorizontal: spacing.l,
-  },
-  tabButton: {
-    flex: 1,
-    minHeight: 46,
-    justifyContent: "center",
-    alignItems: "center",
-    borderBottomWidth: 3,
-    borderBottomColor: "transparent",
-  },
-  tabButtonActive: {
-    borderBottomColor: colors.primary,
-  },
-  tabLabel: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontFamily: "NotoKufiArabic-SemiBold",
-  },
-  tabLabelActive: {
-    color: colors.primary,
-  },
-  content: {
-    flex: 1,
-  },
-});
