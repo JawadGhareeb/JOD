@@ -15,6 +15,7 @@ export const ROUTES = {
   }),
   jobs: asHref("/(root)/(tabs)/jobs"),
   myApplications: asHref("/(root)/applications"),
+  notificationPreferences: asHref("/(root)/settings/notification-preferences"),
   profile: asHref("/(root)/(tabs)/profile"),
   publisherProfile: (id: string) =>
     asHref({ pathname: "/(root)/publisher/[id]", params: { id } }),

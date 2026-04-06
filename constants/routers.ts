@@ -18,6 +18,7 @@ export const ROUTES = {
     MY_POSTS: "/(root)/settings/my-posts",
     SAVED_POSTS: "/(root)/settings/saved-posts",
     NOTIFICATIONS: "/(root)/settings/notifications",
+    NOTIFICATION_PREFERENCES: "/(root)/settings/notification-preferences",
     LANGUAGE: "/(root)/settings/language",
     SUPPORT: "/(root)/settings/support",
     PRIVACY: "/(root)/settings/privacy",
@@ -157,6 +158,12 @@ export const ROUTE_OBJECTS: RouteObject[] = [
     path: ROUTES.SETTINGS.NOTIFICATIONS,
     category: "settings",
     title: "الإشعارات",
+    requiresAuth: true,
+  },
+  {
+    path: ROUTES.SETTINGS.NOTIFICATION_PREFERENCES,
+    category: "settings",
+    title: "تفضيلات الإشعارات",
     requiresAuth: true,
   },
   {

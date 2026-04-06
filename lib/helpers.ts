@@ -91,6 +91,10 @@ export class NavigationHelper {
     this.navigate(router, ROUTES.SETTINGS.NOTIFICATIONS);
   }
 
+  static goToNotificationPreferences(router: ReturnType<typeof useRouter>) {
+    this.navigate(router, ROUTES.SETTINGS.NOTIFICATION_PREFERENCES);
+  }
+
   static goToLanguage(router: ReturnType<typeof useRouter>) {
     this.navigate(router, ROUTES.SETTINGS.LANGUAGE);
   }
