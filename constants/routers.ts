@@ -10,6 +10,7 @@ export const ROUTES = {
     HOME: "/(root)/(tabs)/home",
     POSTS: "/(root)/(tabs)/posts",
     CREATE_POST: "/(root)/posts/create",
+    MY_APPLICATIONS: "/(root)/applications",
   },
 
   SETTINGS: {
@@ -93,6 +94,12 @@ export const ROUTE_OBJECTS: RouteObject[] = [
     path: ROUTES.ROOT.CREATE_POST,
     category: "root",
     title: "Create Post",
+    requiresAuth: true,
+  },
+  {
+    path: ROUTES.ROOT.MY_APPLICATIONS,
+    category: "root",
+    title: "طلباتي الوظيفية",
     requiresAuth: true,
   },
   //tabs pages

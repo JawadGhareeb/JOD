@@ -7,6 +7,11 @@ import { useAppData } from "@/src/context";
 import { formatCurrency } from "@/src/utils/formatters";
 
 const quickLinks = [
+  {
+    label: "طلباتي الوظيفية",
+    path: ROUTES.ROOT.MY_APPLICATIONS,
+    icon: "work-history",
+  },
   { label: "الإشعارات", path: ROUTES.SETTINGS.NOTIFICATIONS, icon: "notifications" },
   { label: "المنشورات المحفوظة", path: ROUTES.SETTINGS.SAVED_POSTS, icon: "bookmark" },
   { label: "منشوراتي", path: ROUTES.SETTINGS.MY_POSTS, icon: "article" },

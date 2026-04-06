@@ -14,6 +14,7 @@ export const ROUTES = {
     params: { tab: "volunteering" },
   }),
   jobs: asHref("/(root)/(tabs)/jobs"),
+  myApplications: asHref("/(root)/applications"),
   profile: asHref("/(root)/(tabs)/profile"),
   publisherProfile: (id: string) =>
     asHref({ pathname: "/(root)/publisher/[id]", params: { id } }),

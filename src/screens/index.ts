@@ -3,6 +3,7 @@ export * from "./campaigns/DonationsTopTabsScreen";
 export * from "./campaigns/DonationsListScreen";
 export * from "./campaigns/VolunteeringListScreen";
 export * from "./jobs/JobsScreen";
+export * from "./jobs/MyApplicationsScreen";
 export * from "./profile/ProfileScreen";
 export * from "./profile/PublisherProfileScreen";
 export * from "./details/DonationDetailsScreen";

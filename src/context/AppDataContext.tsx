@@ -14,6 +14,7 @@ import {
 import { mockPosts, mockSavedPostIds } from "@/src/data/mockPosts";
 import type {
   DonationCampaign,
+  JobApplication,
   JobItem,
   UserRole,
   VolunteeringCampaign,
@@ -43,6 +44,7 @@ interface AppDataContextValue {
   donations: DonationCampaign[];
   volunteeringCampaigns: VolunteeringCampaign[];
   jobs: JobItem[];
+  jobApplications: JobApplication[];
   closeItem: (type: ManagedType, id: string) => void;
   createPost: (input: CreatePostInput) => PostItem;
   updatePostStatus: (postId: string, status: PostStatus) => void;
@@ -50,6 +52,7 @@ interface AppDataContextValue {
   toggleFollowDonation: (campaignId: string) => void;
   submitDonationProof: (campaignId: string) => void;
   requestVolunteerJoin: (campaignId: string) => void;
+  applyToJob: (jobId: string) => void;
   createDonationCampaign: () => void;
   createVolunteeringCampaign: () => void;
   createJob: () => void;
@@ -75,6 +78,20 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
   const [volunteeringCampaigns, setVolunteeringCampaigns] =
     useState<VolunteeringCampaign[]>(mockVolunteeringCampaigns);
   const [jobs, setJobs] = useState<JobItem[]>(mockJobs);
+  const [jobApplications, setJobApplications] = useState<JobApplication[]>([
+    {
+      id: "app-j2",
+      jobId: "j2",
+      status: "in_review",
+      appliedAt: "2026-03-01T10:30:00Z",
+    },
+    {
+      id: "app-j3",
+      jobId: "j3",
+      status: "submitted",
+      appliedAt: "2026-03-03T08:10:00Z",
+    },
+  ]);
 
   const createPost = useCallback((input: CreatePostInput): PostItem => {
     const newPost: PostItem = {
@@ -142,6 +159,24 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
           : campaign,
       ),
     );
+  }, []);
+
+  const applyToJob = useCallback((jobId: string) => {
+    setJobApplications((prev) => {
+      if (prev.some((application) => application.jobId === jobId)) {
+        return prev;
+      }
+
+      return [
+        {
+          id: createId("app"),
+          jobId,
+          status: "submitted",
+          appliedAt: new Date().toISOString(),
+        },
+        ...prev,
+      ];
+    });
   }, []);
 
   const closeItem = useCallback((type: ManagedType, id: string) => {
@@ -243,6 +278,13 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         workType: "دوام كامل",
         experienceYears: 2,
         postedAt: "الآن",
+        deadline: "2026-06-01",
+        requirements: [
+          "تنسيق برامج مجتمعية",
+          "متابعة الفرق التشغيلية",
+          "إعداد تقارير أسبوعية",
+        ],
+        employmentTypeLabel: "وظيفة خيرية - دوام كامل",
         statusTag: "باقي 30 أيام",
         publisherId: CURRENT_PUBLISHER_ID,
       },
@@ -278,6 +320,7 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       donations,
       volunteeringCampaigns,
       jobs,
+      jobApplications,
       closeItem,
       createPost,
       updatePostStatus,
@@ -285,6 +328,7 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       toggleFollowDonation,
       submitDonationProof,
       requestVolunteerJoin,
+      applyToJob,
       createDonationCampaign,
       createVolunteeringCampaign,
       createJob,
@@ -299,10 +343,12 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       donations,
       followedDonationIds,
       jobs,
+      jobApplications,
       posts,
       publisherStats,
       savedPostIds,
       submittedDonationProofIds,
+      applyToJob,
       requestVolunteerJoin,
       submitDonationProof,
       toggleSavePost,

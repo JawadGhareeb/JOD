@@ -12,6 +12,12 @@ export type VolunteerJoinStatus = "not_joined" | "pending" | "accepted";
 
 export type WorkType = "دوام كامل" | "دوام جزئي" | "عن بعد";
 
+export type JobApplicationStatus =
+  | "submitted"
+  | "in_review"
+  | "accepted"
+  | "rejected";
+
 export interface BaseItem {
   id: string;
   title: string;
@@ -49,4 +55,14 @@ export interface JobItem extends BaseItem {
   workType: WorkType;
   experienceYears: number;
   postedAt: string;
+  deadline: string;
+  requirements: string[];
+  employmentTypeLabel: string;
+}
+
+export interface JobApplication {
+  id: string;
+  jobId: string;
+  status: JobApplicationStatus;
+  appliedAt: string;
 }

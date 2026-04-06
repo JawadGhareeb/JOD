@@ -1,191 +1,137 @@
-import Dialog from "@/components/ui/Dialog";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBadge, TypeChip } from "@/src/components";
 import { useAppData } from "@/src/context";
 import { ROUTES } from "@/src/navigation";
-import { colors, radius, shadows, spacing } from "@/src/theme";
+
+const applicationStatusLabel = {
+  submitted: "تم الإرسال",
+  in_review: "قيد المراجعة",
+  accepted: "مقبول",
+  rejected: "مرفوض",
+} as const;
 
 export const JobDetailsScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ id: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const [isApplyDialogVisible, setIsApplyDialogVisible] = useState(false);
 
-  const { jobs, currentPublisherId } = useAppData();
+  const { jobs, currentPublisherId, jobApplications, applyToJob } = useAppData();
   const job = jobs.find((item) => item.id === id);
 
   if (!job) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.title}>الوظيفة غير موجودة</Text>
+      <View className="flex-1 items-center justify-center bg-jod-background px-4">
+        <Text className="text-right font-noto-bold text-lg text-jod-text">
+          الوظيفة غير موجودة
+        </Text>
       </View>
     );
   }
 
   const publisherName =
     job.orgName || (job.publisherId === currentPublisherId ? "الناشر الحالي" : "جهة خيرية");
+  const application = jobApplications.find((item) => item.jobId === job.id);
+
+  const onApply = () => {
+    if (application) {
+      Alert.alert("تم التقديم مسبقاً", `حالة طلبك الحالية: ${applicationStatusLabel[application.status]}`);
+      return;
+    }
+
+    applyToJob(job.id);
+    Alert.alert("تم التقديم", "تم إرسال طلبك بنجاح ويمكنك متابعة حالته من صفحة طلباتي.");
+  };
 
   return (
-    <>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{
-          paddingTop: insets.top + spacing.s,
-          paddingBottom: spacing.xl,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.inner}>
-          <View style={styles.headRow}>
-            <TypeChip type="job" />
-            <StatusBadge status={job.statusTag} />
-          </View>
-
-          <Text style={styles.title}>{job.title}</Text>
-          <Text style={styles.description}>{job.description}</Text>
-
-          <Pressable
-            style={styles.publisherCard}
-            onPress={() => router.push(ROUTES.publisherProfile(job.publisherId))}
-          >
-            <View style={styles.publisherTextWrap}>
-              <Text style={styles.publisherName}>{publisherName}</Text>
-              <Text style={styles.publisherHint}>الجهة الناشرة - عرض الملف والمنشورات</Text>
-            </View>
-            <Text style={styles.publisherAction}>عرض الملف</Text>
-          </Pressable>
-
-          <View style={styles.card}>
-            <Text style={styles.meta}>{`الجهة: ${job.orgName}`}</Text>
-            <Text style={styles.meta}>{`المدينة: ${job.city}`}</Text>
-            <Text style={styles.meta}>{`نوع العمل: ${job.workType}`}</Text>
-            <Text style={styles.meta}>{`سنوات الخبرة: ${job.experienceYears}`}</Text>
-            <Text style={styles.meta}>{`تاريخ النشر: ${job.postedAt}`}</Text>
-          </View>
-
-          <Pressable
-            style={styles.primaryButton}
-            onPress={() => setIsApplyDialogVisible(true)}
-          >
-            <Text style={styles.primaryButtonText}>قدّم الآن</Text>
-          </Pressable>
+    <ScrollView
+      className="flex-1 bg-jod-background"
+      contentContainerStyle={{
+        paddingTop: insets.top + 8,
+        paddingBottom: insets.bottom + 24,
+      }}
+      showsVerticalScrollIndicator={false}
+    >
+      <View className="gap-4 px-4">
+        <View className="flex-row-reverse items-center gap-2">
+          <TypeChip type="job" />
+          <StatusBadge status={job.statusTag} />
         </View>
-      </ScrollView>
 
-      <Dialog
-        visible={isApplyDialogVisible}
-        onClose={() => setIsApplyDialogVisible(false)}
-        title="تأكيد التقديم"
-        message="تم تجهيز طلبك للتقديم على هذه الوظيفة. هل تريد المتابعة؟"
-        buttons={[
-          {
-            text: "إلغاء",
-            variant: "outline",
-            onPress: () => setIsApplyDialogVisible(false),
-          },
-          {
-            text: "متابعة",
-            onPress: () => setIsApplyDialogVisible(false),
-          },
-        ]}
-      />
-    </>
+        <Text className="text-right font-noto-bold text-xl text-jod-text">{job.title}</Text>
+        <Text className="text-right font-noto leading-7 text-jod-text-secondary">
+          {job.description}
+        </Text>
+
+        <Pressable
+          className="flex-row-reverse items-center justify-between rounded-xl border border-jod-border bg-jod-surface p-4"
+          onPress={() => router.push(ROUTES.publisherProfile(job.publisherId))}
+        >
+          <View className="flex-1">
+            <Text className="text-right font-noto-bold text-sm text-jod-text">
+              {publisherName}
+            </Text>
+            <Text className="text-right font-noto text-xs text-jod-muted">
+              الجهة الناشرة - عرض الملف والمنشورات
+            </Text>
+          </View>
+          <Text className="font-noto-semibold text-xs text-jod-primary">عرض الملف</Text>
+        </Pressable>
+
+        <View className="gap-2 rounded-xl border border-jod-border bg-jod-surface p-4">
+          <Text className="text-right font-noto text-sm text-jod-text">{`الجهة: ${job.orgName}`}</Text>
+          <Text className="text-right font-noto text-sm text-jod-text">{`المدينة: ${job.city}`}</Text>
+          <Text className="text-right font-noto text-sm text-jod-text">{`نوع العمل: ${job.workType}`}</Text>
+          <Text className="text-right font-noto text-sm text-jod-text">{`سنوات الخبرة: ${job.experienceYears}`}</Text>
+          <Text className="text-right font-noto text-sm text-jod-text">{`نوع الوظيفة: ${job.employmentTypeLabel}`}</Text>
+          <Text className="text-right font-noto text-sm text-jod-text">{`تاريخ النشر: ${job.postedAt}`}</Text>
+          <Text className="text-right font-noto text-sm text-jod-text">{`آخر موعد للتقديم: ${new Date(job.deadline).toLocaleDateString("ar-SA")}`}</Text>
+        </View>
+
+        <View className="gap-2 rounded-xl border border-jod-border bg-jod-surface p-4">
+          <Text className="text-right font-noto-semibold text-sm text-jod-text">
+            المتطلبات
+          </Text>
+          {job.requirements.map((requirement) => (
+            <Text
+              key={requirement}
+              className="text-right font-noto text-sm leading-7 text-jod-text-secondary"
+            >
+              • {requirement}
+            </Text>
+          ))}
+        </View>
+
+        {application ? (
+          <View className="rounded-xl border border-jod-border bg-[#F7FAFD] p-4">
+            <Text className="text-right font-noto-semibold text-sm text-jod-primary">
+              حالة طلبك: {applicationStatusLabel[application.status]}
+            </Text>
+          </View>
+        ) : null}
+
+        <Pressable
+          className={`items-center justify-center rounded-xl px-4 py-3 ${
+            application ? "bg-[#C8D5DB]" : "bg-jod-primary"
+          }`}
+          onPress={onApply}
+        >
+          <Text className="font-noto-bold text-sm text-white">
+            {application ? "تم التقديم" : "قدّم الآن"}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          className="items-center justify-center rounded-xl border border-jod-border bg-jod-surface px-4 py-3"
+          onPress={() => router.push(ROUTES.myApplications)}
+        >
+          <Text className="font-noto-semibold text-sm text-jod-text">
+            عرض طلباتي
+          </Text>
+        </Pressable>
+      </View>
+    </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  inner: {
-    paddingHorizontal: spacing.l,
-    gap: spacing.m,
-  },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
-  headRow: {
-    flexDirection: "row-reverse",
-    gap: spacing.s,
-  },
-  title: {
-    fontSize: 20,
-    color: colors.textPrimary,
-    textAlign: "right",
-    fontFamily: "NotoKufiArabic-Bold",
-  },
-  description: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 24,
-    textAlign: "right",
-    fontFamily: "NotoKufiArabic-Regular",
-  },
-  publisherCard: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: "#F7FAFD",
-    padding: spacing.m,
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    justifyContent: "space-between",
-    ...shadows.card,
-  },
-  publisherTextWrap: {
-    flex: 1,
-    gap: 2,
-  },
-  publisherName: {
-    fontSize: 14,
-    color: colors.textPrimary,
-    textAlign: "right",
-    fontFamily: "NotoKufiArabic-Bold",
-  },
-  publisherHint: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    textAlign: "right",
-    fontFamily: "NotoKufiArabic-Regular",
-  },
-  publisherAction: {
-    fontSize: 12,
-    color: colors.primary,
-    fontFamily: "NotoKufiArabic-SemiBold",
-  },
-  card: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    padding: spacing.l,
-    gap: spacing.s,
-    ...shadows.card,
-  },
-  meta: {
-    fontSize: 13,
-    color: colors.textPrimary,
-    textAlign: "right",
-    fontFamily: "NotoKufiArabic-Regular",
-  },
-  primaryButton: {
-    minHeight: 46,
-    borderRadius: radius.card,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  primaryButtonText: {
-    fontSize: 14,
-    color: "#FFFFFF",
-    fontFamily: "NotoKufiArabic-Bold",
-  },
-});
