@@ -15,6 +15,7 @@ export const ROUTES = {
   }),
   jobs: asHref("/(root)/(tabs)/jobs"),
   myApplications: asHref("/(root)/applications"),
+  myReports: asHref("/(root)/reports"),
   notificationPreferences: asHref("/(root)/settings/notification-preferences"),
   profile: asHref("/(root)/(tabs)/profile"),
   publisherProfile: (id: string) =>
@@ -27,4 +28,9 @@ export const ROUTES = {
     asHref({ pathname: "/(root)/job/[id]", params: { id } }),
   campaignResults: (id: string) =>
     asHref({ pathname: "/(root)/campaign-results/[id]", params: { id } }),
+  reportIssue: (entityType: string, entityId: string) =>
+    asHref({
+      pathname: "/(root)/report/create",
+      params: { entityType, entityId },
+    }),
 } as const;

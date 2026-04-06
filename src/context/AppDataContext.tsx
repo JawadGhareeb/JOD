@@ -23,6 +23,7 @@ import type {
   NotificationItem,
   NotificationPreferences,
 } from "@/src/types/notifications";
+import type { BlockedEntity, ReportItem, ReportStatus } from "@/src/types/reports";
 import type {
   CreatePostInput,
   PostItem,
@@ -49,6 +50,8 @@ interface AppDataContextValue {
   volunteeringCampaigns: VolunteeringCampaign[];
   jobs: JobItem[];
   jobApplications: JobApplication[];
+  reports: ReportItem[];
+  blockedEntities: BlockedEntity[];
   notifications: NotificationItem[];
   notificationPreferences: NotificationPreferences;
   closeItem: (type: ManagedType, id: string) => void;
@@ -66,6 +69,17 @@ interface AppDataContextValue {
     value: boolean,
   ) => void;
   setDoNotDisturb: (value: boolean) => void;
+  submitReport: (input: {
+    title: string;
+    description: string;
+    entityType: ReportItem["entityType"];
+    entityId: string;
+  }) => void;
+  blockEntity: (input: {
+    entityType: BlockedEntity["entityType"];
+    id: string;
+  }) => void;
+  updateReportStatus: (id: string, status: ReportStatus) => void;
   createDonationCampaign: () => void;
   createVolunteeringCampaign: () => void;
   createJob: () => void;
@@ -105,6 +119,27 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       appliedAt: "2026-03-03T08:10:00Z",
     },
   ]);
+  const [reports, setReports] = useState<ReportItem[]>([
+    {
+      id: "rep-1",
+      title: "بلاغ على حملة",
+      description: "يوجد محتوى مضلل في تحديث الحملة.",
+      status: "waiting_response",
+      entityType: "campaign",
+      entityId: "d2",
+      createdAt: "2026-04-01T14:30:00Z",
+    },
+    {
+      id: "rep-2",
+      title: "بلاغ على وظيفة",
+      description: "تفاصيل الإعلان غير مكتملة.",
+      status: "in_progress",
+      entityType: "job",
+      entityId: "j3",
+      createdAt: "2026-04-03T10:20:00Z",
+    },
+  ]);
+  const [blockedEntities, setBlockedEntities] = useState<BlockedEntity[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     {
       id: "ntf-1",
@@ -267,6 +302,56 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
     setNotificationPreferences((prev) => ({ ...prev, doNotDisturb: value }));
   }, []);
 
+  const submitReport = useCallback(
+    (input: {
+      title: string;
+      description: string;
+      entityType: ReportItem["entityType"];
+      entityId: string;
+    }) => {
+      setReports((prev) => [
+        {
+          id: createId("rep"),
+          title: input.title,
+          description: input.description,
+          status: "new",
+          entityType: input.entityType,
+          entityId: input.entityId,
+          createdAt: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
+    },
+    [],
+  );
+
+  const blockEntity = useCallback(
+    (input: { entityType: BlockedEntity["entityType"]; id: string }) => {
+      setBlockedEntities((prev) => {
+        const exists = prev.some(
+          (item) => item.id === input.id && item.entityType === input.entityType,
+        );
+        if (exists) return prev;
+
+        return [
+          {
+            id: input.id,
+            entityType: input.entityType,
+            blockedAt: new Date().toISOString(),
+          },
+          ...prev,
+        ];
+      });
+    },
+    [],
+  );
+
+  const updateReportStatus = useCallback((id: string, status: ReportStatus) => {
+    setReports((prev) =>
+      prev.map((report) => (report.id === id ? { ...report, status } : report)),
+    );
+  }, []);
+
   const closeItem = useCallback((type: ManagedType, id: string) => {
     if (type === "donation") {
       setDonations((prev) =>
@@ -409,6 +494,8 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       volunteeringCampaigns,
       jobs,
       jobApplications,
+      reports,
+      blockedEntities,
       notifications,
       notificationPreferences,
       closeItem,
@@ -423,6 +510,9 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       markAllNotificationsRead,
       updateNotificationPreference,
       setDoNotDisturb,
+      submitReport,
+      blockEntity,
+      updateReportStatus,
       createDonationCampaign,
       createVolunteeringCampaign,
       createJob,
@@ -438,6 +528,8 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       followedDonationIds,
       jobs,
       jobApplications,
+      reports,
+      blockedEntities,
       notifications,
       notificationPreferences,
       posts,
@@ -449,6 +541,9 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       markAllNotificationsRead,
       updateNotificationPreference,
       setDoNotDisturb,
+      submitReport,
+      blockEntity,
+      updateReportStatus,
       requestVolunteerJoin,
       submitDonationProof,
       toggleSavePost,

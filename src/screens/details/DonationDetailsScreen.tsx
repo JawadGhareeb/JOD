@@ -26,6 +26,7 @@ export const DonationDetailsScreen = () => {
     submittedDonationProofIds,
     toggleFollowDonation,
     submitDonationProof,
+    blockEntity,
   } = useAppData();
 
   const donation = donations.find((item) => item.id === id);
@@ -186,6 +187,25 @@ export const DonationDetailsScreen = () => {
           ملاحظة: منصة جود ليست بوابة دفع مباشرة. سيتم تحويلك إلى القناة المعتمدة من
           الجهة الناشرة لإتمام التبرع.
         </Text>
+
+        <View className="flex-row-reverse gap-2">
+          <Pressable
+            className="flex-1 items-center justify-center rounded-xl border border-jod-border bg-jod-surface px-4 py-3"
+            onPress={() => router.push(ROUTES.reportIssue("campaign", donation.id))}
+          >
+            <Text className="font-noto-semibold text-sm text-jod-text">إبلاغ</Text>
+          </Pressable>
+
+          <Pressable
+            className="flex-1 items-center justify-center rounded-xl border border-jod-danger bg-jod-surface px-4 py-3"
+            onPress={() => {
+              blockEntity({ entityType: "organization", id: donation.publisherId });
+              Alert.alert("تم الحظر", "تم حظر الجهة ولن تظهر لك محتوياتها.");
+            }}
+          >
+            <Text className="font-noto-semibold text-sm text-jod-danger">حظر الجهة</Text>
+          </Pressable>
+        </View>
       </View>
     </ScrollView>
   );

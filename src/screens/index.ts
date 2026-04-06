@@ -8,6 +8,8 @@ export * from "./notifications/NotificationsCenterScreen";
 export * from "./notifications/NotificationPreferencesScreen";
 export * from "./profile/ProfileScreen";
 export * from "./profile/PublisherProfileScreen";
+export * from "./reports/MyReportsScreen";
+export * from "./reports/ReportIssueScreen";
 export * from "./details/DonationDetailsScreen";
 export * from "./details/VolunteerDetailsScreen";
 export * from "./details/JobDetailsScreen";

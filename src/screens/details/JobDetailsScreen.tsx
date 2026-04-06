@@ -18,7 +18,8 @@ export const JobDetailsScreen = () => {
   const params = useLocalSearchParams<{ id: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
-  const { jobs, currentPublisherId, jobApplications, applyToJob } = useAppData();
+  const { jobs, currentPublisherId, jobApplications, applyToJob, blockEntity } =
+    useAppData();
   const job = jobs.find((item) => item.id === id);
 
   if (!job) {
@@ -131,6 +132,25 @@ export const JobDetailsScreen = () => {
             عرض طلباتي
           </Text>
         </Pressable>
+
+        <View className="flex-row-reverse gap-2">
+          <Pressable
+            className="flex-1 items-center justify-center rounded-xl border border-jod-border bg-jod-surface px-4 py-3"
+            onPress={() => router.push(ROUTES.reportIssue("job", job.id))}
+          >
+            <Text className="font-noto-semibold text-sm text-jod-text">إبلاغ</Text>
+          </Pressable>
+
+          <Pressable
+            className="flex-1 items-center justify-center rounded-xl border border-jod-danger bg-jod-surface px-4 py-3"
+            onPress={() => {
+              blockEntity({ entityType: "organization", id: job.publisherId });
+              Alert.alert("تم الحظر", "تم حظر الجهة ولن تظهر لك وظائفها.");
+            }}
+          >
+            <Text className="font-noto-semibold text-sm text-jod-danger">حظر الجهة</Text>
+          </Pressable>
+        </View>
       </View>
     </ScrollView>
   );

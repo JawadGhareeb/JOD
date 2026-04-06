@@ -29,6 +29,7 @@ export const VolunteerDetailsScreen = () => {
     jobs,
     currentPublisherId,
     requestVolunteerJoin,
+    blockEntity,
   } = useAppData();
 
   const campaign = volunteeringCampaigns.find((item) => item.id === id);
@@ -127,6 +128,25 @@ export const VolunteerDetailsScreen = () => {
             {joinButtonLabel[campaign.joinStatus]}
           </Text>
         </Pressable>
+
+        <View className="flex-row-reverse gap-2">
+          <Pressable
+            className="flex-1 items-center justify-center rounded-xl border border-jod-border bg-jod-surface px-4 py-3"
+            onPress={() => router.push(ROUTES.reportIssue("campaign", campaign.id))}
+          >
+            <Text className="font-noto-semibold text-sm text-jod-text">إبلاغ</Text>
+          </Pressable>
+
+          <Pressable
+            className="flex-1 items-center justify-center rounded-xl border border-jod-danger bg-jod-surface px-4 py-3"
+            onPress={() => {
+              blockEntity({ entityType: "organization", id: campaign.publisherId });
+              Alert.alert("تم الحظر", "تم حظر الجهة ولن تظهر لك محتوياتها.");
+            }}
+          >
+            <Text className="font-noto-semibold text-sm text-jod-danger">حظر الجهة</Text>
+          </Pressable>
+        </View>
       </View>
     </ScrollView>
   );

@@ -11,6 +11,8 @@ export const ROUTES = {
     POSTS: "/(root)/(tabs)/posts",
     CREATE_POST: "/(root)/posts/create",
     MY_APPLICATIONS: "/(root)/applications",
+    MY_REPORTS: "/(root)/reports",
+    REPORT_CREATE: "/(root)/report/create",
   },
 
   SETTINGS: {
@@ -101,6 +103,18 @@ export const ROUTE_OBJECTS: RouteObject[] = [
     path: ROUTES.ROOT.MY_APPLICATIONS,
     category: "root",
     title: "طلباتي الوظيفية",
+    requiresAuth: true,
+  },
+  {
+    path: ROUTES.ROOT.MY_REPORTS,
+    category: "root",
+    title: "بلاغاتي",
+    requiresAuth: true,
+  },
+  {
+    path: ROUTES.ROOT.REPORT_CREATE,
+    category: "root",
+    title: "إرسال بلاغ",
     requiresAuth: true,
   },
   //tabs pages

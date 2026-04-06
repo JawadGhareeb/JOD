@@ -40,6 +40,21 @@ export class NavigationHelper {
     this.navigate(router, ROUTES.ROOT.CREATE_POST);
   }
 
+  static goToMyReports(router: ReturnType<typeof useRouter>) {
+    this.navigate(router, ROUTES.ROOT.MY_REPORTS);
+  }
+
+  static goToReportCreate(
+    router: ReturnType<typeof useRouter>,
+    params?: { entityType?: string; entityId?: string },
+  ) {
+    this.navigate(
+      router,
+      ROUTES.ROOT.REPORT_CREATE,
+      params ? { params } : undefined,
+    );
+  }
+
   static goToDonations(router: ReturnType<typeof useRouter>) {
     this.navigate(router, ROUTES.TABS.DONATIONS);
   }

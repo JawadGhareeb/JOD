@@ -12,6 +12,7 @@ const quickLinks = [
     path: ROUTES.ROOT.MY_APPLICATIONS,
     icon: "work-history",
   },
+  { label: "بلاغاتي", path: ROUTES.ROOT.MY_REPORTS, icon: "flag" },
   { label: "الإشعارات", path: ROUTES.SETTINGS.NOTIFICATIONS, icon: "notifications" },
   { label: "المنشورات المحفوظة", path: ROUTES.SETTINGS.SAVED_POSTS, icon: "bookmark" },
   { label: "منشوراتي", path: ROUTES.SETTINGS.MY_POSTS, icon: "article" },

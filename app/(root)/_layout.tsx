@@ -16,6 +16,8 @@ export default function RootLayout() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="posts/create/index" options={{ headerShown: false }} />
       <Stack.Screen name="applications/index" options={{ headerShown: false }} />
+      <Stack.Screen name="reports/index" options={{ headerShown: false }} />
+      <Stack.Screen name="report/create" options={{ headerShown: false }} />
       <Stack.Screen name="campaign-results/[id]" options={{ headerShown: false }} />
       <Stack.Screen
         name="settings/notification-preferences/index"
