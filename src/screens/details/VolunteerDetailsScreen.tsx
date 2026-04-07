@@ -1,21 +1,10 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBadge, TypeChip } from "@/src/components";
 import { useAppData } from "@/src/context";
 import { ROUTES } from "@/src/navigation";
-
-const joinStatusLabel = {
-  not_joined: "لم تنضم بعد",
-  pending: "طلبك قيد المراجعة",
-  accepted: "تم قبول طلبك",
-} as const;
-
-const joinButtonLabel = {
-  not_joined: "انضم للحملة",
-  pending: "قيد المراجعة",
-  accepted: "تم القبول",
-} as const;
+import { colors, radius, shadows, spacing } from "@/src/theme";
 
 export const VolunteerDetailsScreen = () => {
   const router = useRouter();
@@ -23,23 +12,13 @@ export const VolunteerDetailsScreen = () => {
   const params = useLocalSearchParams<{ id: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
-  const {
-    volunteeringCampaigns,
-    donations,
-    jobs,
-    currentPublisherId,
-    requestVolunteerJoin,
-    blockEntity,
-  } = useAppData();
-
+  const { volunteeringCampaigns, donations, jobs, currentPublisherId } = useAppData();
   const campaign = volunteeringCampaigns.find((item) => item.id === id);
 
   if (!campaign) {
     return (
-      <View className="flex-1 items-center justify-center bg-jod-background px-4">
-        <Text className="text-right font-noto-bold text-lg text-jod-text">
-          الحملة غير موجودة
-        </Text>
+      <View style={styles.centered}>
+        <Text style={styles.title}>الحملة غير موجودة</Text>
       </View>
     );
   }
@@ -56,98 +35,144 @@ export const VolunteerDetailsScreen = () => {
     fallbackPublisherName ||
     (campaign.publisherId === currentPublisherId ? "الناشر الحالي" : "جهة خيرية");
 
-  const isJoinDisabled =
-    campaign.joinStatus === "pending" || campaign.joinStatus === "accepted";
-
-  const onJoinPress = () => {
-    if (campaign.joinStatus === "not_joined") {
-      requestVolunteerJoin(campaign.id);
-      Alert.alert("تم إرسال الطلب", "تم إرسال طلب الانضمام للحملة التطوعية.");
-      return;
-    }
-  };
-
   return (
     <ScrollView
-      className="flex-1 bg-jod-background"
+      style={styles.container}
       contentContainerStyle={{
-        paddingTop: insets.top + 8,
-        paddingBottom: insets.bottom + 24,
+        paddingTop: insets.top + spacing.s,
+        paddingBottom: spacing.xl,
       }}
       showsVerticalScrollIndicator={false}
     >
-      <View className="gap-4 px-4">
-        <View className="flex-row-reverse items-center gap-2">
+      <View style={styles.inner}>
+        <View style={styles.headRow}>
           <TypeChip type="volunteer" />
           <StatusBadge status={campaign.statusTag} />
         </View>
 
-        <Text className="text-right font-noto-bold text-xl text-jod-text">
-          {campaign.title}
-        </Text>
-        <Text className="text-right font-noto leading-7 text-jod-text-secondary">
-          {campaign.description}
-        </Text>
+        <Text style={styles.title}>{campaign.title}</Text>
+        <Text style={styles.description}>{campaign.description}</Text>
 
         <Pressable
-          className="flex-row-reverse items-center justify-between rounded-xl border border-jod-border bg-jod-surface p-4"
+          style={styles.publisherCard}
           onPress={() => router.push(ROUTES.publisherProfile(campaign.publisherId))}
         >
-          <View className="flex-1">
-            <Text className="text-right font-noto-bold text-sm text-jod-text">
-              {publisherName}
-            </Text>
-            <Text className="text-right font-noto text-xs text-jod-muted">
-              الجهة الناشرة - عرض الملف والمنشورات
-            </Text>
+          <View style={styles.publisherTextWrap}>
+            <Text style={styles.publisherName}>{publisherName}</Text>
+            <Text style={styles.publisherHint}>الجهة الناشرة - عرض الملف والمنشورات</Text>
           </View>
-          <Text className="font-noto-semibold text-xs text-jod-primary">عرض الملف</Text>
+          <Text style={styles.publisherAction}>عرض الملف</Text>
         </Pressable>
 
-        <View className="gap-2 rounded-xl border border-jod-border bg-jod-surface p-4">
-          <Text className="text-right font-noto text-sm text-jod-text">{`الحالة: ${
-            campaign.campaignStatus === "active" ? "نشطة" : "مكتملة"
-          }`}</Text>
-          <Text className="text-right font-noto text-sm text-jod-text">{`المدينة: ${campaign.city}`}</Text>
-          <Text className="text-right font-noto text-sm text-jod-text">{`التاريخ: ${campaign.date}`}</Text>
-          <Text className="text-right font-noto text-sm text-jod-text">{`الوقت: ${campaign.time}`}</Text>
-          <Text className="text-right font-noto text-sm text-jod-text">{`المطلوب: ${campaign.requiredVolunteers}`}</Text>
-          <Text className="text-right font-noto text-sm text-jod-text">{`المنضمون: ${campaign.joinedVolunteers}`}</Text>
-          <Text className="text-right font-noto text-sm text-jod-text">{`المقاعد المتبقية: ${remainingSeats}`}</Text>
-          <Text className="text-right font-noto-semibold text-sm text-jod-primary">{`حالة الطلب: ${joinStatusLabel[campaign.joinStatus]}`}</Text>
+        <View style={styles.card}>
+          <Text style={styles.meta}>{`المدينة: ${campaign.city}`}</Text>
+          <Text style={styles.meta}>{`التاريخ: ${campaign.date}`}</Text>
+          <Text style={styles.meta}>{`الوقت: ${campaign.time}`}</Text>
+          <Text style={styles.meta}>{`المطلوب: ${campaign.requiredVolunteers}`}</Text>
+          <Text style={styles.meta}>{`المنضمون: ${campaign.joinedVolunteers}`}</Text>
+          <Text style={styles.meta}>{`المقاعد المتبقية: ${remainingSeats}`}</Text>
         </View>
 
         <Pressable
-          disabled={isJoinDisabled}
-          className={`items-center justify-center rounded-xl px-4 py-3 ${
-            isJoinDisabled ? "bg-[#C8D5DB]" : "bg-jod-primary"
-          }`}
-          onPress={onJoinPress}
+          style={styles.primaryButton}
+          onPress={() => Alert.alert("الانضمام", "تم إرسال طلب الانضمام")}
         >
-          <Text className="font-noto-bold text-sm text-white">
-            {joinButtonLabel[campaign.joinStatus]}
-          </Text>
+          <Text style={styles.primaryButtonText}>انضم للحملة</Text>
         </Pressable>
-
-        <View className="flex-row-reverse gap-2">
-          <Pressable
-            className="flex-1 items-center justify-center rounded-xl border border-jod-border bg-jod-surface px-4 py-3"
-            onPress={() => router.push(ROUTES.reportIssue("campaign", campaign.id))}
-          >
-            <Text className="font-noto-semibold text-sm text-jod-text">إبلاغ</Text>
-          </Pressable>
-
-          <Pressable
-            className="flex-1 items-center justify-center rounded-xl border border-jod-danger bg-jod-surface px-4 py-3"
-            onPress={() => {
-              blockEntity({ entityType: "organization", id: campaign.publisherId });
-              Alert.alert("تم الحظر", "تم حظر الجهة ولن تظهر لك محتوياتها.");
-            }}
-          >
-            <Text className="font-noto-semibold text-sm text-jod-danger">حظر الجهة</Text>
-          </Pressable>
-        </View>
       </View>
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  inner: {
+    paddingHorizontal: spacing.l,
+    gap: spacing.m,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.background,
+  },
+  headRow: {
+    flexDirection: "row-reverse",
+    gap: spacing.s,
+  },
+  title: {
+    fontSize: 20,
+    color: colors.textPrimary,
+    textAlign: "right",
+    fontFamily: "NotoKufiArabic-Bold",
+  },
+  description: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 24,
+    textAlign: "right",
+    fontFamily: "NotoKufiArabic-Regular",
+  },
+  publisherCard: {
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: "#F7FAFD",
+    padding: spacing.m,
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "space-between",
+    ...shadows.card,
+  },
+  publisherTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  publisherName: {
+    fontSize: 14,
+    color: colors.textPrimary,
+    textAlign: "right",
+    fontFamily: "NotoKufiArabic-Bold",
+  },
+  publisherHint: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    textAlign: "right",
+    fontFamily: "NotoKufiArabic-Regular",
+  },
+  publisherAction: {
+    fontSize: 12,
+    color: colors.primary,
+    fontFamily: "NotoKufiArabic-SemiBold",
+  },
+  card: {
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    padding: spacing.l,
+    gap: spacing.s,
+    ...shadows.card,
+  },
+  meta: {
+    fontSize: 13,
+    color: colors.textPrimary,
+    textAlign: "right",
+    fontFamily: "NotoKufiArabic-Regular",
+  },
+  primaryButton: {
+    minHeight: 46,
+    borderRadius: radius.card,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  primaryButtonText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontFamily: "NotoKufiArabic-Bold",
+  },
+});

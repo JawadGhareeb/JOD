@@ -1,16 +1,12 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Alert, Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBadge, TypeChip } from "@/src/components";
 import { useAppData } from "@/src/context";
 import { ROUTES } from "@/src/navigation";
+import { colors, radius, shadows, spacing } from "@/src/theme";
 import { daysUntil } from "@/src/utils/date";
 import { formatCurrency, toPercent } from "@/src/utils/formatters";
-
-const lifecycleLabel: Record<"active" | "completed", string> = {
-  active: "نشطة",
-  completed: "مكتملة",
-};
 
 export const DonationDetailsScreen = () => {
   const router = useRouter();
@@ -18,33 +14,19 @@ export const DonationDetailsScreen = () => {
   const params = useLocalSearchParams<{ id: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
-  const {
-    donations,
-    jobs,
-    currentPublisherId,
-    followedDonationIds,
-    submittedDonationProofIds,
-    toggleFollowDonation,
-    submitDonationProof,
-    blockEntity,
-  } = useAppData();
-
+  const { donations, jobs, currentPublisherId } = useAppData();
   const donation = donations.find((item) => item.id === id);
 
   if (!donation) {
     return (
-      <View className="flex-1 items-center justify-center bg-jod-background px-4">
-        <Text className="text-right font-noto-bold text-lg text-jod-text">
-          الحملة غير موجودة
-        </Text>
+      <View style={styles.centered}>
+        <Text style={styles.title}>الحملة غير موجودة</Text>
       </View>
     );
   }
 
   const percent = toPercent(donation.raisedAmount, donation.goalAmount);
   const remainingDays = daysUntil(donation.endDate);
-  const isFollowing = followedDonationIds.includes(donation.id);
-  const hasProof = submittedDonationProofIds.includes(donation.id);
   const fallbackPublisherName = jobs.find(
     (item) => item.publisherId === donation.publisherId,
   )?.orgName;
@@ -53,160 +35,143 @@ export const DonationDetailsScreen = () => {
     fallbackPublisherName ||
     (donation.publisherId === currentPublisherId ? "الناشر الحالي" : "جهة خيرية");
 
-  const openDonationChannel = async () => {
-    if (!donation.donationChannelUrl) {
-      Alert.alert("قناة التبرع", `قناة التبرع: ${donation.donationChannelLabel}`);
-      return;
-    }
-
-    const canOpen = await Linking.canOpenURL(donation.donationChannelUrl);
-    if (!canOpen) {
-      Alert.alert("تعذر فتح الرابط", donation.donationChannelLabel);
-      return;
-    }
-
-    await Linking.openURL(donation.donationChannelUrl);
-  };
-
-  const onSubmitProof = () => {
-    submitDonationProof(donation.id);
-    Alert.alert("تم الإرسال", "تم إرسال إثبات التبرع وسيظهر في سجل الحملة.");
-  };
-
   return (
     <ScrollView
-      className="flex-1 bg-jod-background"
-      showsVerticalScrollIndicator={false}
+      style={styles.container}
       contentContainerStyle={{
-        paddingTop: insets.top + 8,
-        paddingBottom: insets.bottom + 24,
+        paddingTop: insets.top + spacing.s,
+        paddingBottom: spacing.xl,
       }}
+      showsVerticalScrollIndicator={false}
     >
-      <View className="gap-4 px-4">
-        <View className="flex-row-reverse items-center gap-2">
+      <View style={styles.inner}>
+        <View style={styles.headRow}>
           <TypeChip type="donation" />
           <StatusBadge status={donation.statusTag} />
         </View>
 
-        <Text className="text-right font-noto-bold text-xl text-jod-text">
-          {donation.title}
-        </Text>
-
-        <Text className="text-right font-noto leading-7 text-jod-text-secondary">
-          {donation.description}
-        </Text>
+        <Text style={styles.title}>{donation.title}</Text>
+        <Text style={styles.description}>{donation.description}</Text>
 
         <Pressable
-          className="flex-row-reverse items-center justify-between rounded-xl border border-jod-border bg-jod-surface p-4"
+          style={styles.publisherCard}
           onPress={() => router.push(ROUTES.publisherProfile(donation.publisherId))}
         >
-          <View className="flex-1">
-            <Text className="text-right font-noto-bold text-sm text-jod-text">
-              {publisherName}
-            </Text>
-            <Text className="text-right font-noto text-xs text-jod-muted">
-              الجهة الناشرة - عرض الملف والمنشورات
-            </Text>
+          <View style={styles.publisherTextWrap}>
+            <Text style={styles.publisherName}>{publisherName}</Text>
+            <Text style={styles.publisherHint}>الجهة الناشرة - عرض الملف والمنشورات</Text>
           </View>
-          <Text className="font-noto-semibold text-xs text-jod-primary">عرض الملف</Text>
+          <Text style={styles.publisherAction}>عرض الملف</Text>
         </Pressable>
 
-        <View className="gap-2 rounded-xl border border-jod-border bg-jod-surface p-4">
-          <Text className="text-right font-noto text-sm text-jod-text">{`الحالة: ${lifecycleLabel[donation.campaignStatus]}`}</Text>
-          <Text className="text-right font-noto text-sm text-jod-text">{`الجهة: ${donation.orgName}`}</Text>
-          <Text className="text-right font-noto text-sm text-jod-text">{`المدينة: ${donation.city}`}</Text>
-          <Text className="text-right font-noto text-sm text-jod-text">{`ينتهي في: ${new Date(donation.endDate).toLocaleDateString("ar-SA")}`}</Text>
-          <Text className="text-right font-noto text-sm text-jod-text">{`المتبقي: ${remainingDays >= 0 ? `${remainingDays} أيام` : "انتهت"}`}</Text>
-          <Text className="text-right font-noto text-sm text-jod-text">{`تم جمع ${formatCurrency(donation.raisedAmount)} من ${formatCurrency(donation.goalAmount)} (${percent}%)`}</Text>
-          <Text className="text-right font-noto text-sm text-jod-text">{`المتابعون: ${donation.followersCount}`}</Text>
-        </View>
-
-        {donation.campaignStatus === "completed" ? (
-          <View className="gap-2 rounded-xl border border-jod-border bg-[#ECF8F0] p-4">
-            <Text className="text-right font-noto-bold text-sm text-jod-success">
-              نتائج الحملة
-            </Text>
-            <Text className="text-right font-noto text-sm text-jod-text-secondary">
-              {donation.resultSummary ?? "تم إغلاق الحملة بنجاح."}
-            </Text>
-            {donation.resultBeneficiaries ? (
-              <Text className="text-right font-noto-semibold text-sm text-jod-text">
-                عدد المستفيدين: {donation.resultBeneficiaries}
-              </Text>
-            ) : null}
-
-            <Pressable
-              className="mt-1 items-center justify-center rounded-xl border border-jod-success px-4 py-3"
-              onPress={() => router.push(ROUTES.campaignResults(donation.id))}
-            >
-              <Text className="font-noto-semibold text-sm text-jod-success">
-                عرض صفحة النتائج
-              </Text>
-            </Pressable>
-          </View>
-        ) : null}
-
-        <View className="flex-row-reverse gap-2">
-          <Pressable
-            className={`flex-1 items-center justify-center rounded-xl border px-4 py-3 ${
-              isFollowing
-                ? "border-jod-primary bg-jod-primary"
-                : "border-jod-border bg-jod-surface"
-            }`}
-            onPress={() => toggleFollowDonation(donation.id)}
-          >
-            <Text
-              className={`font-noto-bold text-sm ${
-                isFollowing ? "text-white" : "text-jod-text"
-              }`}
-            >
-              {isFollowing ? "تتابع الحملة" : "متابعة الحملة"}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            className="flex-1 items-center justify-center rounded-xl border border-jod-border bg-jod-surface px-4 py-3"
-            onPress={onSubmitProof}
-          >
-            <Text className="font-noto-semibold text-sm text-jod-text">
-              {hasProof ? "تم رفع الإثبات" : "رفع إثبات التبرع"}
-            </Text>
-          </Pressable>
+        <View style={styles.card}>
+          <Text style={styles.meta}>{`الجهة: ${donation.orgName}`}</Text>
+          <Text style={styles.meta}>{`المدينة: ${donation.city}`}</Text>
+          <Text style={styles.meta}>{`ينتهي في: ${new Date(donation.endDate).toLocaleDateString("ar-SA")}`}</Text>
+          <Text style={styles.meta}>{`المتبقي: ${remainingDays >= 0 ? `${remainingDays} أيام` : "انتهت"}`}</Text>
+          <Text style={styles.meta}>{`تم جمع ${formatCurrency(donation.raisedAmount)} من ${formatCurrency(donation.goalAmount)} (${percent}%)`}</Text>
         </View>
 
         <Pressable
-          className="items-center justify-center rounded-xl bg-jod-primary px-4 py-3"
-          onPress={openDonationChannel}
+          style={styles.primaryButton}
+          onPress={() => Alert.alert("تبرّع", "تم فتح مسار التبرع")}
         >
-          <Text className="font-noto-bold text-sm text-white">
-            التبرع عبر القناة الخارجية
-          </Text>
+          <Text style={styles.primaryButtonText}>تبرّع الآن</Text>
         </Pressable>
-
-        <Text className="text-right font-noto text-xs leading-6 text-jod-muted">
-          ملاحظة: منصة جود ليست بوابة دفع مباشرة. سيتم تحويلك إلى القناة المعتمدة من
-          الجهة الناشرة لإتمام التبرع.
-        </Text>
-
-        <View className="flex-row-reverse gap-2">
-          <Pressable
-            className="flex-1 items-center justify-center rounded-xl border border-jod-border bg-jod-surface px-4 py-3"
-            onPress={() => router.push(ROUTES.reportIssue("campaign", donation.id))}
-          >
-            <Text className="font-noto-semibold text-sm text-jod-text">إبلاغ</Text>
-          </Pressable>
-
-          <Pressable
-            className="flex-1 items-center justify-center rounded-xl border border-jod-danger bg-jod-surface px-4 py-3"
-            onPress={() => {
-              blockEntity({ entityType: "organization", id: donation.publisherId });
-              Alert.alert("تم الحظر", "تم حظر الجهة ولن تظهر لك محتوياتها.");
-            }}
-          >
-            <Text className="font-noto-semibold text-sm text-jod-danger">حظر الجهة</Text>
-          </Pressable>
-        </View>
       </View>
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  inner: {
+    paddingHorizontal: spacing.l,
+    gap: spacing.m,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.background,
+  },
+  headRow: {
+    flexDirection: "row-reverse",
+    gap: spacing.s,
+  },
+  title: {
+    fontSize: 20,
+    color: colors.textPrimary,
+    textAlign: "right",
+    fontFamily: "NotoKufiArabic-Bold",
+  },
+  description: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 24,
+    textAlign: "right",
+    fontFamily: "NotoKufiArabic-Regular",
+  },
+  publisherCard: {
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: "#F7FAFD",
+    padding: spacing.m,
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "space-between",
+    ...shadows.card,
+  },
+  publisherTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  publisherName: {
+    fontSize: 14,
+    color: colors.textPrimary,
+    textAlign: "right",
+    fontFamily: "NotoKufiArabic-Bold",
+  },
+  publisherHint: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    textAlign: "right",
+    fontFamily: "NotoKufiArabic-Regular",
+  },
+  publisherAction: {
+    fontSize: 12,
+    color: colors.primary,
+    fontFamily: "NotoKufiArabic-SemiBold",
+  },
+  card: {
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    padding: spacing.l,
+    gap: spacing.s,
+    ...shadows.card,
+  },
+  meta: {
+    fontSize: 13,
+    color: colors.textPrimary,
+    textAlign: "right",
+    fontFamily: "NotoKufiArabic-Regular",
+  },
+  primaryButton: {
+    minHeight: 46,
+    borderRadius: radius.card,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  primaryButtonText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontFamily: "NotoKufiArabic-Bold",
+  },
+});

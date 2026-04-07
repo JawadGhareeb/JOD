@@ -17,7 +17,7 @@ import type {
   JobFilters,
   VolunteeringFilters,
 } from "@/src/types/filters";
-import type { CampaignLifecycleStatus, WorkType } from "@/src/types/models";
+import type { CampaignStatusTag, WorkType } from "@/src/types/models";
 
 const defaultDonationFilters: DonationFilters = {
   city: null,
@@ -38,12 +38,10 @@ const defaultJobFilters: JobFilters = {
   experienceYears: null,
 };
 
-const donationStatuses: {
-  value: CampaignLifecycleStatus;
-  label: string;
-}[] = [
-  { value: "active", label: "نشطة" },
-  { value: "completed", label: "مكتملة" },
+const donationStatuses: CampaignStatusTag[] = [
+  "عاجلة",
+  "اقتربت من الاكتمال",
+  "اكتملت",
 ];
 
 const workTypes: WorkType[] = ["دوام كامل", "دوام جزئي", "عن بعد"];
@@ -221,13 +219,13 @@ export const FilterBottomSheet = ({
         <View style={styles.pillsWrap}>
           {donationStatuses.map((status) => (
             <Pill
-              key={status.value}
-              label={status.label}
-              active={draftDonation.status === status.value}
+              key={status}
+              label={status}
+              active={draftDonation.status === status}
               onPress={() =>
                 setDraftDonation((prev) => ({
                   ...prev,
-                  status: prev.status === status.value ? null : status.value,
+                  status: prev.status === status ? null : status,
                 }))
               }
             />

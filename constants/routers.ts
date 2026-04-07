@@ -10,10 +10,6 @@ export const ROUTES = {
     HOME: "/(root)/(tabs)/home",
     POSTS: "/(root)/(tabs)/posts",
     CREATE_POST: "/(root)/posts/create",
-    MY_APPLICATIONS: "/(root)/applications",
-    MY_REPORTS: "/(root)/reports",
-    REPORT_CREATE: "/(root)/report/create",
-    ACTIVITY: "/(root)/activity",
   },
 
   SETTINGS: {
@@ -21,7 +17,6 @@ export const ROUTES = {
     MY_POSTS: "/(root)/settings/my-posts",
     SAVED_POSTS: "/(root)/settings/saved-posts",
     NOTIFICATIONS: "/(root)/settings/notifications",
-    NOTIFICATION_PREFERENCES: "/(root)/settings/notification-preferences",
     LANGUAGE: "/(root)/settings/language",
     SUPPORT: "/(root)/settings/support",
     PRIVACY: "/(root)/settings/privacy",
@@ -100,30 +95,6 @@ export const ROUTE_OBJECTS: RouteObject[] = [
     title: "Create Post",
     requiresAuth: true,
   },
-  {
-    path: ROUTES.ROOT.MY_APPLICATIONS,
-    category: "root",
-    title: "طلباتي الوظيفية",
-    requiresAuth: true,
-  },
-  {
-    path: ROUTES.ROOT.MY_REPORTS,
-    category: "root",
-    title: "بلاغاتي",
-    requiresAuth: true,
-  },
-  {
-    path: ROUTES.ROOT.REPORT_CREATE,
-    category: "root",
-    title: "إرسال بلاغ",
-    requiresAuth: true,
-  },
-  {
-    path: ROUTES.ROOT.ACTIVITY,
-    category: "root",
-    title: "سجل نشاطي",
-    requiresAuth: true,
-  },
   //tabs pages
   {
     path: ROUTES.TABS.HOME,
@@ -179,12 +150,6 @@ export const ROUTE_OBJECTS: RouteObject[] = [
     path: ROUTES.SETTINGS.NOTIFICATIONS,
     category: "settings",
     title: "الإشعارات",
-    requiresAuth: true,
-  },
-  {
-    path: ROUTES.SETTINGS.NOTIFICATION_PREFERENCES,
-    category: "settings",
-    title: "تفضيلات الإشعارات",
     requiresAuth: true,
   },
   {
