@@ -13,6 +13,7 @@ export const ROUTES = {
     MY_APPLICATIONS: "/(root)/applications",
     MY_REPORTS: "/(root)/reports",
     REPORT_CREATE: "/(root)/report/create",
+    ACTIVITY: "/(root)/activity",
   },
 
   SETTINGS: {
@@ -115,6 +116,12 @@ export const ROUTE_OBJECTS: RouteObject[] = [
     path: ROUTES.ROOT.REPORT_CREATE,
     category: "root",
     title: "إرسال بلاغ",
+    requiresAuth: true,
+  },
+  {
+    path: ROUTES.ROOT.ACTIVITY,
+    category: "root",
+    title: "سجل نشاطي",
     requiresAuth: true,
   },
   //tabs pages
