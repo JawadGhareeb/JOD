@@ -1,6 +1,5 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { getAuthToken } from "@/utils/auth";
 
 export const useAuthStatus = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -8,13 +7,8 @@ export const useAuthStatus = () => {
 
   const refreshAuthStatus = useCallback(async () => {
     setIsLoading(true);
-
-    try {
-      const token = await getAuthToken();
-      setIsAuthenticated(Boolean(token));
-    } finally {
-      setIsLoading(false);
-    }
+    setIsAuthenticated(false);
+    setIsLoading(false);
   }, []);
 
   useFocusEffect(

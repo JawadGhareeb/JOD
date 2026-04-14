@@ -51,11 +51,7 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "06aa1e37-eb49-49b2-8c6d-ae83ea3103e2"
-      }
-    },
-    "owner": "abd_hares"
+      "router": {}
+    }
   }
 }
