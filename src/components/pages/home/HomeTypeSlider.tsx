@@ -1,4 +1,4 @@
-import { ScrollView, Pressable, View } from "react-native";
+import { FlatList, Pressable, View } from "react-native";
 import { HOME_FILTER_ALL, HomePostTypeEnum } from "@/src/constants/global";
 import Text from "@/src/components/ui/Text";
 import { useRTL } from "@/src/providers/RTLProvider";
@@ -40,16 +40,15 @@ export function HomeTypeSlider({
   };
 
   return (
-    <ScrollView
+    <FlatList
+      data={filterOptions}
       horizontal
+      inverted={isArabic}
+      keyExtractor={(item) => item.key}
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{
-        gap: 8,
-        paddingBottom: 12,
-      }}
+      contentContainerStyle={{ gap: 8, paddingBottom: 12 }}
       className="mb-1"
-    >
-      {filterOptions.reverse().map((option) => {
+      renderItem={({ item: option }) => {
         const isActive = selectedType === option.key;
 
         return (
@@ -86,7 +85,7 @@ export function HomeTypeSlider({
             </View>
           </Pressable>
         );
-      })}
-    </ScrollView>
+      }}
+    />
   );
 }
