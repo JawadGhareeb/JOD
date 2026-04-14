@@ -1,12 +1,14 @@
 import {
   Bell,
   Bookmark,
+  ChevronRight,
+  Clock3,
   Heart,
   Home,
   LogOut,
   Menu,
   MessageCircle,
-  Monitor,
+  Megaphone,
   Newspaper,
   Plus,
   Send,
@@ -32,7 +34,10 @@ export const appIcons = {
   logout: LogOut,
   lightMode: Sun,
   darkMode: Moon,
-  systemMode: Monitor,
+  campaign: Megaphone,
+  volunteer: Plus,
+  clock: Clock3,
+  chevronRight: ChevronRight,
 } satisfies Record<string, LucideIcon>;
 
 export type AppIconKey = keyof typeof appIcons;

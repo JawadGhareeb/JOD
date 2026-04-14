@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appIcons } from "./iconMap";
@@ -11,6 +12,7 @@ type AppHeaderProps = {
 };
 
 export function AppHeader({ onMenuPress }: AppHeaderProps) {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -32,6 +34,7 @@ export function AppHeader({ onMenuPress }: AppHeaderProps) {
       </Pressable>
       <Text className="font-noto-semibold text-lg text-dark-100 dark:text-light-50">جود</Text>
       <Pressable
+        onPress={() => router.push("/notifications")}
         className={`h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
         accessibilityRole="button"
         accessibilityLabel="الإشعارات"
