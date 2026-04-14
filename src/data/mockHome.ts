@@ -1,39 +1,98 @@
-import { HomeFeedPayload } from "@/src/types/home";
+import { HomePostTypeEnum } from "@/src/constants/global";
+import { HomeFeedPayload, HomePost, HomePostAction } from "@/src/types/home";
 
-// This mock mirrors a backend payload shape to simplify BE wiring later.
+// Backend-ready mock payload for home feed (20 posts).
+const publishers = [
+  { id: "publisher-1", name: "جمعية عطاء", username: "ataa.org", verified: true },
+  { id: "publisher-2", name: "فريق المتطوعين", username: "volunteers.team" },
+  { id: "publisher-3", name: "مبادرة يد الخير", username: "hand.of.good", verified: true },
+  { id: "publisher-4", name: "أهالي الحي", username: "community.group" },
+];
+
+const imagePool = [
+  "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c",
+  "https://images.unsplash.com/photo-1469571486292-b53601020f86",
+  "https://images.unsplash.com/photo-1542838132-92c53300491e",
+  "https://images.unsplash.com/photo-1593113630400-ea4288922497",
+  "https://images.unsplash.com/photo-1524069290683-0457abfe42c3",
+  "https://images.unsplash.com/photo-1559027615-cd4628902d4a",
+];
+
+type PostTemplate = {
+  postType: HomePostTypeEnum;
+  content: string;
+  cta: HomePostAction;
+};
+
+const templates: PostTemplate[] = [
+  {
+    postType: HomePostTypeEnum.VolunteerOpportunity,
+    content:
+      "مطلوب 20 متطوع لتنظيم وتوزيع السلال الغذائية يوم الجمعة القادم. باب التسجيل مفتوح حتى مساء الخميس.",
+    cta: { type: "apply", label: "قدّم الآن", state: "open" },
+  },
+  {
+    postType: HomePostTypeEnum.DonationCampaign,
+    content:
+      "حملة جديدة لدعم العمليات الجراحية العاجلة للأطفال، وهدفنا تغطية 30 حالة خلال هذا الشهر.",
+    cta: { type: "donate", label: "تبرّع الآن", state: "open" },
+  },
+  {
+    postType: HomePostTypeEnum.HelpRequest,
+    content:
+      "أسرة مكونة من 6 أفراد تحتاج مساعدة عاجلة لتأمين مستلزمات التدفئة والأدوية خلال هذا الأسبوع.",
+    cta: { type: "contact", label: "تواصل", state: "open" },
+  },
+  {
+    postType: HomePostTypeEnum.CampaignUpdate,
+    content:
+      "تم إنجاز 65% من هدف الحملة خلال 10 أيام فقط. شكرًا لكل شخص ساهم بالنشر أو بالدعم المباشر.",
+    cta: { type: "details", label: "عرض التفاصيل", state: "open" },
+  },
+  {
+    postType: HomePostTypeEnum.Awareness,
+    content:
+      "معلومة مهمة: التبرعات الصغيرة المنتظمة تصنع أثرًا تراكميًا أكبر من التبرعات الموسمية المتقطعة.",
+    cta: { type: "none", label: "" },
+  },
+];
+
+const buildPost = (index: number): HomePost => {
+  const template = templates[index % templates.length];
+  const publisher = publishers[index % publishers.length];
+
+  const hasTwoImages = index % 6 === 0;
+  const hasOneImage = index % 3 === 0;
+  const images = hasTwoImages
+    ? [imagePool[index % imagePool.length], imagePool[(index + 1) % imagePool.length]]
+    : hasOneImage
+      ? [imagePool[index % imagePool.length]]
+      : [];
+
+  const cta =
+    template.postType === HomePostTypeEnum.VolunteerOpportunity && index % 9 === 0
+      ? { ...template.cta, state: "submitted" as const, label: "قدّم الآن" }
+      : template.postType === HomePostTypeEnum.VolunteerOpportunity && index % 11 === 0
+        ? { ...template.cta, state: "closed" as const, label: "اكتمل العدد" }
+        : { ...template.cta };
+
+  return {
+    id: `post-${index + 1}`,
+    publisher,
+    postType: template.postType,
+    content: template.content,
+    createdAt: new Date(Date.now() - index * 1000 * 60 * 47).toISOString(),
+    images,
+    cta,
+    stats: {
+      likes: 50 + ((index * 17) % 220),
+      comments: 8 + ((index * 7) % 70),
+      shares: 3 + ((index * 5) % 35),
+    },
+    saved: index % 5 === 0,
+  };
+};
+
 export const mockHomePayload: HomeFeedPayload = {
-  posts: [
-    {
-      id: "post-1",
-      publisher: {
-        id: "publisher-1",
-        name: "جمعية عطاء",
-        username: "ataa.org",
-        verified: true,
-      },
-      content:
-        "تم تجهيز 150 سلة غذائية اليوم، ونحتاج دعم إضافي للوصول إلى 250 سلة قبل نهاية الأسبوع.",
-      createdAt: "2026-04-14T09:20:00.000Z",
-      images: [
-        "https://images.unsplash.com/photo-1542838132-92c53300491e",
-        "https://images.unsplash.com/photo-1469571486292-b53601020f86",
-      ],
-      stats: { likes: 124, comments: 32, shares: 18 },
-      saved: false,
-    },
-    {
-      id: "post-2",
-      publisher: {
-        id: "publisher-2",
-        name: "فريق المتطوعين",
-        username: "volunteers.team",
-      },
-      content:
-        "مطلوب 20 متطوع لتجهيز وتغليف المساعدات يوم الجمعة. التسجيل مفتوح حتى الخميس مساءً.",
-      createdAt: "2026-04-13T14:10:00.000Z",
-      images: [],
-      stats: { likes: 87, comments: 21, shares: 9 },
-      saved: true,
-    },
-  ],
+  posts: Array.from({ length: 20 }, (_, idx) => buildPost(idx)),
 };

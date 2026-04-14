@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import { Image, Pressable, View } from "react-native";
+import { appIcons } from "@/src/components/layout/iconMap";
+import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
-import { appIcons } from "@/src/components/layout/iconMap";
+import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/helpers/home";
 import { HomePost } from "@/src/types/home";
 
 type HomePostCardProps = {
@@ -11,18 +13,6 @@ type HomePostCardProps = {
 };
 
 const MAX_CONTENT = 120;
-
-function formatRelativeDate(isoDate: string): string {
-  const now = Date.now();
-  const created = new Date(isoDate).getTime();
-  const diffMinutes = Math.max(1, Math.floor((now - created) / 60000));
-
-  if (diffMinutes < 60) return `منذ ${diffMinutes} دقيقة`;
-  const hours = Math.floor(diffMinutes / 60);
-  if (hours < 24) return `منذ ${hours} ساعة`;
-  const days = Math.floor(hours / 24);
-  return `منذ ${days} يوم`;
-}
 
 export function HomePostCard({ post }: HomePostCardProps) {
   const [expanded, setExpanded] = useState(false);
@@ -34,6 +24,14 @@ export function HomePostCard({ post }: HomePostCardProps) {
 
   const BookmarkIcon = appIcons.savedPosts;
   const HeartIcon = appIcons.myDonations;
+  const CommentsIcon = appIcons.comments;
+  const SharesIcon = appIcons.shares;
+  const hasCta = post.cta.type !== "none";
+  const isSubmitted = post.cta.state === "submitted";
+  const isClosed = post.cta.state === "closed";
+  const ctaLabel = isSubmitted ? "تم التقديم" : post.cta.label;
+  const ctaVariant =
+    post.cta.type === "apply" || post.cta.type === "donate" ? "primary" : "secondary";
 
   return (
     <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
@@ -52,15 +50,15 @@ export function HomePostCard({ post }: HomePostCardProps) {
               ) : null}
             </View>
             <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-              @{post.publisher.username} • {formatRelativeDate(post.createdAt)}
+              @{post.publisher.username} • {formatHomePostRelativeDate(post.createdAt)}
             </Text>
           </View>
         </View>
-        <BookmarkIcon
-          size={18}
-          color={post.saved ? "#405d72" : "#9CA3AF"}
-          strokeWidth={2.25}
-        />
+        <View className="rounded-full bg-primary-400/15 px-3 py-1">
+          <Text size="2xs" weight="medium" className="text-primary-400">
+            {HOME_POST_TYPE_LABELS[post.postType]}
+          </Text>
+        </View>
       </View>
 
       <Text size="sm" className="text-dark-100 dark:text-light-50">
@@ -95,13 +93,42 @@ export function HomePostCard({ post }: HomePostCardProps) {
             {post.stats.likes}
           </Text>
         </View>
-        <Text size="xs" className="text-gray-500 dark:text-gray-300">
-          {post.stats.comments} تعليق
-        </Text>
-        <Text size="xs" className="text-gray-500 dark:text-gray-300">
-          {post.stats.shares} مشاركة
-        </Text>
+        <View className="flex-row-reverse items-center gap-1">
+          <CommentsIcon size={16} color="#9CA3AF" strokeWidth={2.25} />
+          <Text size="xs" className="text-gray-500 dark:text-gray-300">
+            {post.stats.comments}
+          </Text>
+        </View>
+        <View className="flex-row-reverse items-center gap-1">
+          <SharesIcon size={16} color="#9CA3AF" strokeWidth={2.25} />
+          <Text size="xs" className="text-gray-500 dark:text-gray-300">
+            {post.stats.shares}
+          </Text>
+        </View>
+        <View className="flex-row-reverse items-center gap-1">
+          <BookmarkIcon
+            size={16}
+            color={post.saved ? "#405d72" : "#9CA3AF"}
+            strokeWidth={2.25}
+          />
+          <Text size="xs" className="text-gray-500 dark:text-gray-300">
+            {post.saved ? "محفوظ" : "حفظ"}
+          </Text>
+        </View>
       </View>
+
+      {hasCta ? (
+        <View className="mt-3">
+          <Button
+            fullWidth
+            size="small"
+            variant={ctaVariant}
+            disabled={isSubmitted || isClosed}
+          >
+            {isClosed ? "مغلق" : ctaLabel}
+          </Button>
+        </View>
+      ) : null}
     </Card>
   );
 }
