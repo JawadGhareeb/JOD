@@ -1,7 +1,6 @@
 export { default as Button } from "./Button";
 export { default as Card } from "./Card";
 export { default as Container } from "./Container";
-export { default as CustomTabBar } from "./CustomTabBar";
 export { EmptyState } from "./EmptyState";
 export { default as Input } from "./Input";
 export { StatusIcon, TypeIcon } from "./InputIcons";

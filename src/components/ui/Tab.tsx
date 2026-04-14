@@ -1,4 +1,4 @@
-import Text from "@/components/ui/Text";
+import Text from "@/src/components/ui/Text";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import { Animated, Pressable, View } from "react-native";

@@ -1,4 +1,4 @@
-import { Images } from "@/constants/images";
+import { Images } from "@/src/constants/images";
 import React from "react";
 import { Image, ImageStyle, View } from "react-native";
 

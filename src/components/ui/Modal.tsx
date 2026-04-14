@@ -1,4 +1,4 @@
-import { icons } from "@/constants/icons";
+import { icons } from "@/src/constants/icons";
 import { useColorScheme } from "nativewind";
 import React from "react";
 import {

@@ -1,4 +1,4 @@
-import { useRTL } from "@/providers/RTLProvider";
+import { useRTL } from "@/src/providers/RTLProvider";
 import { useColorScheme } from "nativewind";
 import React, {
   cloneElement,

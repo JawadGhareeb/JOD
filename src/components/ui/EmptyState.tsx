@@ -2,7 +2,7 @@ import { useColorScheme } from "nativewind";
 import React from "react";
 import { Image, ImageSourcePropType, View } from "react-native";
 import Text from "./Text";
-import { cn } from "@/lib";
+import { cn } from "@/src/lib";
 
 interface EmptyStateProps {
   title: string;

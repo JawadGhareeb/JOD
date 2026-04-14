@@ -1,6 +1,6 @@
-import { FONTS } from "@/constants/fonts";
-import { cn } from "@/lib";
-import { useRTL } from "@/providers/RTLProvider";
+import { FONTS } from "@/src/constants/fonts";
+import { cn } from "@/src/lib";
+import { useRTL } from "@/src/providers/RTLProvider";
 import { useColorScheme } from "nativewind";
 import React from "react";
 import {
