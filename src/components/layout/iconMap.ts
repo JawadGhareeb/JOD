@@ -5,10 +5,13 @@ import {
   Home,
   LogOut,
   Menu,
+  Monitor,
   Newspaper,
   Plus,
+  Sun,
   UserRound,
   X,
+  Moon,
   type LucideIcon,
 } from "lucide-react-native";
 
@@ -23,6 +26,9 @@ export const appIcons = {
   myDonations: Heart,
   savedPosts: Bookmark,
   logout: LogOut,
+  lightMode: Sun,
+  darkMode: Moon,
+  systemMode: Monitor,
 } satisfies Record<string, LucideIcon>;
 
 export type AppIconKey = keyof typeof appIcons;

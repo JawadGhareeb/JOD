@@ -1,4 +1,5 @@
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { useColorScheme } from "nativewind";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appIcons } from "./iconMap";
@@ -13,11 +14,13 @@ const labels: Record<TabKey, string> = {
 
 export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   return (
     <View
       style={{ paddingBottom: Math.max(insets.bottom, 10) }}
-      className="border-t border-gray-200 bg-white px-3 pt-2"
+      className="border-t border-gray-200 bg-white px-3 pt-2 dark:border-dark-400 dark:bg-dark-500"
     >
       <View className="flex-row-reverse items-center justify-between gap-2">
         {state.routes.map((route, index) => {
@@ -27,7 +30,11 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
           const activeClass = isFocused
             ? "bg-primary-400/15"
             : "bg-transparent";
-          const textClass = isFocused ? "text-primary-400" : "text-gray-400";
+          const textClass = isFocused
+            ? "text-primary-400"
+            : isDark
+              ? "text-gray-300"
+              : "text-gray-400";
 
           const onPress = () => {
             const event = navigation.emit({
@@ -59,7 +66,11 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
               onLongPress={onLongPress}
               className={`min-h-[60px] flex-1 items-center justify-center rounded-2xl px-2 py-2 ${activeClass}`}
             >
-              <Icon size={18} color={isFocused ? "#405d72" : "#9CA3AF"} strokeWidth={2.25} />
+              <Icon
+                size={18}
+                color={isFocused ? "#405d72" : isDark ? "#D1D5DB" : "#9CA3AF"}
+                strokeWidth={2.25}
+              />
               <Text
                 numberOfLines={2}
                 className={`mt-1 w-full text-center font-noto-medium text-[11px] leading-4 ${textClass}`}

@@ -2,7 +2,9 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { useColorScheme } from "nativewind";
 import { useEffect } from "react";
+import { Appearance } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "./global.css";
@@ -10,6 +12,8 @@ import "./global.css";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const { colorScheme, setColorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [fontsLoaded] = useFonts({
     "NotoKufiArabic-Regular": require("../assets/fonts/Noto/NotoKufiArabic-Regular.ttf"),
     "NotoKufiArabic-Medium": require("../assets/fonts/Noto/NotoKufiArabic-Medium.ttf"),
@@ -21,6 +25,11 @@ export default function RootLayout() {
     "NotoKufiArabic-Light": require("../assets/fonts/Noto/NotoKufiArabic-Light.ttf"),
     "NotoKufiArabic-ExtraBold": require("../assets/fonts/Noto/NotoKufiArabic-ExtraBold.ttf"),
   });
+
+  useEffect(() => {
+    // Default app theme to system mode on startup.
+    setColorScheme(Appearance.getColorScheme() ?? "light");
+  }, [setColorScheme]);
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -35,7 +44,11 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar style="dark" translucent={false} backgroundColor="#FFFFFF" />
+        <StatusBar
+          style={isDark ? "light" : "dark"}
+          translucent={false}
+          backgroundColor={isDark ? "#1f222b" : "#FFFFFF"}
+        />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
         </Stack>

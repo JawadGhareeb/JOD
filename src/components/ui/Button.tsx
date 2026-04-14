@@ -30,8 +30,6 @@ const Button: React.FC<ButtonProps> = ({
   rightIcon,
   fullWidth = false,
   className,
-  onPressIn,
-  onPressOut,
   ...props
 }) => {
   const { colorScheme } = useColorScheme();
@@ -76,7 +74,7 @@ const Button: React.FC<ButtonProps> = ({
 
   const getButtonClasses = (): string => {
     const baseClasses =
-      "flex-row items-center justify-center gap-2 rounded-md shadow-lg";
+      "flex-row items-center justify-center gap-2 rounded-md";
 
     const sizeClasses = {
       small: "px-5 py-2 min-h-[36px]",
@@ -85,16 +83,16 @@ const Button: React.FC<ButtonProps> = ({
     };
 
     const variantClasses = {
-      primary: "bg-primary-400 shadow-primary-400/30",
+      primary: "bg-primary-400 shadow-lg shadow-primary-400/30",
       tertiary: isDark
-        ? "bg-dark-500 shadow-dark-400/30"
-        : "bg-white shadow-gray-200/50",
+        ? "border border-dark-400 bg-dark-500 shadow-lg shadow-dark-400/30"
+        : "border border-gray-200 bg-white shadow-lg shadow-gray-200/50",
       secondary: isDark
-        ? "bg-dark-500 shadow-dark-400/30"
-        : "bg-primary-100 shadow-gray-200/50",
+        ? "bg-primary-400/20 shadow-lg shadow-dark-400/30"
+        : "bg-primary-100 shadow-lg shadow-gray-200/50",
       outline: isDark
-        ? "bg-dark-200 shadow-dark-300/30"
-        : "bg-light-100 shadow-gray-200/50",
+        ? "border border-primary-200 bg-dark-200 shadow-lg shadow-dark-300/30"
+        : "border border-primary-200 bg-light-100 shadow-lg shadow-gray-200/50",
     } as const;
 
     const fullWidthClasses = fullWidth ? "w-full" : "";
@@ -148,9 +146,9 @@ const Button: React.FC<ButtonProps> = ({
   const getSpinnerColor = (): string => {
     const spinnerColors = {
       primary: "#FFFFFF",
-      tertiary: isDark ? "#FFFFFF" : "#6A5ACD",
-      secondary: isDark ? "#FFFFFF" : "#646464",
-      outline: isDark ? "#FFFFFF" : "#646464",
+      tertiary: isDark ? "#FFFFFF" : "#212121",
+      secondary: "#405d72",
+      outline: "#405d72",
     } as const;
     return spinnerColors[variant];
   };

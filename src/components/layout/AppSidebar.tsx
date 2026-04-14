@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useColorScheme } from "nativewind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Button from "@/src/components/ui/Button";
 import Dialog from "@/src/components/ui/Dialog";
@@ -10,6 +11,8 @@ const CreatePostIcon = appIcons.createPost;
 const DonationsIcon = appIcons.myDonations;
 const SavedPostsIcon = appIcons.savedPosts;
 const LogoutIcon = appIcons.logout;
+const LightModeIcon = appIcons.lightMode;
+const DarkModeIcon = appIcons.darkMode;
 
 type AppSidebarProps = {
   visible: boolean;
@@ -24,7 +27,18 @@ const menuItems = [
 
 export function AppSidebar({ visible, onClose }: AppSidebarProps) {
   const insets = useSafeAreaInsets();
+  const { colorScheme, setColorScheme } = useColorScheme();
+  const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
+  const isDark = colorScheme === "dark";
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+  const panelClass = isDark
+    ? "border-dark-400 bg-dark-500"
+    : "border-gray-200 bg-white";
+  const menuItemClass = isDark
+    ? "bg-dark-350"
+    : "bg-white";
+  const iconColor = isDark ? "#F9FAFB" : "#405d72";
+  const textColorClass = isDark ? "text-light-50" : "text-dark-100";
 
   const closeSidebar = () => {
     setIsLogoutDialogOpen(false);
@@ -49,11 +63,11 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
           paddingTop: Math.max(insets.top, 12),
           paddingBottom: Math.max(insets.bottom, 12),
         }}
-        className="absolute right-0 top-0 h-full w-[78%] max-w-[320px] border-l border-gray-200 bg-white px-4"
+        className={`absolute right-0 top-0 h-full w-[78%] max-w-[320px] border-l px-4 ${panelClass}`}
       >
         <View className="flex-1">
           <View className="flex-row-reverse items-center justify-between pb-4">
-            <Text className="font-noto-semibold text-lg text-dark-100">القائمة</Text>
+            <Text className={`font-noto-semibold text-lg ${textColorClass}`}>القائمة</Text>
             <Pressable
               onPress={closeSidebar}
               className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100"
@@ -68,21 +82,63 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
             {menuItems.map((item) => (
               <Pressable
                 key={item.key}
-                className="flex-row-reverse items-center justify-start gap-2 rounded-xl px-3 py-3"
+                className={`flex-row-reverse items-center justify-start gap-2 rounded-xl px-3 py-3 ${menuItemClass}`}
                 accessibilityRole="button"
                 accessibilityLabel={item.label}
               >
-                <item.Icon size={18} color="#405d72" strokeWidth={2.25} />
-                <Text className="font-noto-medium text-sm text-dark-100">{item.label}</Text>
+                <item.Icon size={18} color={iconColor} strokeWidth={2.25} />
+                <Text className={`font-noto-medium text-sm ${textColorClass}`}>{item.label}</Text>
               </Pressable>
             ))}
           </View>
 
-          <View className="mt-auto pt-4">
+          <View className="mt-auto gap-3 pt-4">
+            <View className="flex-row-reverse gap-2">
+              <View className="flex-1">
+                <Button
+                  fullWidth
+                  size="small"
+                  variant={themeMode === "light" ? "primary" : "tertiary"}
+                  leftIcon={
+                    <LightModeIcon
+                      size={16}
+                      color={themeMode === "light" ? "#FFFFFF" : iconColor}
+                      strokeWidth={2.25}
+                    />
+                  }
+                  onPress={() => {
+                    setThemeMode("light");
+                    setColorScheme("light");
+                  }}
+                >
+                  فاتح
+                </Button>
+              </View>
+              <View className="flex-1">
+                <Button
+                  fullWidth
+                  size="small"
+                  variant={themeMode === "dark" ? "primary" : "tertiary"}
+                  leftIcon={
+                    <DarkModeIcon
+                      size={16}
+                      color={themeMode === "dark" ? "#FFFFFF" : iconColor}
+                      strokeWidth={2.25}
+                    />
+                  }
+                  onPress={() => {
+                    setThemeMode("dark");
+                    setColorScheme("dark");
+                  }}
+                >
+                  داكن
+                </Button>
+              </View>
+            </View>
             <Button
               fullWidth
               variant="outline"
-              leftIcon={<LogoutIcon size={18} color="#405d72" strokeWidth={2.25} />}
+              leftIcon={<LogoutIcon size={18} color={iconColor} strokeWidth={2.25} />}
               onPress={() => setIsLogoutDialogOpen(true)}
             >
               تسجيل الخروج
@@ -95,6 +151,7 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
         visible={isLogoutDialogOpen}
         title="تأكيد تسجيل الخروج"
         message="هل أنت متأكد أنك تريد تسجيل الخروج؟"
+        icon={<LogoutIcon size={26} color="#DC2626" strokeWidth={2.25} />}
         onClose={() => setIsLogoutDialogOpen(false)}
         buttons={[
           {
