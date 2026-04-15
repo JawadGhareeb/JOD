@@ -1,7 +1,6 @@
-import { FlatList, Pressable, View } from "react-native";
+import { useMemo } from "react";
 import { HOME_FILTER_ALL, HomePostTypeEnum } from "@/src/constants/global";
-import Text from "@/src/components/ui/Text";
-import { useRTL } from "@/src/providers/RTLProvider";
+import { FilterCountSlider } from "@/src/components/shared";
 import { HomePost } from "@/src/types/home";
 
 export type HomeFilterType = typeof HOME_FILTER_ALL | HomePostTypeEnum;
@@ -31,61 +30,24 @@ export function HomeTypeSlider({
   onSelectType,
   posts,
 }: HomeTypeSliderProps) {
-  const { currentLanguage } = useRTL();
-  const isArabic = currentLanguage === "ar";
-
-  const getCount = (type: HomeFilterType) => {
-    if (type === HOME_FILTER_ALL) return posts.length;
-    return posts.filter((post) => post.postType === type).length;
-  };
+  const items = useMemo(
+    () =>
+      filterOptions.map((option) => ({
+        key: option.key,
+        label: option.label,
+        count:
+          option.key === HOME_FILTER_ALL
+            ? posts.length
+            : posts.filter((post) => post.postType === option.key).length,
+      })),
+    [posts],
+  );
 
   return (
-    <FlatList
-      data={filterOptions}
-      horizontal
-      inverted={isArabic}
-      keyExtractor={(item) => item.key}
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: 8, paddingBottom: 12 }}
-      className="mb-1"
-      renderItem={({ item: option }) => {
-        const isActive = selectedType === option.key;
-
-        return (
-          <Pressable
-            key={option.key}
-            onPress={() => onSelectType(option.key)}
-            className={`flex-row items-center gap-2 rounded-full px-4 py-2 ${
-              isActive
-                ? "bg-primary-400/15"
-                : "bg-white dark:bg-dark-500"
-            }`}
-            accessibilityRole="button"
-            accessibilityLabel={option.label}
-          >
-            <Text
-              size="xs"
-              weight="medium"
-              className={isActive ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}
-            >
-              {option.label}
-            </Text>
-            <View
-              className={`size-6 items-center justify-center rounded-full ${
-                isActive ? "bg-primary-400" : "bg-gray-200 dark:bg-dark-350"
-              }`}
-            >
-              <Text
-                size="2xs"
-                weight="medium"
-                className={isActive ? "text-light-50" : "text-gray-600 dark:text-gray-200"}
-              >
-                {getCount(option.key)}
-              </Text>
-            </View>
-          </Pressable>
-        );
-      }}
+    <FilterCountSlider
+      items={items}
+      selectedKey={selectedType}
+      onSelect={onSelectType}
     />
   );
 }

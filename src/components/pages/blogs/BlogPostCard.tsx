@@ -11,7 +11,7 @@ type BlogPostCardProps = {
 };
 
 const ClockIcon = appIcons.clock;
-const ArrowIcon = appIcons.chevronRight;
+const ArrowIcon = appIcons.chevronLeft;
 
 export function BlogPostCard({ post }: BlogPostCardProps) {
   return (
@@ -49,10 +49,10 @@ export function BlogPostCard({ post }: BlogPostCardProps) {
           </View>
 
           <Pressable className="flex-row-reverse items-center gap-1" accessibilityRole="button">
-            <ArrowIcon size={14} color="#405d72" strokeWidth={2.25} />
             <Text size="xs" weight="medium" className="text-primary-400">
               قراءة المقال
             </Text>
+            <ArrowIcon size={14} color="#405d72" strokeWidth={2.25} />
           </Pressable>
         </View>
       </View>

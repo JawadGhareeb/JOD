@@ -16,6 +16,7 @@ import {
   UserRound,
   X,
   Moon,
+  ChevronLeft,
   type LucideIcon,
 } from "lucide-react-native";
 
@@ -38,6 +39,7 @@ export const appIcons = {
   volunteer: Plus,
   clock: Clock3,
   chevronRight: ChevronRight,
+  chevronLeft: ChevronLeft,
 } satisfies Record<string, LucideIcon>;
 
 export type AppIconKey = keyof typeof appIcons;

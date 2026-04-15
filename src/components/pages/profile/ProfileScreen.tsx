@@ -50,7 +50,7 @@ export function ProfileScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={tab.label}
                 >
-                  <View className="flex-row-reverse items-center justify-center gap-2">
+                  <View className="flex-row items-center justify-center gap-2">
                     <Text
                       size="xs"
                       weight="medium"
@@ -59,7 +59,7 @@ export function ProfileScreen() {
                       {tab.label}
                     </Text>
                     <View
-                      className={`size-5 items-center justify-center rounded-full ${
+                      className={`size-6 items-center justify-center rounded-full ${
                         isActive ? "bg-primary-400" : "bg-gray-200 dark:bg-dark-350"
                       }`}
                     >
