@@ -51,7 +51,14 @@ export default function RootLayout() {
         />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="about" />
+          <Stack.Screen name="account-settings" />
+          <Stack.Screen name="create-post" />
+          <Stack.Screen name="help-center" />
+          <Stack.Screen name="my-donations" />
           <Stack.Screen name="notifications" />
+          <Stack.Screen name="saved-posts" />
+          <Stack.Screen name="terms-privacy" />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

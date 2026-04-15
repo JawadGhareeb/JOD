@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Button from "@/src/components/ui/Button";
@@ -10,6 +11,10 @@ const CloseIcon = appIcons.close;
 const CreatePostIcon = appIcons.createPost;
 const DonationsIcon = appIcons.myDonations;
 const SavedPostsIcon = appIcons.savedPosts;
+const SettingsIcon = appIcons.settings;
+const HelpIcon = appIcons.help;
+const ShieldIcon = appIcons.shield;
+const AboutIcon = appIcons.about;
 const LogoutIcon = appIcons.logout;
 const LightModeIcon = appIcons.lightMode;
 const DarkModeIcon = appIcons.darkMode;
@@ -20,12 +25,17 @@ type AppSidebarProps = {
 };
 
 const menuItems = [
-  { key: "create-post", label: "نشر بوست", Icon: CreatePostIcon },
-  { key: "my-donations", label: "تبرعاتي", Icon: DonationsIcon },
-  { key: "saved-posts", label: "بوستات محفوظة", Icon: SavedPostsIcon },
+  { key: "create-post", label: "نشر بوست", route: "/create-post", Icon: CreatePostIcon },
+  { key: "my-donations", label: "تبرعاتي", route: "/my-donations", Icon: DonationsIcon },
+  { key: "saved-posts", label: "بوستات محفوظة", route: "/saved-posts", Icon: SavedPostsIcon },
+  { key: "account-settings", label: "إعدادات الحساب", route: "/account-settings", Icon: SettingsIcon },
+  { key: "help-center", label: "مركز المساعدة", route: "/help-center", Icon: HelpIcon },
+  { key: "terms-privacy", label: "الشروط والخصوصية", route: "/terms-privacy", Icon: ShieldIcon },
+  { key: "about", label: "من نحن", route: "/about", Icon: AboutIcon },
 ] as const;
 
 export function AppSidebar({ visible, onClose }: AppSidebarProps) {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colorScheme, setColorScheme } = useColorScheme();
   const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
@@ -123,6 +133,10 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
             {menuItems.map((item) => (
               <Pressable
                 key={item.key}
+                onPress={() => {
+                  closeSidebar();
+                  router.push(item.route);
+                }}
                 className={`flex-row-reverse items-center justify-start gap-2 rounded-xl px-3 py-3 ${menuItemClass}`}
                 accessibilityRole="button"
                 accessibilityLabel={item.label}

@@ -1,4 +1,5 @@
 import {
+  CircleHelp,
   Bell,
   Bookmark,
   ChevronRight,
@@ -10,8 +11,11 @@ import {
   MessageCircle,
   Megaphone,
   Newspaper,
+  Info,
   Plus,
   Send,
+  Settings,
+  ShieldCheck,
   Sun,
   UserRound,
   X,
@@ -40,6 +44,10 @@ export const appIcons = {
   clock: Clock3,
   chevronRight: ChevronRight,
   chevronLeft: ChevronLeft,
+  settings: Settings,
+  help: CircleHelp,
+  shield: ShieldCheck,
+  about: Info,
 } satisfies Record<string, LucideIcon>;
 
 export type AppIconKey = keyof typeof appIcons;
