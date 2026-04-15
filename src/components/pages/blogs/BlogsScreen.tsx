@@ -5,12 +5,14 @@ import { mockBlogsPayload } from "@/src/data/mockBlogs";
 import type { BlogCategory } from "@/src/types/blogs";
 import { BlogCategorySlider } from "./BlogCategorySlider";
 import { BlogPostCard } from "./BlogPostCard";
+import { BlogPostCardSkeleton } from "./BlogPostCardSkeleton";
 
 const PAGE_SIZE = 6;
 
 export function BlogsScreen() {
   const [selectedCategory, setSelectedCategory] = useState<BlogCategory>("all");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const filteredPosts = useMemo(() => {
     if (selectedCategory === "all") return mockBlogsPayload.posts;
@@ -27,6 +29,17 @@ export function BlogsScreen() {
   const onSelectCategory = (category: BlogCategory) => {
     setSelectedCategory(category);
     setVisibleCount(PAGE_SIZE);
+    setLoadingMore(false);
+  };
+
+  const handleLoadMore = () => {
+    if (!hasMore || loadingMore) return;
+
+    setLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredPosts.length));
+      setLoadingMore(false);
+    }, 500);
   };
 
   return (
@@ -37,10 +50,7 @@ export function BlogsScreen() {
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => <BlogPostCard post={item} />}
       showsVerticalScrollIndicator={false}
-      onEndReached={() => {
-        if (!hasMore) return;
-        setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredPosts.length));
-      }}
+      onEndReached={handleLoadMore}
       onEndReachedThreshold={0.3}
       ListHeaderComponent={
         <BlogCategorySlider
@@ -57,7 +67,11 @@ export function BlogsScreen() {
         </View>
       }
       ListFooterComponent={
-        hasMore ? (
+        loadingMore ? (
+          <View className="py-2">
+            <BlogPostCardSkeleton />
+          </View>
+        ) : hasMore ? (
           <View className="py-2" />
         ) : (
           <View className="items-center py-4">

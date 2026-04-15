@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Easing, Pressable, Text, View } from "react-native";
 import { useColorScheme } from "nativewind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Button from "@/src/components/ui/Button";
@@ -29,6 +29,8 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
   const insets = useSafeAreaInsets();
   const { colorScheme, setColorScheme } = useColorScheme();
   const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
+  const [shouldRender, setShouldRender] = useState(visible);
+  const progress = useRef(new Animated.Value(visible ? 1 : 0)).current;
   const isDark = colorScheme === "dark";
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const panelClass = isDark
@@ -45,23 +47,62 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
     onClose();
   };
 
-  if (!visible) {
+  useEffect(() => {
+    if (visible) {
+      setShouldRender(true);
+      Animated.timing(progress, {
+        toValue: 1,
+        duration: 240,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+      return;
+    }
+
+    Animated.timing(progress, {
+      toValue: 0,
+      duration: 180,
+      easing: Easing.in(Easing.cubic),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) {
+        setIsLogoutDialogOpen(false);
+        setShouldRender(false);
+      }
+    });
+  }, [visible, progress]);
+
+  if (!shouldRender) {
     return null;
   }
 
+  const overlayOpacity = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 0.25],
+  });
+  const panelTranslateX = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [320, 0],
+  });
+
   return (
     <View className="absolute inset-0 z-50">
+      <Animated.View
+        className="absolute inset-0 bg-black"
+        style={{ opacity: overlayOpacity }}
+      />
       <Pressable
-        className="absolute inset-0 bg-black/25"
+        className="absolute inset-0"
         onPress={closeSidebar}
         accessibilityRole="button"
         accessibilityLabel="إغلاق القائمة الجانبية"
       />
 
-      <View
+      <Animated.View
         style={{
           paddingTop: Math.max(insets.top, 12),
           paddingBottom: Math.max(insets.bottom, 12),
+          transform: [{ translateX: panelTranslateX }],
         }}
         className={`absolute right-0 top-0 h-full w-[78%] max-w-[320px] border-l px-4 ${panelClass}`}
       >
@@ -145,7 +186,7 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
             </Button>
           </View>
         </View>
-      </View>
+      </Animated.View>
 
       <Dialog
         visible={isLogoutDialogOpen}

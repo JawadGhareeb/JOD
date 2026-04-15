@@ -10,11 +10,12 @@ import { HomePost } from "@/src/types/home";
 
 type HomePostCardProps = {
   post: HomePost;
+  showCta?: boolean;
 };
 
 const MAX_CONTENT = 120;
 
-export function HomePostCard({ post }: HomePostCardProps) {
+export function HomePostCard({ post, showCta = true }: HomePostCardProps) {
   const [expanded, setExpanded] = useState(false);
   const shouldTruncate = post.content.length > MAX_CONTENT;
   const displayContent = useMemo(() => {
@@ -117,7 +118,7 @@ export function HomePostCard({ post }: HomePostCardProps) {
         </View>
       </View>
 
-      {hasCta ? (
+      {showCta && hasCta ? (
         <View className="mt-3">
           <Button
             fullWidth

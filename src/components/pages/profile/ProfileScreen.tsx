@@ -3,9 +3,12 @@ import { FlatList, Pressable, View } from "react-native";
 import Text from "@/src/components/ui/Text";
 import { SectionHeader } from "@/src/components/shared/SectionHeader";
 import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
+import { HomePostCardSkeleton } from "@/src/components/pages/home/HomePostCardSkeleton";
 import { mockProfilePayload } from "@/src/data/mockProfile";
 import { ProfilePostStatus } from "@/src/types/profile";
 import { ProfileHeaderCard } from "./ProfileHeaderCard";
+
+const PAGE_SIZE = 6;
 
 const profilePostTabs: Array<{ key: ProfilePostStatus; label: string }> = [
   { key: "posted", label: "منشور" },
@@ -15,23 +18,48 @@ const profilePostTabs: Array<{ key: ProfilePostStatus; label: string }> = [
 
 export function ProfileScreen() {
   const [activeTab, setActiveTab] = useState<ProfilePostStatus>("posted");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const filteredPosts = useMemo(
     () => mockProfilePayload.posts.filter((post) => post.profileStatus === activeTab),
     [activeTab],
   );
+  const visiblePosts = useMemo(
+    () => filteredPosts.slice(0, visibleCount),
+    [filteredPosts, visibleCount],
+  );
+  const hasMore = visibleCount < filteredPosts.length;
 
   const getTabCount = (status: ProfilePostStatus) =>
     mockProfilePayload.posts.filter((post) => post.profileStatus === status).length;
+
+  const handleTabChange = (status: ProfilePostStatus) => {
+    setActiveTab(status);
+    setVisibleCount(PAGE_SIZE);
+    setLoadingMore(false);
+  };
+
+  const handleLoadMore = () => {
+    if (!hasMore || loadingMore) return;
+
+    setLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredPosts.length));
+      setLoadingMore(false);
+    }, 500);
+  };
 
   return (
     <FlatList
       className="flex-1 bg-light-100 px-4 pt-4 dark:bg-dark-300"
       contentContainerStyle={{ paddingBottom: 24 }}
-      data={filteredPosts}
+      data={visiblePosts}
       keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <HomePostCard post={item} />}
+      renderItem={({ item }) => <HomePostCard post={item} showCta={false} />}
       showsVerticalScrollIndicator={false}
+      onEndReached={handleLoadMore}
+      onEndReachedThreshold={0.35}
       ListHeaderComponent={
         <View>
           <ProfileHeaderCard summary={mockProfilePayload.summary} />
@@ -43,7 +71,7 @@ export function ProfileScreen() {
               return (
                 <Pressable
                   key={tab.key}
-                  onPress={() => setActiveTab(tab.key)}
+                  onPress={() => handleTabChange(tab.key)}
                   className={`flex-1 rounded-xl px-3 py-2 ${
                     isActive ? "bg-primary-400/15" : "bg-white dark:bg-dark-500"
                   }`}
@@ -85,7 +113,21 @@ export function ProfileScreen() {
           </Text>
         </View>
       }
-      ListFooterComponent={<View className="py-2" />}
+      ListFooterComponent={
+        loadingMore ? (
+          <View className="py-2">
+            <HomePostCardSkeleton />
+          </View>
+        ) : hasMore ? (
+          <View className="py-2" />
+        ) : (
+          <View className="items-center py-4">
+            <Text size="xs" className="text-gray-500 dark:text-gray-300">
+              تم عرض جميع المنشورات
+            </Text>
+          </View>
+        )
+      }
     />
   );
 }
