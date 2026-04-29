@@ -16,7 +16,7 @@ const tabConfig: Record<
 > = {
   home: { label: "الرئيسية", Icon: appIcons.home },
   blogs: { label: "المدونات", Icon: appIcons.blogs },
-  post: { label: " نشر بوست", Icon: appIcons.createPost, isCenter: true },
+  post: { label: "", Icon: appIcons.createPost, isCenter: true },
   profile: { label: "الملف الشخصي", Icon: appIcons.profile },
   settings: { label: "الإعدادات", Icon: appIcons.settings },
 };
@@ -80,7 +80,7 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
               onLongPress={onLongPress}
               className={
                 isCenter
-                  ? "min-h-[74px] flex-1 items-center justify-center px-2"
+                  ? "absolute -top-1/2 left-1/2 -translate-x-1/2 flex-1 items-center justify-center px-2"
                   : `min-h-[60px] flex-1 items-center justify-center rounded-2xl px-2 py-2 ${activeClass}`
               }
             >
