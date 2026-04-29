@@ -9,6 +9,7 @@ export type BlogPost = {
   id: string;
   title: string;
   excerpt: string;
+  content: string;
   coverImage?: string;
   category: Exclude<BlogCategory, "all">;
   readTimeMinutes: number;

@@ -51,6 +51,7 @@ export default function RootLayout() {
         />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="blogs/[id]" />
           <Stack.Screen name="about" />
           <Stack.Screen name="account-settings" />
           <Stack.Screen name="create-post" />

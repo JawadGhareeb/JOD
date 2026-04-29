@@ -1,4 +1,5 @@
-import { Image, Pressable, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Image, View } from "react-native";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
@@ -14,8 +15,23 @@ const ClockIcon = appIcons.clock;
 const ArrowIcon = appIcons.chevronLeft;
 
 export function BlogPostCard({ post }: BlogPostCardProps) {
+  const router = useRouter();
+
+  const handleOpenDetails = () => {
+    router.push({
+      pathname: "/blogs/[id]",
+      params: { id: post.id },
+    });
+  };
+
   return (
-    <Card padding="none" className="mb-3 overflow-hidden border-gray-200 dark:border-dark-400">
+    <Card
+      padding="none"
+      className="mb-3 overflow-hidden border-gray-200 dark:border-dark-400"
+      onPress={handleOpenDetails}
+      accessibilityRole="button"
+      accessibilityLabel={`عرض تفاصيل المقال ${post.title}`}
+    >
       {post.coverImage ? (
         <Image source={{ uri: post.coverImage }} className="h-44 w-full" resizeMode="cover" />
       ) : null}
@@ -48,12 +64,12 @@ export function BlogPostCard({ post }: BlogPostCardProps) {
             </Text>
           </View>
 
-          <Pressable className="flex-row-reverse items-center gap-1" accessibilityRole="button">
+          <View className="flex-row-reverse items-center gap-1">
             <Text size="xs" weight="medium" className="text-primary-400">
               قراءة المقال
             </Text>
             <ArrowIcon size={14} color="#405d72" strokeWidth={2.25} />
-          </Pressable>
+          </View>
         </View>
       </View>
     </Card>
