@@ -30,6 +30,8 @@ export function HomePostCard({
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [isSaved, setIsSaved] = useState(Boolean(post.saved));
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const shouldTruncate = post.content.length > MAX_CONTENT;
   const displayContent = useMemo(() => {
     if (expanded || !shouldTruncate) return post.content;
@@ -39,6 +41,8 @@ export function HomePostCard({
   const BookmarkIcon = appIcons.savedPosts;
   const HeartIcon = appIcons.myDonations;
   const SharesIcon = appIcons.shares;
+  const MoreIcon = appIcons.moreVertical;
+  const ShieldIcon = appIcons.shield;
   const canOpenAuthorProfile = enableAuthorNavigation && Boolean(post.publisher.id);
   const hasCta = post.cta.type !== "none";
   const isSubmitted = post.cta.state === "submitted";
@@ -59,6 +63,7 @@ export function HomePostCard({
     if (isSharing) return;
 
     try {
+      setIsOptionsOpen(false);
       setIsSharing(true);
       const postLink = buildHomePostShareLink(post.id);
       const message = buildHomePostShareMessage(post);
@@ -78,6 +83,21 @@ export function HomePostCard({
     } finally {
       setIsSharing(false);
     }
+  };
+
+  const handleTogglePostSaved = () => {
+    const willSave = !isSaved;
+    setIsSaved(willSave);
+    setIsOptionsOpen(false);
+    Alert.alert(
+      willSave ? "تم حفظ المنشور" : "تم إزالة الحفظ",
+      willSave ? "يمكنك العثور عليه لاحقًا في المنشورات المحفوظة." : "تمت إزالة المنشور من المحفوظات.",
+    );
+  };
+
+  const handleReportPost = () => {
+    setIsOptionsOpen(false);
+    Alert.alert("تم إرسال البلاغ", "شكراً لك. سيتم مراجعة هذا المنشور من قبل فريق الإشراف.");
   };
 
   return (
@@ -160,15 +180,47 @@ export function HomePostCard({
             {post.stats.shares}
           </Text>
         </Pressable>
-        <View className="flex-row-reverse items-center gap-1">
-          <BookmarkIcon
-            size={16}
-            color={post.saved ? "#405d72" : "#9CA3AF"}
-            strokeWidth={2.25}
-          />
-          <Text size="xs" className="text-gray-500 dark:text-gray-300">
-            {post.saved ? "محفوظ" : "حفظ"}
-          </Text>
+        <View className="relative">
+          <Pressable
+            onPress={() => setIsOptionsOpen((prev) => !prev)}
+            className="h-8 w-8 items-center justify-center rounded-lg"
+            accessibilityRole="button"
+            accessibilityLabel="خيارات المنشور"
+          >
+            <MoreIcon
+              size={18}
+              color={isOptionsOpen ? "#405d72" : "#9CA3AF"}
+              strokeWidth={2.25}
+            />
+          </Pressable>
+
+          {isOptionsOpen ? (
+            <View className="absolute left-0 top-9 z-20 w-44 rounded-xl border border-gray-200 bg-white p-1 shadow-sm dark:border-dark-400 dark:bg-dark-500">
+              <Pressable
+                onPress={handleTogglePostSaved}
+                className="flex-row-reverse items-center justify-between rounded-lg px-3 py-2"
+                accessibilityRole="button"
+                accessibilityLabel={isSaved ? "إلغاء حفظ المنشور" : "حفظ المنشور"}
+              >
+                <Text size="xs" className="text-dark-100 dark:text-light-50">
+                  {isSaved ? "إلغاء الحفظ" : "حفظ المنشور"}
+                </Text>
+                <BookmarkIcon size={15} color="#405d72" strokeWidth={2.25} />
+              </Pressable>
+
+              <Pressable
+                onPress={handleReportPost}
+                className="mt-1 flex-row-reverse items-center justify-between rounded-lg px-3 py-2"
+                accessibilityRole="button"
+                accessibilityLabel="إبلاغ عن المنشور"
+              >
+                <Text size="xs" className="text-error-300">
+                  إبلاغ عن المنشور
+                </Text>
+                <ShieldIcon size={15} color="#DC2626" strokeWidth={2.25} />
+              </Pressable>
+            </View>
+          ) : null}
         </View>
       </View>
 
