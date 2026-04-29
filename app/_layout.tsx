@@ -55,7 +55,9 @@ export default function RootLayout() {
           <Stack.Screen name="blogs/[id]" />
           <Stack.Screen name="about" />
           <Stack.Screen name="account-settings" />
+          <Stack.Screen name="change-password" />
           <Stack.Screen name="create-post" />
+          <Stack.Screen name="edit-information" />
           <Stack.Screen name="help-center" />
           <Stack.Screen name="my-donations" />
           <Stack.Screen name="notifications" />

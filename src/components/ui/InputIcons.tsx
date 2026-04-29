@@ -17,6 +17,8 @@ import React from "react";
 import { Animated } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 
+const APP_PRIMARY_COLOR = "#405d72";
+
 export interface TypeIconProps {
   type?: string;
   isFocused: boolean;
@@ -51,7 +53,7 @@ export const TypeIcon: React.FC<TypeIconProps> = ({
 
   const getIconColor = () => {
     if (hasError) return "#EF4444";
-    if (isFocused) return "#8B7FD7";
+    if (isFocused) return APP_PRIMARY_COLOR;
     return isDark ? "#9CA3AF" : "#6B7280";
   };
 
@@ -221,7 +223,7 @@ export const StatusIcon: React.FC<StatusIconProps> = ({
 
   const getIconColor = () => {
     if (hasError) return "#EF4444";
-    if (isFocused) return "#8B7FD7";
+    if (isFocused) return APP_PRIMARY_COLOR;
     if (hasValue) return "#10B981";
     return isDark ? "#6B7280" : "#9CA3AF";
   };

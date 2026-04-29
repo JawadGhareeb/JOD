@@ -2,6 +2,8 @@ export { CreatePostScreen } from "./CreatePostScreen";
 export { MyDonationsScreen } from "./MyDonationsScreen";
 export { SavedPostsScreen } from "./SavedPostsScreen";
 export { AccountSettingsScreen } from "./AccountSettingsScreen";
+export { EditInformationScreen } from "./EditInformationScreen";
+export { ChangePasswordScreen } from "./ChangePasswordScreen";
 export { HelpCenterScreen } from "./HelpCenterScreen";
 export { TermsPrivacyScreen } from "./TermsPrivacyScreen";
 export { AboutScreen } from "./AboutScreen";

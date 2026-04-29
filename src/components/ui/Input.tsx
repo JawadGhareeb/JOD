@@ -19,6 +19,9 @@ import { FONTS } from "../../constants/fonts";
 import { StatusIcon } from "./InputIcons";
 import Text from "./Text";
 
+const APP_PRIMARY_COLOR = "#405d72";
+const APP_PRIMARY_BORDER = "#9faeb8";
+
 interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
@@ -58,6 +61,7 @@ const Input: React.FC<InputProps> = ({
   secureTextEntry,
   value,
   keyboardType,
+  multiline = false,
   ...props
 }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -155,7 +159,7 @@ const Input: React.FC<InputProps> = ({
 
   const getIconColor = useCallback(() => {
     const defaultColor = isDark ? "#9CA3AF" : "#6B7280";
-    const focusedColor = "#8B7FD7"; // Primary color
+    const focusedColor = APP_PRIMARY_COLOR;
     return isFocused ? focusedColor : defaultColor;
   }, [isDark, isFocused]);
 
@@ -179,15 +183,20 @@ const Input: React.FC<InputProps> = ({
   };
 
   const getInputContainerClasses = (): string => {
-    const baseClasses = "flex-row items-center gap-3 relative z-10";
+    const baseClasses = `flex-row ${multiline ? "items-start" : "items-center"} gap-2 relative z-10`;
 
-    const sizeClasses = {
-      small: "px-4 py-2",
-      medium: "px-6 py-4",
-    };
+    const sizeClasses = multiline
+      ? {
+          small: "px-3 py-2",
+          medium: "px-4 py-3",
+        }
+      : {
+          small: "px-3 py-1.5",
+          medium: "px-4 py-2.5",
+        };
 
     const variantClasses = {
-      default: `${isDark ? "bg-dark-500" : "bg-white"} border ${isDark ? "border-dark-400" : "border-gray-200"} rounded-xl shadow-sm`,
+      default: `${isDark ? "bg-dark-500" : "bg-white"} border ${isDark ? "border-dark-400" : "border-primary-200"} rounded-xl shadow-sm`,
     };
 
     const focusClasses = isFocused
@@ -213,8 +222,8 @@ const Input: React.FC<InputProps> = ({
     const borderColor = focusAnimation.interpolate({
       inputRange: [0, 1],
       outputRange: [
-        error ? "#EF4444" : isDark ? "#374151" : "#E5E7EB",
-        error ? "#EF4444" : "#8B7FD7",
+        error ? "#EF4444" : isDark ? "#374151" : APP_PRIMARY_BORDER,
+        error ? "#EF4444" : APP_PRIMARY_COLOR,
       ],
     });
 
@@ -230,11 +239,11 @@ const Input: React.FC<InputProps> = ({
 
     return {
       borderColor,
-      shadowColor: "#8B7FD7",
+      shadowColor: APP_PRIMARY_COLOR,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity,
-      shadowRadius: 12,
-      elevation: isFocused ? 5 : 2,
+      shadowRadius: 10,
+      elevation: isFocused ? 4 : 1,
       transform: [{ scale }],
     };
   };
@@ -242,10 +251,15 @@ const Input: React.FC<InputProps> = ({
   const getInputClasses = (): string => {
     const baseClasses = `flex-1 ${isDark ? "text-light-50" : "text-gray-900"}`;
 
-    const sizeClasses = {
-      small: "text-xs min-h-[36px]",
-      medium: "text-sm min-h-[44px]",
-    };
+    const sizeClasses = multiline
+      ? {
+          small: "text-xs min-h-[64px]",
+          medium: "text-sm min-h-[84px]",
+        }
+      : {
+          small: "text-xs min-h-[32px]",
+          medium: "text-sm min-h-[38px]",
+        };
 
     return [baseClasses, sizeClasses[size], inputClassName]
       .filter(Boolean)
@@ -256,6 +270,7 @@ const Input: React.FC<InputProps> = ({
     return {
       fontFamily: FONTS.noto.regular,
       textAlign: (isRTL ? "right" : "left") as "right" | "left",
+      textAlignVertical: (multiline ? "top" : "center") as "top" | "center",
     };
   };
 
@@ -361,6 +376,7 @@ const Input: React.FC<InputProps> = ({
             value={value}
             keyboardType={keyboardType}
             secureTextEntry={secureTextEntry}
+            multiline={multiline}
             placeholderTextColor={isDark ? "#9CA3AF" : "#9CA3AF"}
             {...props}
           />
@@ -372,7 +388,7 @@ const Input: React.FC<InputProps> = ({
               activeOpacity={0.7}
             >
               <Animated.View style={{ transform: [{ scale: rightIconScale }] }}>
-                {rightIcon}
+                {renderIconWithColor(rightIcon)}
               </Animated.View>
             </TouchableOpacity>
           )}

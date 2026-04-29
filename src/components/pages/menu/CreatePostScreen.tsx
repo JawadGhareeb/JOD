@@ -1,13 +1,17 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, TextInput, View } from "react-native";
+import { MapPin } from "lucide-react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
+import Input from "@/src/components/ui/Input";
 import Text from "@/src/components/ui/Text";
 import { appIcons } from "@/src/components/layout/iconMap";
 import type { CreatePostType } from "@/src/types/menu";
 import { MenuPageHeader } from "./MenuPageHeader";
 
 const PlusIcon = appIcons.createPost;
+const TitleIcon = appIcons.campaign;
+const DescriptionIcon = appIcons.about;
 
 const postTypes: Array<{ key: CreatePostType; label: string; hint: string }> = [
   { key: "volunteer", label: "فرصة تطوع", hint: "مناسب لطلبات المتطوعين" },
@@ -88,23 +92,29 @@ export function CreatePostScreen() {
             <Text size="2xs" className="text-gray-500 dark:text-gray-300">
               عنوان المنشور *
             </Text>
-            <TextInput
+            <Input
+              fullWidth
+              showStatusIcon={false}
+              inputClassName="font-noto text-xs"
+              rightIcon={<TitleIcon size={16} strokeWidth={2.25} />}
               value={title}
               onChangeText={setTitle}
               placeholder="مثال: حملة دعم طلاب المدارس"
               placeholderTextColor="#9CA3AF"
-              className="rounded-xl border border-gray-200 bg-white px-3 py-3 text-right font-noto text-xs text-dark-100 dark:border-dark-400 dark:bg-dark-500 dark:text-light-50"
             />
 
             <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
               المدينة *
             </Text>
-            <TextInput
+            <Input
+              fullWidth
+              showStatusIcon={false}
+              inputClassName="font-noto text-xs"
+              rightIcon={<MapPin size={16} strokeWidth={2.25} />}
               value={city}
               onChangeText={setCity}
               placeholder="مثال: دمشق"
               placeholderTextColor="#9CA3AF"
-              className="rounded-xl border border-gray-200 bg-white px-3 py-3 text-right font-noto text-xs text-dark-100 dark:border-dark-400 dark:bg-dark-500 dark:text-light-50"
             />
 
             <View className="mt-1 flex-row-reverse items-center justify-between">
@@ -115,7 +125,12 @@ export function CreatePostScreen() {
                 {details.trim().length}/300
               </Text>
             </View>
-            <TextInput
+            <Input
+              fullWidth
+              showStatusIcon={false}
+              inputClassName="min-h-[96px] font-noto text-xs"
+              inputContainerClassName="min-h-[120px] items-start py-3"
+              rightIcon={<DescriptionIcon size={16} strokeWidth={2.25} />}
               value={details}
               onChangeText={setDetails}
               placeholder="اشرح الهدف من المنشور، الفئة المستهدفة، وكيف يمكن المساعدة."
@@ -123,7 +138,6 @@ export function CreatePostScreen() {
               multiline
               textAlignVertical="top"
               maxLength={300}
-              className="min-h-[120px] rounded-xl border border-gray-200 bg-white px-3 py-3 text-right font-noto text-xs text-dark-100 dark:border-dark-400 dark:bg-dark-500 dark:text-light-50"
             />
           </View>
         </Card>
