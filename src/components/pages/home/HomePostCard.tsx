@@ -5,6 +5,7 @@ import { appIcons } from "@/src/components/layout/iconMap";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Dialog from "@/src/components/ui/Dialog";
+import Input from "@/src/components/ui/Input";
 import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
@@ -44,6 +45,11 @@ const reportTypeOptions: SelectionOption[] = [
     value: "impersonation",
     hint: "استخدام اسم جهة أو شخص بدون صلاحية.",
   },
+  {
+    label: "سبب آخر",
+    value: "other",
+    hint: "اكتب سببًا مخصصًا غير الخيارات السابقة.",
+  },
 ];
 
 export function HomePostCard({
@@ -57,8 +63,10 @@ export function HomePostCard({
   const [isSaved, setIsSaved] = useState(Boolean(post.saved));
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isOtherReasonDialogOpen, setIsOtherReasonDialogOpen] = useState(false);
   const [isReportSuccessOpen, setIsReportSuccessOpen] = useState(false);
   const [lastReportType, setLastReportType] = useState("");
+  const [otherReportReason, setOtherReportReason] = useState("");
   const shouldTruncate = post.content.length > MAX_CONTENT;
   const displayContent = useMemo(() => {
     if (expanded || !shouldTruncate) return post.content;
@@ -128,10 +136,26 @@ export function HomePostCard({
   };
 
   const handleSelectReportType = (reportTypeValue: string) => {
+    if (reportTypeValue === "other") {
+      setIsReportModalOpen(false);
+      setIsOtherReasonDialogOpen(true);
+      return;
+    }
+
     const reportTypeLabel =
       reportTypeOptions.find((item) => item.value === reportTypeValue)?.label || "";
     setLastReportType(reportTypeLabel);
     setIsReportModalOpen(false);
+    setIsReportSuccessOpen(true);
+  };
+
+  const handleSubmitOtherReason = () => {
+    const reason = otherReportReason.trim();
+    if (reason.length < 3) return;
+
+    setLastReportType(`سبب آخر: ${reason}`);
+    setIsOtherReasonDialogOpen(false);
+    setOtherReportReason("");
     setIsReportSuccessOpen(true);
   };
 
@@ -280,6 +304,44 @@ export function HomePostCard({
         onSelect={handleSelectReportType}
         onClose={() => setIsReportModalOpen(false)}
       />
+
+      <Dialog
+        visible={isOtherReasonDialogOpen}
+        title="سبب آخر للبلاغ"
+        onClose={() => {
+          setIsOtherReasonDialogOpen(false);
+          setOtherReportReason("");
+        }}
+        showCloseButton
+      >
+        <Text size="xs" className="mb-3 leading-6 text-gray-500 dark:text-gray-300">
+          اكتب السبب الذي تريد الإبلاغ عنه، وسيتم مراجعته من فريق الإشراف.
+        </Text>
+        <Input
+          fullWidth
+          multiline
+          showStatusIcon={false}
+          value={otherReportReason}
+          onChangeText={setOtherReportReason}
+          placeholder="اكتب سبب البلاغ هنا..."
+          inputClassName="min-h-[64px] text-xs"
+          inputContainerClassName="min-h-[88px] py-2"
+          maxLength={180}
+        />
+        <Text size="2xs" className="mt-2 self-start text-gray-400 dark:text-gray-300">
+          {otherReportReason.trim().length}/180
+        </Text>
+        <View className="mt-4">
+          <Button
+            fullWidth
+            size="small"
+            disabled={otherReportReason.trim().length < 3}
+            onPress={handleSubmitOtherReason}
+          >
+            إرسال البلاغ
+          </Button>
+        </View>
+      </Dialog>
 
       <Dialog
         visible={isReportSuccessOpen}
