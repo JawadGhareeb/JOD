@@ -4,6 +4,7 @@ import { Pressable, ScrollView, View } from "react-native";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Input from "@/src/components/ui/Input";
+import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
 import { appIcons } from "@/src/components/layout/iconMap";
 import type { CreatePostType } from "@/src/types/menu";
@@ -19,11 +20,26 @@ const postTypes: Array<{ key: CreatePostType; label: string; hint: string }> = [
   { key: "help", label: "طلب مساعدة", hint: "مناسب لحالات الدعم الفردية" },
 ];
 
+const cityOptions: SelectionOption[] = [
+  { label: "دمشق", value: "دمشق" },
+  { label: "حلب", value: "حلب" },
+  { label: "حمص", value: "حمص" },
+  { label: "حماة", value: "حماة" },
+  { label: "اللاذقية", value: "اللاذقية" },
+  { label: "طرطوس", value: "طرطوس" },
+  { label: "درعا", value: "درعا" },
+  { label: "السويداء", value: "السويداء" },
+  { label: "دير الزور", value: "دير الزور" },
+  { label: "الرقة", value: "الرقة" },
+  { label: "إدلب", value: "إدلب" },
+];
+
 export function CreatePostScreen() {
   const [postType, setPostType] = useState<CreatePostType>("volunteer");
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   const [city, setCity] = useState("");
+  const [isCityModalOpen, setIsCityModalOpen] = useState(false);
 
   const typeHint = useMemo(
     () => postTypes.find((type) => type.key === postType)?.hint,
@@ -106,16 +122,24 @@ export function CreatePostScreen() {
             <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
               المدينة *
             </Text>
-            <Input
-              fullWidth
-              showStatusIcon={false}
-              inputClassName="font-noto text-xs"
-              rightIcon={<MapPin size={16} strokeWidth={2.25} />}
-              value={city}
-              onChangeText={setCity}
-              placeholder="مثال: دمشق"
-              placeholderTextColor="#9CA3AF"
-            />
+            <Pressable
+              onPress={() => setIsCityModalOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel="اختيار المدينة"
+            >
+              <View pointerEvents="none">
+                <Input
+                  fullWidth
+                  editable={false}
+                  showStatusIcon={false}
+                  inputClassName="font-noto text-xs"
+                  rightIcon={<MapPin size={16} strokeWidth={2.25} />}
+                  value={city}
+                  placeholder="اختر المدينة"
+                  placeholderTextColor="#9CA3AF"
+                />
+              </View>
+            </Pressable>
 
             <View className="mt-1 flex-row-reverse items-center justify-between">
               <Text size="2xs" className="text-gray-500 dark:text-gray-300">
@@ -195,6 +219,19 @@ export function CreatePostScreen() {
           </Text>
         ) : null}
       </ScrollView>
+
+      <SelectionModal
+        visible={isCityModalOpen}
+        title="اختيار المدينة"
+        description="اختر المدينة المرتبطة بالمنشور."
+        options={cityOptions}
+        selectedValue={city}
+        onSelect={(selectedCity) => {
+          setCity(selectedCity);
+          setIsCityModalOpen(false);
+        }}
+        onClose={() => setIsCityModalOpen(false)}
+      />
     </View>
   );
 }

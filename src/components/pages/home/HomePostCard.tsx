@@ -4,6 +4,8 @@ import { Alert, Image, Pressable, Share, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
+import Dialog from "@/src/components/ui/Dialog";
+import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
 import {
@@ -21,6 +23,28 @@ type HomePostCardProps = {
 };
 
 const MAX_CONTENT = 120;
+const reportTypeOptions: SelectionOption[] = [
+  {
+    label: "محتوى مضلل",
+    value: "misleading",
+    hint: "معلومات غير صحيحة أو غير موثوقة.",
+  },
+  {
+    label: "محتوى مسيء أو غير لائق",
+    value: "abusive",
+    hint: "يتضمن إساءة لفظية أو ألفاظ غير مناسبة.",
+  },
+  {
+    label: "احتيال أو طلب تبرع مشبوه",
+    value: "fraud",
+    hint: "طلب دعم مالي يثير الشك أو بدون إثباتات.",
+  },
+  {
+    label: "انتحال جهة أو شخصية",
+    value: "impersonation",
+    hint: "استخدام اسم جهة أو شخص بدون صلاحية.",
+  },
+];
 
 export function HomePostCard({
   post,
@@ -32,6 +56,9 @@ export function HomePostCard({
   const [isSharing, setIsSharing] = useState(false);
   const [isSaved, setIsSaved] = useState(Boolean(post.saved));
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isReportSuccessOpen, setIsReportSuccessOpen] = useState(false);
+  const [lastReportType, setLastReportType] = useState("");
   const shouldTruncate = post.content.length > MAX_CONTENT;
   const displayContent = useMemo(() => {
     if (expanded || !shouldTruncate) return post.content;
@@ -97,7 +124,15 @@ export function HomePostCard({
 
   const handleReportPost = () => {
     setIsOptionsOpen(false);
-    Alert.alert("تم إرسال البلاغ", "شكراً لك. سيتم مراجعة هذا المنشور من قبل فريق الإشراف.");
+    setIsReportModalOpen(true);
+  };
+
+  const handleSelectReportType = (reportTypeValue: string) => {
+    const reportTypeLabel =
+      reportTypeOptions.find((item) => item.value === reportTypeValue)?.label || "";
+    setLastReportType(reportTypeLabel);
+    setIsReportModalOpen(false);
+    setIsReportSuccessOpen(true);
   };
 
   return (
@@ -236,6 +271,30 @@ export function HomePostCard({
           </Button>
         </View>
       ) : null}
+
+      <SelectionModal
+        visible={isReportModalOpen}
+        title="إبلاغ عن المنشور"
+        description="اختر نوع البلاغ لمساعدة فريق الإشراف على المعالجة بشكل أسرع:"
+        options={reportTypeOptions}
+        onSelect={handleSelectReportType}
+        onClose={() => setIsReportModalOpen(false)}
+      />
+
+      <Dialog
+        visible={isReportSuccessOpen}
+        title="تم إرسال البلاغ بنجاح"
+        message={`شكراً لك. سنقوم بمراجعة البلاغ قريبًا.${lastReportType ? `\nنوع البلاغ: ${lastReportType}` : ""}`}
+        icon={<ShieldIcon size={26} color="#405d72" strokeWidth={2.25} />}
+        onClose={() => setIsReportSuccessOpen(false)}
+        buttons={[
+          {
+            text: "حسنًا",
+            variant: "primary",
+            onPress: () => setIsReportSuccessOpen(false),
+          },
+        ]}
+      />
     </Card>
   );
 }

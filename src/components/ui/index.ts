@@ -9,6 +9,7 @@ export { GridSkeleton, QuizCardSkeleton, Skeleton } from "./LoadingSkeleton";
 export { default as Logo } from "./Logo";
 export { default as Modal } from "./Modal";
 export { default as PhoneNumberInput } from "./PhoneNumberInput";
+export { default as SelectionModal } from "./SelectionModal";
 export { default as Tab } from "./Tab";
 export { default as Tabs } from "./Tabs";
 export { default as Text } from "./Text";
