@@ -56,7 +56,7 @@ export function CreatePostScreen() {
                 <Pressable
                   key={type.key}
                   onPress={() => setPostType(type.key)}
-                  className={`flex-1 rounded-xl border px-2 py-3 ${
+                  className={`flex-1 items-center justify-center rounded-xl border px-2 py-3 ${
                     isActive
                       ? "border-primary-400 bg-primary-400/10"
                       : "border-gray-200 bg-white dark:border-dark-400 dark:bg-dark-500"
