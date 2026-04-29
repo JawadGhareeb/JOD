@@ -46,7 +46,7 @@ export function HomeScreen() {
       contentContainerStyle={{ paddingBottom: 24 }}
       data={visiblePosts}
       keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <HomePostCard post={item} />}
+      renderItem={({ item }) => <HomePostCard post={item} enableAuthorNavigation />}
       showsVerticalScrollIndicator={false}
       onEndReached={handleLoadMore}
       onEndReachedThreshold={0.35}

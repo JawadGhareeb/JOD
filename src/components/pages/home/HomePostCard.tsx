@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useRouter } from "expo-router";
 import { Image, Pressable, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import Button from "@/src/components/ui/Button";
@@ -11,11 +12,17 @@ import { HomePost } from "@/src/types/home";
 type HomePostCardProps = {
   post: HomePost;
   showCta?: boolean;
+  enableAuthorNavigation?: boolean;
 };
 
 const MAX_CONTENT = 120;
 
-export function HomePostCard({ post, showCta = true }: HomePostCardProps) {
+export function HomePostCard({
+  post,
+  showCta = true,
+  enableAuthorNavigation = false,
+}: HomePostCardProps) {
+  const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const shouldTruncate = post.content.length > MAX_CONTENT;
   const displayContent = useMemo(() => {
@@ -25,8 +32,8 @@ export function HomePostCard({ post, showCta = true }: HomePostCardProps) {
 
   const BookmarkIcon = appIcons.savedPosts;
   const HeartIcon = appIcons.myDonations;
-  const CommentsIcon = appIcons.comments;
   const SharesIcon = appIcons.shares;
+  const canOpenAuthorProfile = enableAuthorNavigation && Boolean(post.publisher.id);
   const hasCta = post.cta.type !== "none";
   const isSubmitted = post.cta.state === "submitted";
   const isClosed = post.cta.state === "closed";
@@ -34,10 +41,26 @@ export function HomePostCard({ post, showCta = true }: HomePostCardProps) {
   const ctaVariant =
     post.cta.type === "apply" || post.cta.type === "donate" ? "primary" : "secondary";
 
+  const handleOpenAuthorProfile = () => {
+    if (!canOpenAuthorProfile) return;
+    router.push({
+      pathname: "/author/[id]",
+      params: { id: post.publisher.id },
+    });
+  };
+
   return (
     <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
       <View className="mb-3 flex-row-reverse items-center justify-between">
-        <View className="flex-row-reverse items-center gap-2">
+        <Pressable
+          onPress={handleOpenAuthorProfile}
+          disabled={!canOpenAuthorProfile}
+          className="flex-row-reverse items-center gap-2"
+          accessibilityRole={canOpenAuthorProfile ? "button" : undefined}
+          accessibilityLabel={
+            canOpenAuthorProfile ? `عرض الملف الشخصي للناشر ${post.publisher.name}` : undefined
+          }
+        >
           <Avatar name={post.publisher.name} size={42} />
           <View>
             <View className="flex-row-reverse items-center gap-1">
@@ -54,7 +77,7 @@ export function HomePostCard({ post, showCta = true }: HomePostCardProps) {
               @{post.publisher.username} • {formatHomePostRelativeDate(post.createdAt)}
             </Text>
           </View>
-        </View>
+        </Pressable>
         <View className="rounded-full bg-primary-400/15 px-3 py-1">
           <Text size="2xs" weight="medium" className="text-primary-400">
             {HOME_POST_TYPE_LABELS[post.postType]}
@@ -92,12 +115,6 @@ export function HomePostCard({ post, showCta = true }: HomePostCardProps) {
           <HeartIcon size={16} color="#405d72" strokeWidth={2.25} />
           <Text size="xs" className="text-gray-500 dark:text-gray-300">
             {post.stats.likes}
-          </Text>
-        </View>
-        <View className="flex-row-reverse items-center gap-1">
-          <CommentsIcon size={16} color="#9CA3AF" strokeWidth={2.25} />
-          <Text size="xs" className="text-gray-500 dark:text-gray-300">
-            {post.stats.comments}
           </Text>
         </View>
         <View className="flex-row-reverse items-center gap-1">

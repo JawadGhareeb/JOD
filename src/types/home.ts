@@ -5,6 +5,8 @@ export type Publisher = {
   name: string;
   username: string;
   avatarUrl?: string;
+  bio?: string;
+  city?: string;
   verified?: boolean;
 };
 

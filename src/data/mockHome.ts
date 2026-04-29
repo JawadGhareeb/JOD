@@ -1,12 +1,38 @@
 import { HomePostTypeEnum } from "@/src/constants/global";
-import { HomeFeedPayload, HomePost, HomePostAction } from "@/src/types/home";
+import { HomeFeedPayload, HomePost, HomePostAction, Publisher } from "@/src/types/home";
 
 // Backend-ready mock payload for home feed (20 posts).
 const publishers = [
-  { id: "publisher-1", name: "جمعية عطاء", username: "ataa.org", verified: true },
-  { id: "publisher-2", name: "فريق المتطوعين", username: "volunteers.team" },
-  { id: "publisher-3", name: "مبادرة يد الخير", username: "hand.of.good", verified: true },
-  { id: "publisher-4", name: "أهالي الحي", username: "community.group" },
+  {
+    id: "publisher-1",
+    name: "جمعية عطاء",
+    username: "ataa.org",
+    city: "دمشق",
+    bio: "جمعية إنسانية تعمل على دعم الأسر المحتاجة عبر حملات إغاثة دورية ومبادرات تنموية.",
+    verified: true,
+  },
+  {
+    id: "publisher-2",
+    name: "فريق المتطوعين",
+    username: "volunteers.team",
+    city: "حلب",
+    bio: "فريق شبابي ينسق الفرص التطوعية الميدانية ويركز على الاستجابة السريعة للحالات العاجلة.",
+  },
+  {
+    id: "publisher-3",
+    name: "مبادرة يد الخير",
+    username: "hand.of.good",
+    city: "حمص",
+    bio: "مبادرة مجتمع محلي تهدف لربط المتبرعين بالحملات الموثوقة ومتابعة أثر التبرعات بشكل شفاف.",
+    verified: true,
+  },
+  {
+    id: "publisher-4",
+    name: "أهالي الحي",
+    username: "community.group",
+    city: "حماة",
+    bio: "تجمع أهلي يطلق حملات دعم اجتماعي وصحي للأسر المتعففة داخل الحي والمناطق المجاورة.",
+  },
 ];
 
 const imagePool = [
@@ -96,3 +122,11 @@ const buildPost = (index: number): HomePost => {
 export const mockHomePayload: HomeFeedPayload = {
   posts: Array.from({ length: 20 }, (_, idx) => buildPost(idx)),
 };
+
+export function getHomePublisherById(publisherId: string): Publisher | undefined {
+  return publishers.find((publisher) => publisher.id === publisherId);
+}
+
+export function getHomePostsByPublisherId(publisherId: string): HomePost[] {
+  return mockHomePayload.posts.filter((post) => post.publisher.id === publisherId);
+}
