@@ -1,4 +1,4 @@
-import { ChangePasswordScreen } from "@/src/components/pages/menu";
+import { ChangePasswordScreen } from "@/src/components/pages/settings";
 
 export default function ChangePasswordPage() {
   return <ChangePasswordScreen />;

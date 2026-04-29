@@ -12,7 +12,8 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="home" options={{ title: "الرئيسية" }} />
       <Tabs.Screen name="blogs" options={{ title: "المدونات" }} />
-      <Tabs.Screen name="post" options={{ title: "نشر بوست" }} />
+      <Tabs.Screen name="create-post" options={{ title: "نشر بوست" }} />
+      <Tabs.Screen name="post" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ title: "الملف الشخصي" }} />
       <Tabs.Screen name="settings" options={{ title: "الإعدادات" }} />
     </Tabs>

@@ -8,7 +8,7 @@ import SelectionModal, { type SelectionOption } from "@/src/components/ui/Select
 import Text from "@/src/components/ui/Text";
 import { appIcons } from "@/src/components/layout/iconMap";
 import type { CreatePostType } from "@/src/types/menu";
-import { MenuPageHeader } from "./MenuPageHeader";
+import { MenuPageHeader } from "../settings/MenuPageHeader";
 
 const PlusIcon = appIcons.createPost;
 const TitleIcon = appIcons.campaign;

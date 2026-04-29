@@ -1,5 +1,6 @@
 import { ScrollView, View } from "react-native";
 import Card from "@/src/components/ui/Card";
+import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
 import { MenuPageHeader } from "./MenuPageHeader";
 
@@ -21,6 +22,10 @@ export function AboutScreen() {
       <MenuPageHeader title="من نحن" />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+        <View className="mb-3 items-center">
+          <Logo variant="small" />
+        </View>
+
         <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             منصة جود

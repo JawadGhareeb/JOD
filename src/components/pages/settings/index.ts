@@ -1,4 +1,3 @@
-export { CreatePostScreen } from "./CreatePostScreen";
 export { MyDonationsScreen } from "./MyDonationsScreen";
 export { SavedPostsScreen } from "./SavedPostsScreen";
 export { AccountSettingsScreen } from "./AccountSettingsScreen";

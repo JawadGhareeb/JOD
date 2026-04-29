@@ -1,4 +1,4 @@
-import { AboutScreen } from "@/src/components/pages/menu";
+import { AboutScreen } from "@/src/components/pages/settings";
 
 export default function AboutPage() {
   return <AboutScreen />;

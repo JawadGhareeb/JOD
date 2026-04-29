@@ -4,19 +4,18 @@ import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appIcons } from "./iconMap";
 
-type TabKey = "home" | "blogs" | "post" | "profile" | "settings";
+type TabKey = "home" | "blogs" | "create-post" | "profile" | "settings";
 
 const tabConfig: Record<
   TabKey,
   {
     label: string;
     Icon: (typeof appIcons)[keyof typeof appIcons];
-    isCenter?: boolean;
   }
 > = {
   home: { label: "الرئيسية", Icon: appIcons.home },
   blogs: { label: "المدونات", Icon: appIcons.blogs },
-  post: { label: "", Icon: appIcons.createPost, isCenter: true },
+  "create-post": { label: "نشر بوست", Icon: appIcons.createPost },
   profile: { label: "الملف الشخصي", Icon: appIcons.profile },
   settings: { label: "الإعدادات", Icon: appIcons.settings },
 };
@@ -39,16 +38,14 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
             return null;
           }
 
-          const { label, Icon, isCenter } = config;
+          const { label, Icon } = config;
           const isFocused = state.index === index;
           const activeClass = isFocused ? "bg-primary-400/15" : "bg-transparent";
-          const textClass = isCenter
+          const textClass = isFocused
             ? "text-primary-400"
-            : isFocused
-              ? "text-primary-400"
-              : isDark
-                ? "text-gray-300"
-                : "text-gray-400";
+            : isDark
+              ? "text-gray-300"
+              : "text-gray-400";
 
           const onPress = () => {
             const event = navigation.emit({
@@ -78,27 +75,13 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
               testID={descriptors[route.key].options.tabBarButtonTestID}
               onPress={onPress}
               onLongPress={onLongPress}
-              className={
-                isCenter
-                  ? "absolute -top-1/2 left-1/2 -translate-x-1/2 flex-1 items-center justify-center px-2"
-                  : `min-h-[60px] flex-1 items-center justify-center rounded-2xl px-2 py-2 ${activeClass}`
-              }
+              className={`min-h-[60px] flex-1 items-center justify-center rounded-2xl px-2 py-2 ${activeClass}`}
             >
-              {isCenter ? (
-                <View
-                  className={`h-14 w-14 items-center justify-center rounded-full ${
-                    isFocused ? "bg-primary-500" : "bg-primary-400"
-                  } shadow-lg shadow-primary-400/35`}
-                >
-                  <Icon size={20} color="#FFFFFF" strokeWidth={2.5} />
-                </View>
-              ) : (
-                <Icon
-                  size={18}
-                  color={isFocused ? "#405d72" : isDark ? "#D1D5DB" : "#9CA3AF"}
-                  strokeWidth={2.25}
-                />
-              )}
+              <Icon
+                size={18}
+                color={isFocused ? "#405d72" : isDark ? "#D1D5DB" : "#9CA3AF"}
+                strokeWidth={2.25}
+              />
               <Text
                 numberOfLines={2}
                 className={`mt-1 w-full text-center font-noto-medium text-[11px] leading-4 ${textClass}`}

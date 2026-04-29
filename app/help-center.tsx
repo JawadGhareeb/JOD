@@ -1,4 +1,4 @@
-import { HelpCenterScreen } from "@/src/components/pages/menu";
+import { HelpCenterScreen } from "@/src/components/pages/settings";
 
 export default function HelpCenterPage() {
   return <HelpCenterScreen />;

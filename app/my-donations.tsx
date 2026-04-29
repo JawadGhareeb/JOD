@@ -1,4 +1,4 @@
-import { MyDonationsScreen } from "@/src/components/pages/menu";
+import { MyDonationsScreen } from "@/src/components/pages/settings";
 
 export default function MyDonationsPage() {
   return <MyDonationsScreen />;
