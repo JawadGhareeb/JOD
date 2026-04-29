@@ -34,7 +34,11 @@ const cityOptions: SelectionOption[] = [
   { label: "إدلب", value: "إدلب" },
 ];
 
-export function CreatePostScreen() {
+type CreatePostScreenProps = {
+  showPageHeader?: boolean;
+};
+
+export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProps = {}) {
   const [postType, setPostType] = useState<CreatePostType>("volunteer");
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
@@ -49,11 +53,11 @@ export function CreatePostScreen() {
 
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
-      <MenuPageHeader title="نشر بوست" />
+      {showPageHeader ? <MenuPageHeader title="نشر بوست" /> : null}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 28 }}
+        contentContainerStyle={{ paddingBottom: 28, paddingTop: showPageHeader ? 0 : 12 }}
       >
         <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">

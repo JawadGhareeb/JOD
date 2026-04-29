@@ -7,3 +7,4 @@ export { ChangePasswordScreen } from "./ChangePasswordScreen";
 export { HelpCenterScreen } from "./HelpCenterScreen";
 export { TermsPrivacyScreen } from "./TermsPrivacyScreen";
 export { AboutScreen } from "./AboutScreen";
+export { SettingsScreen } from "./SettingsScreen";

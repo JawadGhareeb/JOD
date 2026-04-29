@@ -4,7 +4,7 @@
     "slug": "جود",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/jod.png",
+    "icon": "./assets/images/jod-splash.png",
     "scheme": "جود",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -18,7 +18,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "transparent",
-        "foregroundImage": "./assets/images/splash-screen.png"
+        "foregroundImage": "./assets/images/jod-splash.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -29,14 +29,14 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/splash-screen.png"
+      "favicon": "./assets/images/jod-splash.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-screen.png",
+          "image": "./assets/images/jod-splash.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
