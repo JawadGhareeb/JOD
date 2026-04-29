@@ -16,7 +16,7 @@ const tabConfig: Record<
 > = {
   home: { label: "الرئيسية", Icon: appIcons.home },
   blogs: { label: "المدونات", Icon: appIcons.blogs },
-  post: { label: "نشر", Icon: appIcons.createPost, isCenter: true },
+  post: { label: " نشر بوست", Icon: appIcons.createPost, isCenter: true },
   profile: { label: "الملف الشخصي", Icon: appIcons.profile },
   settings: { label: "الإعدادات", Icon: appIcons.settings },
 };
