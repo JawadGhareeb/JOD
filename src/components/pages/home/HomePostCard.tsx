@@ -1,12 +1,17 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "expo-router";
-import { Image, Pressable, View } from "react-native";
+import { Alert, Image, Pressable, Share, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
-import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/helpers/home";
+import {
+  buildHomePostShareLink,
+  buildHomePostShareMessage,
+  HOME_POST_TYPE_LABELS,
+  formatHomePostRelativeDate,
+} from "@/src/helpers/home";
 import { HomePost } from "@/src/types/home";
 
 type HomePostCardProps = {
@@ -24,6 +29,7 @@ export function HomePostCard({
 }: HomePostCardProps) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const shouldTruncate = post.content.length > MAX_CONTENT;
   const displayContent = useMemo(() => {
     if (expanded || !shouldTruncate) return post.content;
@@ -47,6 +53,31 @@ export function HomePostCard({
       pathname: "/author/[id]",
       params: { id: post.publisher.id },
     });
+  };
+
+  const handleSharePost = async () => {
+    if (isSharing) return;
+
+    try {
+      setIsSharing(true);
+      const postLink = buildHomePostShareLink(post.id);
+      const message = buildHomePostShareMessage(post);
+
+      await Share.share(
+        {
+          title: "مشاركة منشور",
+          message,
+          url: postLink,
+        },
+        {
+          subject: `منشور من ${post.publisher.name} على جود`,
+        },
+      );
+    } catch {
+      Alert.alert("تعذر المشاركة", "حدث خطأ أثناء مشاركة الرابط. حاول مرة أخرى.");
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   return (
@@ -117,12 +148,18 @@ export function HomePostCard({
             {post.stats.likes}
           </Text>
         </View>
-        <View className="flex-row-reverse items-center gap-1">
+        <Pressable
+          onPress={handleSharePost}
+          disabled={isSharing}
+          className={`flex-row-reverse items-center gap-1 ${isSharing ? "opacity-60" : "opacity-100"}`}
+          accessibilityRole="button"
+          accessibilityLabel={`مشاركة منشور ${post.publisher.name}`}
+        >
           <SharesIcon size={16} color="#9CA3AF" strokeWidth={2.25} />
           <Text size="xs" className="text-gray-500 dark:text-gray-300">
             {post.stats.shares}
           </Text>
-        </View>
+        </Pressable>
         <View className="flex-row-reverse items-center gap-1">
           <BookmarkIcon
             size={16}
