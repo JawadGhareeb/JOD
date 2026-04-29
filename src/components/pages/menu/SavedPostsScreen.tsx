@@ -12,7 +12,7 @@ export function SavedPostsScreen() {
       <FlatList
         data={mockMenuPayload.savedPosts}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <HomePostCard post={item} />}
+        renderItem={({ item }) => <HomePostCard post={item} enableAuthorNavigation />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
         ListEmptyComponent={
