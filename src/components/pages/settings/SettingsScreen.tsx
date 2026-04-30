@@ -15,42 +15,68 @@ type SettingsRow = {
   route: Href;
 };
 
-const settingsRows: SettingsRow[] = [
+type SettingsGroup = {
+  title: string;
+  rows: SettingsRow[];
+};
+
+const settingsGroups: SettingsGroup[] = [
   {
-    title: "إعدادات الحساب",
-    hint: "تعديل المعلومات وكلمة المرور",
-    Icon: appIcons.settings,
-    route: "/account-settings",
+    title: "الحساب",
+    rows: [
+      {
+        title: "تعديل المعلومات الشخصية",
+        hint: "الاسم، البريد، رقم الجوال",
+        Icon: appIcons.profile,
+        route: "/edit-information",
+      },
+      {
+        title: "تغيير كلمة المرور",
+        hint: "تحديث كلمة المرور للحساب",
+        Icon: appIcons.shield,
+        route: "/change-password",
+      },
+    ],
   },
   {
-    title: "تبرعاتي",
-    hint: "ملخص التبرعات والحملات",
-    Icon: appIcons.myDonations,
-    route: "/my-donations",
+    title: "نشاطي",
+    rows: [
+      {
+        title: "تبرعاتي",
+        hint: "ملخص التبرعات والحملات",
+        Icon: appIcons.myDonations,
+        route: "/my-donations",
+      },
+      {
+        title: "بوستات محفوظة",
+        hint: "المنشورات التي قمت بحفظها",
+        Icon: appIcons.savedPosts,
+        route: "/saved-posts",
+      },
+    ],
   },
   {
-    title: "بوستات محفوظة",
-    hint: "المنشورات التي قمت بحفظها",
-    Icon: appIcons.savedPosts,
-    route: "/saved-posts",
-  },
-  {
-    title: "مركز المساعدة",
-    hint: "الأسئلة الشائعة وطرق التواصل",
-    Icon: appIcons.help,
-    route: "/help-center",
-  },
-  {
-    title: "الشروط والخصوصية",
-    hint: "سياسة الاستخدام وحماية البيانات",
-    Icon: appIcons.shield,
-    route: "/terms-privacy",
-  },
-  {
-    title: "من نحن",
-    hint: "تعرف على منصة جود",
-    Icon: appIcons.about,
-    route: "/about",
+    title: "الدعم والمعلومات",
+    rows: [
+      {
+        title: "مركز المساعدة",
+        hint: "الأسئلة الشائعة وطرق التواصل",
+        Icon: appIcons.help,
+        route: "/help-center",
+      },
+      {
+        title: "الشروط والخصوصية",
+        hint: "سياسة الاستخدام وحماية البيانات",
+        Icon: appIcons.shield,
+        route: "/terms-privacy",
+      },
+      {
+        title: "من نحن",
+        hint: "تعرف على منصة جود",
+        Icon: appIcons.about,
+        route: "/about",
+      },
+    ],
   },
 ];
 
@@ -73,32 +99,43 @@ export function SettingsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
       >
-        {settingsRows.map((row) => (
-          <Card
-            key={row.title}
-            padding="sm"
-            className="mb-3 border-gray-200 dark:border-dark-400"
-            onPress={() => router.push(row.route)}
-            accessibilityRole="button"
-            accessibilityLabel={row.title}
-          >
-            <View className="flex-row-reverse items-center justify-between">
-              <View className="flex-1 flex-row-reverse items-center gap-3">
-                <View className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350">
-                  <row.Icon size={18} color={iconColor} strokeWidth={2.25} />
+        {settingsGroups.map((group) => (
+          <View key={group.title} className="mb-3">
+            <Text weight="semibold" size="xs" className="mb-2 px-1 text-gray-500 dark:text-gray-300">
+              {group.title}
+            </Text>
+            {group.rows.map((row, index) => (
+              <Card
+                key={row.title}
+                padding="sm"
+                className={`border-gray-200 dark:border-dark-400 ${index === group.rows.length - 1 ? "" : "mb-2"}`}
+                onPress={() => router.push(row.route)}
+                accessibilityRole="button"
+                accessibilityLabel={row.title}
+              >
+                <View className="flex-row-reverse items-center justify-between">
+                  <View className="flex-1 flex-row-reverse items-center gap-3">
+                    <View className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350">
+                      <row.Icon size={18} color={iconColor} strokeWidth={2.25} />
+                    </View>
+                    <View className="flex-1">
+                      <Text
+                        weight="semibold"
+                        size="sm"
+                        className="text-dark-100 dark:text-light-50"
+                      >
+                        {row.title}
+                      </Text>
+                      <Text size="xs" className="text-gray-500 dark:text-gray-300">
+                        {row.hint}
+                      </Text>
+                    </View>
+                  </View>
+                  <ArrowIcon size={16} color="#9CA3AF" strokeWidth={2.25} />
                 </View>
-                <View className="flex-1">
-                  <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
-                    {row.title}
-                  </Text>
-                  <Text size="xs" className="text-gray-500 dark:text-gray-300">
-                    {row.hint}
-                  </Text>
-                </View>
-              </View>
-              <ArrowIcon size={16} color="#9CA3AF" strokeWidth={2.25} />
-            </View>
-          </Card>
+              </Card>
+            ))}
+          </View>
         ))}
 
         <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
