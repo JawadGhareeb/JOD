@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "جود",
-    "slug": "جود",
+    "name": "JOD",
+    "slug": "JOD",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/jod-splash.png",
-    "scheme": "جود",
+    "scheme": "JOD",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
@@ -51,7 +51,10 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "4662748d-dadb-4c4a-b44f-4dfdc4728c53"
+      }
     }
   }
 }
