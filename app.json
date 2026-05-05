@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "transparent",
+        "backgroundColor": "#00000000",
         "foregroundImage": "./assets/images/jod-splash.png"
       },
       "edgeToEdgeEnabled": true,
