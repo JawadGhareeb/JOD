@@ -8,6 +8,8 @@ const publishers = [
     name: "جمعية عطاء",
     username: "ataa.org",
     city: "دمشق",
+    phoneNumber: "0991111111",
+    whatsappNumber: "0991111111",
     bio: "جمعية إنسانية تعمل على دعم الأسر المحتاجة عبر حملات إغاثة دورية ومبادرات تنموية.",
     verified: true,
   },
@@ -16,6 +18,7 @@ const publishers = [
     name: "فريق المتطوعين",
     username: "volunteers.team",
     city: "حلب",
+    phoneNumber: "0992222222",
     bio: "فريق شبابي ينسق الفرص التطوعية الميدانية ويركز على الاستجابة السريعة للحالات العاجلة.",
   },
   {
@@ -23,6 +26,7 @@ const publishers = [
     name: "مبادرة يد الخير",
     username: "hand.of.good",
     city: "حمص",
+    whatsappNumber: "0993333333",
     bio: "مبادرة مجتمع محلي تهدف لربط المتبرعين بالحملات الموثوقة ومتابعة أثر التبرعات بشكل شفاف.",
     verified: true,
   },
@@ -46,6 +50,7 @@ const imagePool = [
 
 type PostTemplate = {
   postType: HomePostTypeEnum;
+  title: string;
   content: string;
   cta: HomePostAction;
 };
@@ -53,30 +58,35 @@ type PostTemplate = {
 const templates: PostTemplate[] = [
   {
     postType: HomePostTypeEnum.VolunteerOpportunity,
+    title: "فرصة تطوع لتنظيم التوزيع",
     content:
       "مطلوب 20 متطوع لتنظيم وتوزيع السلال الغذائية يوم الجمعة القادم. باب التسجيل مفتوح حتى مساء الخميس.",
     cta: { type: "apply", label: "قدّم الآن", state: "open" },
   },
   {
     postType: HomePostTypeEnum.DonationCampaign,
+    title: "حملة دعم العمليات الجراحية",
     content:
       "حملة جديدة لدعم العمليات الجراحية العاجلة للأطفال، وهدفنا تغطية 30 حالة خلال هذا الشهر.",
     cta: { type: "donate", label: "تبرّع الآن", state: "open" },
   },
   {
     postType: HomePostTypeEnum.HelpRequest,
+    title: "طلب مساعدة عاجلة",
     content:
       "أسرة مكونة من 6 أفراد تحتاج مساعدة عاجلة لتأمين مستلزمات التدفئة والأدوية خلال هذا الأسبوع.",
     cta: { type: "contact", label: "تواصل", state: "open" },
   },
   {
     postType: HomePostTypeEnum.CampaignUpdate,
+    title: "تحديث مسار الحملة",
     content:
       "تم إنجاز 65% من هدف الحملة خلال 10 أيام فقط. شكرًا لكل شخص ساهم بالنشر أو بالدعم المباشر.",
     cta: { type: "details", label: "عرض التفاصيل", state: "open" },
   },
   {
     postType: HomePostTypeEnum.Awareness,
+    title: "معلومة توعوية",
     content:
       "معلومة مهمة: التبرعات الصغيرة المنتظمة تصنع أثرًا تراكميًا أكبر من التبرعات الموسمية المتقطعة.",
     cta: { type: "none", label: "" },
@@ -106,10 +116,13 @@ const buildPost = (index: number): HomePost => {
     id: `post-${index + 1}`,
     publisher,
     postType: template.postType,
+    title: template.title,
     content: template.content,
     createdAt: new Date(Date.now() - index * 1000 * 60 * 47).toISOString(),
     images,
     cta,
+    phoneNumber: index % 4 === 0 ? publisher.phoneNumber : undefined,
+    whatsappNumber: index % 5 === 0 ? publisher.whatsappNumber : undefined,
     stats: {
       likes: 50 + ((index * 17) % 220),
       comments: 8 + ((index * 7) % 70),

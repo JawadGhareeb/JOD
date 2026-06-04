@@ -8,6 +8,8 @@ export type Publisher = {
   bio?: string;
   city?: string;
   verified?: boolean;
+  phoneNumber?: string;
+  whatsappNumber?: string;
 };
 
 export type HomePostType = HomePostTypeEnum;
@@ -26,10 +28,13 @@ export type HomePost = {
   id: string;
   publisher: Publisher;
   postType: HomePostType;
+  title?: string;
   content: string;
   createdAt: string; // ISO date from backend
   images: string[];
   cta: HomePostAction;
+  phoneNumber?: string;
+  whatsappNumber?: string;
   stats: {
     likes: number;
     comments: number;

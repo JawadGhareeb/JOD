@@ -15,6 +15,7 @@ import {
   HOME_POST_TYPE_LABELS,
   formatHomePostRelativeDate,
 } from "@/src/helpers/home";
+import { openPostContact } from "@/src/lib/engagement";
 import { HomePost } from "@/src/types/home";
 
 type HomePostCardProps = {
@@ -85,6 +86,42 @@ export function HomePostCard({
   const ctaLabel = isSubmitted ? "تم التقديم" : post.cta.label;
   const ctaVariant =
     post.cta.type === "apply" || post.cta.type === "donate" ? "primary" : "secondary";
+
+  const handlePrimaryAction = async () => {
+    if (isSubmitted || isClosed) {
+      return;
+    }
+
+    setIsOptionsOpen(false);
+
+    if (post.cta.type === "donate") {
+      router.push({
+        pathname: "/donate/[id]",
+        params: { id: post.id },
+      });
+      return;
+    }
+
+    if (post.cta.type === "apply") {
+      router.push({
+        pathname: "/apply/[id]",
+        params: { id: post.id },
+      });
+      return;
+    }
+
+    if (post.cta.type === "details") {
+      router.push({
+        pathname: "/posts/[id]",
+        params: { id: post.id },
+      });
+      return;
+    }
+
+    if (post.cta.type === "contact") {
+      await openPostContact(post);
+    }
+  };
 
   const handleOpenAuthorProfile = () => {
     if (!canOpenAuthorProfile) return;
@@ -290,6 +327,9 @@ export function HomePostCard({
             size="small"
             variant={ctaVariant}
             disabled={isSubmitted || isClosed}
+            onPress={() => {
+              void handlePrimaryAction();
+            }}
           >
             {isClosed ? "مغلق" : ctaLabel}
           </Button>

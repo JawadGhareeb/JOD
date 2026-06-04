@@ -271,6 +271,7 @@ const Input: React.FC<InputProps> = ({
       fontFamily: FONTS.noto.regular,
       textAlign: (isRTL ? "right" : "left") as "right" | "left",
       textAlignVertical: (multiline ? "top" : "center") as "top" | "center",
+      writingDirection: (isRTL ? "rtl" : "ltr") as "rtl" | "ltr",
     };
   };
 
@@ -320,7 +321,7 @@ const Input: React.FC<InputProps> = ({
     <View className={getContainerClasses()}>
       {label && (
         <Animated.View style={getLabelStyle()}>
-          <Text {...getLabelProps()} rtlAlign={isRTL ? "left" : "right"}>
+          <Text {...getLabelProps()} rtlAlign={isRTL ? "right" : "left"}>
             {label}
           </Text>
         </Animated.View>
@@ -400,14 +401,14 @@ const Input: React.FC<InputProps> = ({
           <Text
             {...getErrorProps()}
             className=""
-            rtlAlign={isRTL ? "left" : "right"}
+            rtlAlign={isRTL ? "right" : "left"}
           >
             {error}
           </Text>
         </Animated.View>
       )}
       {helperText && !error && (
-        <Text {...getHelperTextProps()} rtlAlign={isRTL ? "left" : "right"}>
+        <Text {...getHelperTextProps()} rtlAlign={isRTL ? "right" : "left"}>
           {helperText}
         </Text>
       )}

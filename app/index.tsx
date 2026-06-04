@@ -1,5 +1,18 @@
-import { Redirect } from "expo-router";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
+import { useAuthStatus } from "@/src/hooks/useAuthStatus";
 
 export default function Index() {
-  return <Redirect href="/(tabs)/home" />;
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuthStatus();
+
+  useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+
+    router.replace(isAuthenticated ? "/(tabs)/home" : "/(auth)/login");
+  }, [isAuthenticated, isLoading, router]);
+
+  return null;
 }

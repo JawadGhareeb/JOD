@@ -1,5 +1,5 @@
-import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { getMockAuth } from "@/src/lib/auth";
+import { useCallback, useEffect, useState } from "react";
 
 export const useAuthStatus = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -7,15 +7,19 @@ export const useAuthStatus = () => {
 
   const refreshAuthStatus = useCallback(async () => {
     setIsLoading(true);
-    setIsAuthenticated(false);
-    setIsLoading(false);
+    try {
+      const authState = await getMockAuth();
+      setIsAuthenticated(authState.isAuthenticated);
+    } catch {
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      refreshAuthStatus();
-    }, [refreshAuthStatus]),
-  );
+  useEffect(() => {
+    void refreshAuthStatus();
+  }, [refreshAuthStatus]);
 
   return {
     isLoading,

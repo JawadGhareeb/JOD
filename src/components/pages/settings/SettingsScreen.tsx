@@ -7,6 +7,7 @@ import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Dialog from "@/src/components/ui/Dialog";
 import Text from "@/src/components/ui/Text";
+import { clearMockAuth } from "@/src/lib/auth";
 
 type SettingsRow = {
   title: string;
@@ -209,7 +210,11 @@ export function SettingsScreen() {
           {
             text: "تسجيل الخروج",
             variant: "primary",
-            onPress: () => setIsLogoutDialogOpen(false),
+            onPress: async () => {
+              setIsLogoutDialogOpen(false);
+              await clearMockAuth();
+              router.replace("/(auth)/login");
+            },
           },
         ]}
       />
