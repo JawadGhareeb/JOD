@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import { LockKeyhole, PhoneCall } from "lucide-react-native";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 import { z } from "zod";
@@ -165,42 +165,51 @@ export default function ResetPasswordScreen() {
     ];
 
     return (
-      <View className="flex-row-reverse items-center justify-between">
+      <View className="flex-row-reverse items-start">
         {steps.map((item, index) => {
-          const isActive = item.id === step;
-          const isCompleted = item.id < step;
+          const isReached = item.id <= step;
 
           return (
-            <View key={item.id} className="flex-1 items-center">
-              <View
-                className={`h-8 w-8 items-center justify-center rounded-full ${
-                  isActive
-                    ? "bg-primary-400"
-                    : isCompleted
-                      ? "bg-success-100"
+            <Fragment key={item.id}>
+              <View key={item.id} className="flex-1 items-center">
+                <View
+                  className={`h-8 w-8 items-center justify-center rounded-full ${
+                    isReached
+                      ? "bg-primary-400"
                       : "bg-gray-200 dark:bg-dark-400"
-                }`}
-              >
-                <Text
-                  size="xs"
-                  weight="bold"
-                  color={isActive || isCompleted ? "light" : "dark"}
+                  }`}
                 >
-                  {item.id}
+                  <Text
+                    size="xs"
+                    weight="bold"
+                    color={isReached ? "light" : "dark"}
+                  >
+                    {item.id}
+                  </Text>
+                </View>
+                <Text
+                  size="2xs"
+                  weight="medium"
+                  rtlAlign="center"
+                  className={`mt-2 ${
+                    isReached
+                      ? "text-primary-600 dark:text-primary-300"
+                      : "text-gray-500 dark:text-gray-300"
+                  }`}
+                >
+                  {item.label}
                 </Text>
               </View>
-              <Text
-                size="2xs"
-                weight="medium"
-                rtlAlign="center"
-                className="mt-2 text-gray-500 dark:text-gray-300"
-              >
-                {item.label}
-              </Text>
               {index < steps.length - 1 && (
-                <View className="absolute left-0 right-1/2 top-4 h-px bg-gray-200 dark:bg-dark-400" />
+                <View
+                  className={`mt-4 h-px flex-1 self-start rounded-full ${
+                    step > item.id
+                      ? "bg-primary-400"
+                      : "bg-gray-200 dark:bg-dark-400"
+                  }`}
+                />
               )}
-            </View>
+            </Fragment>
           );
         })}
       </View>
@@ -397,6 +406,7 @@ export default function ResetPasswordScreen() {
 
       <Button
         fullWidth
+        variant="primary"
         onPress={() => {
           router.replace("/(auth)/login");
         }}

@@ -183,7 +183,7 @@ const Input: React.FC<InputProps> = ({
   };
 
   const getInputContainerClasses = (): string => {
-    const baseClasses = `flex-row ${multiline ? "items-start" : "items-center"} gap-2 relative z-10`;
+    const baseClasses = `${isRTL ? "flex-row-reverse" : "flex-row"} ${multiline ? "items-start" : "items-center"} gap-2 relative z-10`;
 
     const sizeClasses = multiline
       ? {

@@ -170,7 +170,9 @@ const Button: React.FC<ButtonProps> = ({
                 {leftIcon}
               </Animated.View>
             )}
-            <Text {...getTextProps()}>{children}</Text>
+            <Text {...getTextProps()} className="flex-1 text-center">
+              {children}
+            </Text>
             {rightIcon && (
               <Animated.View style={{ transform: [{ scale: iconScale }] }}>
                 {rightIcon}
