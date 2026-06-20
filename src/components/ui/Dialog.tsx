@@ -13,16 +13,29 @@ import Button from "./Button";
 import Card from "./Card";
 import Text from "./Text";
 
+type DialogTextColor =
+  | "primary"
+  | "secondary"
+  | "light"
+  | "dark"
+  | "accent"
+  | "error"
+  | "success"
+  | "warning";
+
 export interface DialogButton {
   text: string;
   onPress: () => void;
-  variant?: "primary" | "outline" | "tertiary";
+  variant?: "primary" | "outline" | "secondary" | "tertiary";
   loading?: boolean;
+  className?: string;
 }
 
 export interface DialogProps {
   visible: boolean;
   title?: string;
+  titleColor?: DialogTextColor;
+  titleClassName?: string;
   message?: string;
   icon?: React.ReactNode;
   buttons?: DialogButton[];
@@ -35,6 +48,8 @@ export interface DialogProps {
 const Dialog: React.FC<DialogProps> = ({
   visible,
   title,
+  titleColor,
+  titleClassName,
   message,
   icon,
   buttons,
@@ -89,7 +104,7 @@ const Dialog: React.FC<DialogProps> = ({
             return true;
           }
           return false;
-        }
+        },
       );
 
       return () => backHandler.remove();
@@ -102,15 +117,19 @@ const Dialog: React.FC<DialogProps> = ({
     }
   };
 
-  const defaultButtons: DialogButton[] = buttons || (children ? [] : [
-    {
-      text: "موافق",
-      onPress: () => {
-        if (onClose) onClose();
-      },
-      variant: "primary",
-    },
-  ]);
+  const defaultButtons: DialogButton[] =
+    buttons ||
+    (children
+      ? []
+      : [
+          {
+            text: "موافق",
+            onPress: () => {
+              if (onClose) onClose();
+            },
+            variant: "primary",
+          },
+        ]);
 
   return (
     <Modal
@@ -150,43 +169,32 @@ const Dialog: React.FC<DialogProps> = ({
               radius="xl"
               className={`${isDark ? "bg-dark-500" : "bg-white"} border-0 shadow-2xl`}
             >
-              {/* Close Button */}
               {showCloseButton && onClose && (
-                <View className="absolute top-4 left-4 z-10">
+                <View className="absolute left-4 top-4 z-10">
                   <TouchableOpacity
                     onPress={onClose}
-                    className={`w-8 h-8 items-center justify-center rounded-full ${isDark ? "bg-dark-400" : "bg-gray-100"}`}
+                    className={`h-8 w-8 items-center justify-center rounded-full ${isDark ? "bg-dark-400" : "bg-gray-100"}`}
                     activeOpacity={0.7}
                   >
-                    <icons.x
-                      size={18}
-                      color={isDark ? "#9CA3AF" : "#6B7280"}
-                    />
+                    <icons.x size={18} color={isDark ? "#9CA3AF" : "#6B7280"} />
                   </TouchableOpacity>
                 </View>
               )}
 
-              {/* Icon */}
-              {icon && (
-                <View className="items-center mb-4">
-                  {icon}
-                </View>
-              )}
+              {icon && <View className="mb-4 items-center">{icon}</View>}
 
-              {/* Title */}
               {title && (
                 <Text
                   size="lg"
                   weight="bold"
-                  color={isDark ? "light" : "dark"}
+                  color={titleColor || (isDark ? "light" : "dark")}
                   rtlAlign="center"
-                  className="mb-3"
+                  className={["mb-3", titleClassName].filter(Boolean).join(" ")}
                 >
                   {title}
                 </Text>
               )}
 
-              {/* Message or Children */}
               {children ? (
                 children
               ) : (
@@ -201,17 +209,17 @@ const Dialog: React.FC<DialogProps> = ({
                 </Text>
               )}
 
-              {/* Buttons */}
-              {defaultButtons && defaultButtons.length > 0 && (
+              {defaultButtons.length > 0 && (
                 <View
-                  className={`flex-row gap-3 mt-6 ${defaultButtons.length === 1 ? "justify-center" : ""}`}
+                  className={`mt-6 flex-row gap-3 ${defaultButtons.length === 1 ? "justify-center" : ""}`}
                 >
                   {defaultButtons.map((button, index) => (
-                    <View key={index} className={defaultButtons.length === 1 ? "" : "flex-1"}>
+                    <View key={`${button.text}-${index}`} className={defaultButtons.length === 1 ? "" : "flex-1"}>
                       <Button
                         variant={button.variant || "primary"}
                         onPress={button.onPress}
                         loading={button.loading}
+                        className={button.className}
                         fullWidth={defaultButtons.length === 1 ? false : true}
                       >
                         {button.text}
@@ -229,4 +237,3 @@ const Dialog: React.FC<DialogProps> = ({
 };
 
 export default Dialog;
-

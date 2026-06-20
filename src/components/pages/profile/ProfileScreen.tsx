@@ -85,6 +85,8 @@ export function ProfileScreen() {
         postType: mapPostTypeToCreateType(post.postType),
         title: post.title || "",
         details: post.content,
+        city: post.publisher.city || "",
+        images: post.images.join("|"),
       },
     });
   };

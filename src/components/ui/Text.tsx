@@ -193,7 +193,7 @@ export default function Text({
   const colorClasses = color
     ? {
         primary: "text-primary-400",
-        secondary: "text-secondary-40",
+        secondary: "text-secondary-50",
         light: "text-light-50",
         dark: "text-dark-100",
         accent: "text-primary-200",

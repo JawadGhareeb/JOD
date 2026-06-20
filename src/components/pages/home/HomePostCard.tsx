@@ -94,11 +94,15 @@ export function HomePostCard({
   const [isReportSuccessOpen, setIsReportSuccessOpen] = useState(false);
   const [lastReportType, setLastReportType] = useState("");
   const [otherReportReason, setOtherReportReason] = useState("");
+  const [pendingOwnPostAction, setPendingOwnPostAction] = useState<
+    "archive" | "delete" | "edit" | null
+  >(null);
   const shouldTruncate = post.content.length > MAX_CONTENT;
   const displayContent = useMemo(() => {
     if (expanded || !shouldTruncate) return post.content;
     return `${post.content.slice(0, MAX_CONTENT).trim()}...`;
   }, [expanded, shouldTruncate, post.content]);
+  const previewImages = useMemo(() => post.images.slice(0, 4), [post.images]);
 
   const BookmarkIcon = appIcons.savedPosts;
   const HeartIcon = appIcons.myDonations;
@@ -214,27 +218,15 @@ export function HomePostCard({
 
   const handleArchiveOwnPost = () => {
     setIsOptionsOpen(false);
-    onArchive?.(post);
+    setPendingOwnPostAction("archive");
   };
 
   const handleDeleteOwnPost = () => {
     setIsOptionsOpen(false);
-    Alert.alert("حذف المنشور", "هل أنت متأكد أنك تريد حذف هذا المنشور من منشوراتك؟", [
-      {
-        text: "إلغاء",
-        style: "cancel",
-      },
-      {
-        text: "حذف",
-        style: "destructive",
-        onPress: () => onDelete?.(post),
-      },
-    ]);
+    setPendingOwnPostAction("delete");
   };
 
-  const handleEditOwnPost = () => {
-    setIsOptionsOpen(false);
-
+  const executeEditOwnPost = () => {
     if (onEdit) {
       onEdit(post);
       return;
@@ -248,8 +240,34 @@ export function HomePostCard({
         postType: mapPostTypeToCreateType(post.postType),
         title: post.title || "",
         details: post.content,
+        city: post.publisher.city || "",
+        images: post.images.join("|"),
       },
     });
+  };
+
+  const handleEditOwnPost = () => {
+    setIsOptionsOpen(false);
+    setPendingOwnPostAction("edit");
+  };
+
+  const handleConfirmOwnPostAction = () => {
+    const action = pendingOwnPostAction;
+    setPendingOwnPostAction(null);
+
+    if (action === "archive") {
+      onArchive?.(post);
+      return;
+    }
+
+    if (action === "delete") {
+      onDelete?.(post);
+      return;
+    }
+
+    if (action === "edit") {
+      executeEditOwnPost();
+    }
   };
 
   const handleReportPost = () => {
@@ -329,16 +347,24 @@ export function HomePostCard({
         </Pressable>
       ) : null}
 
-      {post.images.length > 0 ? (
-        <View className="mt-3 gap-2">
-          <View className="h-44 overflow-hidden rounded-xl bg-gray-200 dark:bg-dark-350">
-            <Image source={{ uri: post.images[0] }} className="h-full w-full" resizeMode="cover" />
-          </View>
-          {post.images.length > 1 ? (
-            <View className="h-32 overflow-hidden rounded-xl bg-gray-200 dark:bg-dark-350">
-              <Image source={{ uri: post.images[1] }} className="h-full w-full" resizeMode="cover" />
+      {previewImages.length > 0 ? (
+        <View className="mt-3 flex-row-reverse flex-wrap justify-between gap-y-2">
+          {previewImages.map((imageUri, index) => (
+            <View
+              key={`${imageUri}-${index}`}
+              style={{ width: index === 0 || previewImages.length === 1 ? "100%" : "48%" }}
+              className={`${index === 0 ? "h-44" : "h-28"} overflow-hidden rounded-xl bg-gray-200 dark:bg-dark-350`}
+            >
+              <Image source={{ uri: imageUri }} className="h-full w-full" resizeMode="cover" />
+              {post.images.length > 4 && index === 3 ? (
+                <View className="absolute inset-0 items-center justify-center bg-gray-900/60">
+                  <Text size="sm" weight="bold" className="text-light-50">
+                    +{post.images.length - 4}
+                  </Text>
+                </View>
+              ) : null}
             </View>
-          ) : null}
+          ))}
         </View>
       ) : null}
 
@@ -481,6 +507,53 @@ export function HomePostCard({
           </Button>
         </View>
       ) : null}
+
+      <Dialog
+        visible={pendingOwnPostAction !== null}
+        title={
+          pendingOwnPostAction === "delete"
+            ? "حذف المنشور"
+            : pendingOwnPostAction === "archive"
+              ? "أرشفة المنشور"
+              : "تأكيد التعديلات"
+        }
+        titleColor={pendingOwnPostAction === "delete" ? "error" : undefined}
+        message={
+          pendingOwnPostAction === "delete"
+            ? "هل أنت متأكد أنك تريد حذف هذا المنشور؟ لا يمكن التراجع عن هذه العملية."
+            : pendingOwnPostAction === "archive"
+              ? "هل تريد نقل هذا المنشور إلى المنشورات المؤرشفة بدل إبقائه ظاهراً ضمن منشوراتك؟"
+              : "هل تريد فتح صفحة التعديل ومراجعة التغييرات قبل إعادة إرسال المنشور؟"
+        }
+        icon={
+          pendingOwnPostAction === "delete" ? (
+            <Trash2 size={28} color="#DC2626" strokeWidth={2.25} />
+          ) : pendingOwnPostAction === "archive" ? (
+            <Archive size={28} color="#405d72" strokeWidth={2.25} />
+          ) : (
+            <Pencil size={28} color="#405d72" strokeWidth={2.25} />
+          )
+        }
+        onClose={() => setPendingOwnPostAction(null)}
+        buttons={[
+          {
+            text: "تراجع",
+            variant: "tertiary",
+            onPress: () => setPendingOwnPostAction(null),
+          },
+          {
+            text:
+              pendingOwnPostAction === "delete"
+                ? "حذف المنشور"
+                : pendingOwnPostAction === "archive"
+                  ? "أرشفة"
+                  : "متابعة التعديل",
+            variant: "primary",
+            className: pendingOwnPostAction === "delete" ? "bg-error-300 shadow-error-300/30" : undefined,
+            onPress: handleConfirmOwnPostAction,
+          },
+        ]}
+      />
 
       <SelectionModal
         visible={isReportModalOpen}
