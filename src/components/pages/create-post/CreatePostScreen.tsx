@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocalSearchParams } from "expo-router";
 import { MapPin } from "lucide-react-native";
 import { Pressable, ScrollView, View } from "react-native";
 import Button from "@/src/components/ui/Button";
@@ -14,7 +15,7 @@ const PlusIcon = appIcons.createPost;
 const TitleIcon = appIcons.campaign;
 const DescriptionIcon = appIcons.about;
 
-const postTypes: Array<{ key: CreatePostType; label: string; hint: string }> = [
+const postTypes: { key: CreatePostType; label: string; hint: string }[] = [
   { key: "volunteer", label: "فرصة تطوع", hint: "مناسب لطلبات المتطوعين" },
   { key: "donation", label: "حملة تبرع", hint: "مناسب لجمع التبرعات" },
   { key: "help", label: "طلب مساعدة", hint: "مناسب لحالات الدعم الفردية" },
@@ -38,22 +39,63 @@ type CreatePostScreenProps = {
   showPageHeader?: boolean;
 };
 
+const readParam = (value: string | string[] | undefined) => {
+  if (Array.isArray(value)) return value[0] || "";
+  return value || "";
+};
+
+const isCreatePostType = (value: string): value is CreatePostType =>
+  postTypes.some((type) => type.key === value);
+
 export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProps = {}) {
+  const params = useLocalSearchParams<{
+    mode?: string;
+    postId?: string;
+    postType?: string;
+    title?: string;
+    details?: string;
+    city?: string;
+  }>();
   const [postType, setPostType] = useState<CreatePostType>("volunteer");
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   const [city, setCity] = useState("");
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
 
+  const editMode = readParam(params.mode) === "edit";
+  const editingPostId = readParam(params.postId);
+
+  useEffect(() => {
+    if (!editMode) return;
+
+    const paramPostType = readParam(params.postType);
+    const paramTitle = readParam(params.title);
+    const paramDetails = readParam(params.details);
+    const paramCity = readParam(params.city);
+
+    if (isCreatePostType(paramPostType)) {
+      setPostType(paramPostType);
+    }
+
+    setTitle(paramTitle);
+    setDetails(paramDetails);
+
+    if (paramCity) {
+      setCity(paramCity);
+    }
+  }, [editMode, params.city, params.details, params.postType, params.title]);
+
   const typeHint = useMemo(
     () => postTypes.find((type) => type.key === postType)?.hint,
     [postType],
   );
   const canPublish = title.trim().length > 3 && city.trim().length > 1 && details.trim().length > 10;
+  const pageTitle = editMode ? "تعديل بوست" : "نشر بوست";
+  const submitLabel = editMode ? "إعادة إرسال للمراجعة" : "نشر الآن";
 
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
-      {showPageHeader ? <MenuPageHeader title="نشر بوست" /> : null}
+      {showPageHeader ? <MenuPageHeader title={pageTitle} /> : null}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -61,10 +103,12 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
       >
         <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
-            قبل النشر
+            {editMode ? "تعديل منشور مرفوض" : "قبل النشر"}
           </Text>
           <Text size="xs" className="mt-2 leading-6 text-gray-500 dark:text-gray-300">
-            اكتب عنوان واضح، وصف مختصر ومباشر، وأضف صور حقيقية لزيادة موثوقية المنشور.
+            {editMode
+              ? `عدّل بيانات المنشور${editingPostId ? ` رقم ${editingPostId}` : ""} ثم أعد إرساله للمراجعة.`
+              : "اكتب عنوان واضح، وصف مختصر ومباشر، وأضف صور حقيقية لزيادة موثوقية المنشور."}
           </Text>
         </Card>
 
@@ -200,14 +244,14 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
 
         <Card padding="sm" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-            بالضغط على نشر الآن أنت توافق على سياسات المحتوى في المنصة.
+            بالضغط على {submitLabel} أنت توافق على سياسات المحتوى في المنصة.
           </Text>
         </Card>
 
         <View className="mb-2 flex-row-reverse items-stretch gap-2">
           <View className="min-w-0 flex-1">
             <Button fullWidth size="small" disabled={!canPublish}>
-              نشر الآن
+              {submitLabel}
             </Button>
           </View>
           <View className="min-w-0 flex-1">

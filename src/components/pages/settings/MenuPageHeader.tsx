@@ -21,7 +21,7 @@ export function MenuPageHeader({ title }: MenuPageHeaderProps) {
     >
       <Pressable
         onPress={() => router.back()}
-        className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100"
+        className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-primary-400/15"
         accessibilityRole="button"
         accessibilityLabel="رجوع"
       >

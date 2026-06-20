@@ -1,29 +1,41 @@
 import { useMemo, useState } from "react";
-import { FlatList, Pressable, View } from "react-native";
+import { Alert, FlatList, Pressable, View } from "react-native";
+import { useRouter } from "expo-router";
 import Text from "@/src/components/ui/Text";
 import { SectionHeader } from "@/src/components/shared/SectionHeader";
 import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
 import { HomePostCardSkeleton } from "@/src/components/pages/home/HomePostCardSkeleton";
+import { HomePostTypeEnum } from "@/src/constants/global";
 import { mockProfilePayload } from "@/src/data/mockProfile";
-import { ProfilePostStatus } from "@/src/types/profile";
+import type { HomePost } from "@/src/types/home";
+import type { CreatePostType } from "@/src/types/menu";
+import { ProfilePostStatus, type ProfilePost } from "@/src/types/profile";
 import { ProfileHeaderCard } from "./ProfileHeaderCard";
 
 const PAGE_SIZE = 6;
 
-const profilePostTabs: Array<{ key: ProfilePostStatus; label: string }> = [
+const profilePostTabs: { key: ProfilePostStatus; label: string }[] = [
   { key: "posted", label: "منشور" },
   { key: "unposted", label: "مرفوض" },
   { key: "archived", label: "مؤرشف" },
 ];
 
+const mapPostTypeToCreateType = (postType: HomePost["postType"]): CreatePostType => {
+  if (postType === HomePostTypeEnum.DonationCampaign) return "donation";
+  if (postType === HomePostTypeEnum.HelpRequest) return "help";
+  return "volunteer";
+};
+
 export function ProfileScreen() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<ProfilePostStatus>("posted");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [posts, setPosts] = useState<ProfilePost[]>(mockProfilePayload.posts);
 
   const filteredPosts = useMemo(
-    () => mockProfilePayload.posts.filter((post) => post.profileStatus === activeTab),
-    [activeTab],
+    () => posts.filter((post) => post.profileStatus === activeTab),
+    [activeTab, posts],
   );
   const visiblePosts = useMemo(
     () => filteredPosts.slice(0, visibleCount),
@@ -32,7 +44,7 @@ export function ProfileScreen() {
   const hasMore = visibleCount < filteredPosts.length;
 
   const getTabCount = (status: ProfilePostStatus) =>
-    mockProfilePayload.posts.filter((post) => post.profileStatus === status).length;
+    posts.filter((post) => post.profileStatus === status).length;
 
   const handleTabChange = (status: ProfilePostStatus) => {
     setActiveTab(status);
@@ -50,13 +62,50 @@ export function ProfileScreen() {
     }, 500);
   };
 
+  const handleArchivePost = (post: HomePost) => {
+    setPosts((prev) =>
+      prev.map((item) =>
+        item.id === post.id ? { ...item, profileStatus: "archived" } : item,
+      ),
+    );
+    Alert.alert("تمت الأرشفة", "تم نقل المنشور إلى تبويب المنشورات المؤرشفة.");
+  };
+
+  const handleDeletePost = (post: HomePost) => {
+    setPosts((prev) => prev.filter((item) => item.id !== post.id));
+    Alert.alert("تم الحذف", "تم حذف المنشور من منشوراتك.");
+  };
+
+  const handleEditRejectedPost = (post: HomePost) => {
+    router.push({
+      pathname: "/(tabs)/create-post",
+      params: {
+        mode: "edit",
+        postId: post.id,
+        postType: mapPostTypeToCreateType(post.postType),
+        title: post.title || "",
+        details: post.content,
+      },
+    });
+  };
+
   return (
     <FlatList
       className="flex-1 bg-light-100 px-4 pt-4 dark:bg-dark-300"
       contentContainerStyle={{ paddingBottom: 24 }}
       data={visiblePosts}
       keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <HomePostCard post={item} showCta={false} />}
+      renderItem={({ item }) => (
+        <HomePostCard
+          post={item}
+          showCta={false}
+          mode="own"
+          ownPostStatus={item.profileStatus}
+          onArchive={handleArchivePost}
+          onDelete={handleDeletePost}
+          onEdit={handleEditRejectedPost}
+        />
+      )}
       showsVerticalScrollIndicator={false}
       onEndReached={handleLoadMore}
       onEndReachedThreshold={0.35}

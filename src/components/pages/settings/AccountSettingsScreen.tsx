@@ -1,4 +1,5 @@
 import { ScrollView, View } from "react-native";
+import { useColorScheme } from "nativewind";
 import { useRouter, type Href } from "expo-router";
 import { appIcons } from "@/src/components/layout/iconMap";
 import Card from "@/src/components/ui/Card";
@@ -30,6 +31,9 @@ const ArrowIcon = appIcons.chevronLeft;
 
 export function AccountSettingsScreen() {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const iconColor = colorScheme === "dark" ? "#9cc4da" : "#405d72";
+  const arrowIconColor = colorScheme === "dark" ? "#D1D5DB" : "#9CA3AF";
 
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
@@ -47,8 +51,8 @@ export function AccountSettingsScreen() {
           >
             <View className="flex-row-reverse items-center justify-between">
               <View className="flex-1 flex-row-reverse items-center gap-3">
-                <View className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350">
-                  <row.Icon size={18} color="#405d72" strokeWidth={2.25} />
+                <View className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-primary-400/15">
+                  <row.Icon size={18} color={iconColor} strokeWidth={2.25} />
                 </View>
                 <View className="flex-1">
                   <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
@@ -59,7 +63,7 @@ export function AccountSettingsScreen() {
                   </Text>
                 </View>
               </View>
-              <ArrowIcon size={16} color="#9CA3AF" strokeWidth={2.25} />
+              <ArrowIcon size={16} color={arrowIconColor} strokeWidth={2.25} />
             </View>
           </Card>
         ))}

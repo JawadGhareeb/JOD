@@ -92,7 +92,9 @@ export function SettingsScreen() {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const isDark = colorScheme === "dark";
   const themeMode = useMemo(() => (isDark ? "dark" : "light"), [isDark]);
-  const iconColor = isDark ? "#F9FAFB" : "#405d72";
+  const iconColor = isDark ? "#9cc4da" : "#405d72";
+  const inactiveThemeIconColor = isDark ? "#E5E7EB" : "#405d72";
+  const arrowIconColor = isDark ? "#D1D5DB" : "#9CA3AF";
 
   return (
     <View className="flex-1 bg-light-100 px-4 pt-4 dark:bg-dark-300">
@@ -116,7 +118,7 @@ export function SettingsScreen() {
               >
                 <View className="flex-row-reverse items-center justify-between">
                   <View className="flex-1 flex-row-reverse items-center gap-3">
-                    <View className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350">
+                    <View className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-primary-400/15">
                       <row.Icon size={18} color={iconColor} strokeWidth={2.25} />
                     </View>
                     <View className="flex-1">
@@ -132,7 +134,7 @@ export function SettingsScreen() {
                       </Text>
                     </View>
                   </View>
-                  <ArrowIcon size={16} color="#9CA3AF" strokeWidth={2.25} />
+                  <ArrowIcon size={16} color={arrowIconColor} strokeWidth={2.25} />
                 </View>
               </Card>
             ))}
@@ -156,7 +158,7 @@ export function SettingsScreen() {
                 leftIcon={
                   <LightModeIcon
                     size={16}
-                    color={themeMode === "light" ? "#FFFFFF" : iconColor}
+                    color={themeMode === "light" ? "#FFFFFF" : inactiveThemeIconColor}
                     strokeWidth={2.25}
                   />
                 }
@@ -173,7 +175,7 @@ export function SettingsScreen() {
                 leftIcon={
                   <DarkModeIcon
                     size={16}
-                    color={themeMode === "dark" ? "#FFFFFF" : iconColor}
+                    color={themeMode === "dark" ? "#FFFFFF" : inactiveThemeIconColor}
                     strokeWidth={2.25}
                   />
                 }
@@ -187,8 +189,9 @@ export function SettingsScreen() {
 
         <Button
           fullWidth
-          variant="outline"
-          leftIcon={<LogoutIcon size={18} color={iconColor} strokeWidth={2.25} />}
+          variant="tertiary"
+          className="border border-error-300/30 bg-error-300/5 dark:bg-error-300/10"
+          leftIcon={<LogoutIcon size={18} color="#DC2626" strokeWidth={2.25} />}
           onPress={() => setIsLogoutDialogOpen(true)}
         >
           تسجيل الخروج
