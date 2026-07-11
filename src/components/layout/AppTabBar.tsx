@@ -48,10 +48,13 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
 
   return (
     <View
-      style={{ paddingBottom: Math.max(insets.bottom, 10), paddingTop: 14 }}
+      style={{
+        paddingTop: 8,
+        paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+      }}
       className="relative border-t border-gray-200 bg-white px-3 dark:border-dark-400 dark:bg-dark-500"
     >
-      <View className={`${rowClassName} items-end justify-between gap-2`}>
+      <View className={`${rowClassName} items-center justify-between gap-2`}>
         {state.routes.map((route, index) => {
           const key = route.name as TabKey;
           const config = tabConfig[key];
@@ -60,7 +63,7 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
           }
 
           if (key === "create-post") {
-            return <View key={route.key} className="min-h-[60px] flex-1" />;
+            return <View key={route.key} className="min-h-[54px] flex-1" />;
           }
 
           const { label, Icon } = config;
@@ -94,7 +97,7 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
               testID={descriptors[route.key].options.tabBarButtonTestID}
               onPress={onPress}
               onLongPress={onLongPress}
-              className={`min-h-[60px] flex-1 items-center justify-center rounded-2xl px-2 py-2 ${activeClass}`}
+              className={`min-h-[54px] flex-1 items-center justify-center rounded-2xl px-2 py-1.5 ${activeClass}`}
             >
               <Icon
                 size={18}
@@ -127,7 +130,7 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
           }}
           style={{
             position: "absolute",
-            top: -24,
+            top: -20,
             left: "50%",
             width: 64,
             height: 64,

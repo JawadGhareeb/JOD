@@ -7,6 +7,7 @@ import {
   type NativeSyntheticEvent,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { mockHomePayload } from "@/src/data/mockHome";
 import { AppHeader } from "@/src/components/layout/AppHeader";
 import Text from "@/src/components/ui/Text";
@@ -14,16 +15,18 @@ import { HomePostCard } from "./HomePostCard";
 import { HomePostCardSkeleton } from "./HomePostCardSkeleton";
 
 export function HomeScreen() {
+  const insets = useSafeAreaInsets();
   const PAGE_SIZE = 6;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(92);
+  const [headerContentHeight, setHeaderContentHeight] = useState(72);
   const headerTranslateY = useRef(new Animated.Value(0)).current;
   const isHeaderVisibleRef = useRef(true);
   const lastOffsetYRef = useRef(0);
   const directionalDeltaRef = useRef(0);
   const filteredPosts = useMemo(() => mockHomePayload.posts, []);
+  const totalVisibleHeaderHeight = insets.top + headerContentHeight;
 
   const visiblePosts = useMemo(
     () => filteredPosts.slice(0, visibleCount),
@@ -53,14 +56,14 @@ export function HomeScreen() {
   }, [headerTranslateY]);
 
   const hideHeader = useCallback(() => {
-    if (!headerHeight || !isHeaderVisibleRef.current) return;
+    if (!headerContentHeight || !isHeaderVisibleRef.current) return;
     isHeaderVisibleRef.current = false;
     Animated.timing(headerTranslateY, {
-      toValue: -headerHeight,
+      toValue: -headerContentHeight,
       duration: 220,
       useNativeDriver: true,
     }).start();
-  }, [headerHeight, headerTranslateY]);
+  }, [headerContentHeight, headerTranslateY]);
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -74,7 +77,7 @@ export function HomeScreen() {
         return;
       }
 
-      if (offsetY < headerHeight) {
+      if (offsetY < totalVisibleHeaderHeight) {
         directionalDeltaRef.current = 0;
         showHeader();
         return;
@@ -101,11 +104,13 @@ export function HomeScreen() {
         directionalDeltaRef.current = 0;
       }
     },
-    [headerHeight, hideHeader, showHeader],
+    [hideHeader, showHeader, totalVisibleHeaderHeight],
   );
 
   const handleRefresh = useCallback(() => {
     showHeader();
+    lastOffsetYRef.current = 0;
+    directionalDeltaRef.current = 0;
     setRefreshing(true);
     setLoadingMore(false);
     setTimeout(() => {
@@ -116,28 +121,30 @@ export function HomeScreen() {
 
   return (
     <View className="flex-1 bg-light-100 dark:bg-dark-300">
-      <Animated.View
-        onLayout={(event) => {
-          const measuredHeight = Math.ceil(event.nativeEvent.layout.height);
-          if (measuredHeight > 0 && measuredHeight !== headerHeight) {
-            setHeaderHeight(measuredHeight);
-          }
-        }}
+      <View
+        pointerEvents="box-none"
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
           zIndex: 20,
-          transform: [{ translateY: headerTranslateY }],
         }}
       >
-        <AppHeader />
-      </Animated.View>
+        <AppHeader
+          animatedContentStyle={{ transform: [{ translateY: headerTranslateY }] }}
+          onContentLayout={(event) => {
+            const measuredHeight = Math.ceil(event.nativeEvent.layout.height);
+            if (measuredHeight > 0 && measuredHeight !== headerContentHeight) {
+              setHeaderContentHeight(measuredHeight);
+            }
+          }}
+        />
+      </View>
 
       <FlatList
         className="flex-1 bg-light-100 px-4 dark:bg-dark-300"
-        contentContainerStyle={{ paddingTop: headerHeight + 16, paddingBottom: 24 }}
+        contentContainerStyle={{ paddingTop: totalVisibleHeaderHeight + 16, paddingBottom: 24 }}
         data={visiblePosts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <HomePostCard post={item} enableAuthorNavigation />}
