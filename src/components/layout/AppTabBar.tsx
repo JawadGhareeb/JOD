@@ -2,6 +2,7 @@ import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useColorScheme } from "nativewind";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRTL } from "@/src/providers/RTLProvider";
 import { appIcons } from "./iconMap";
 
 type TabKey = "home" | "blogs" | "create-post" | "profile" | "settings";
@@ -20,22 +21,46 @@ const tabConfig: Record<
   settings: { label: "الإعدادات", Icon: appIcons.settings },
 };
 
+const CreatePostIcon = appIcons.createPost;
+
 export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const { isRTL } = useRTL();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const rowClassName = isRTL ? "flex-row-reverse" : "flex-row";
+  const floatingRoute = state.routes.find((route) => route.name === "create-post");
+
+  const triggerTabPress = (routeName: string, routeKey: string, routeParams?: object) => {
+    const event = navigation.emit({
+      type: "tabPress",
+      target: routeKey,
+      canPreventDefault: true,
+    });
+
+    if (!event.defaultPrevented) {
+      navigation.navigate({
+        name: routeName as never,
+        params: routeParams as never,
+      } as never);
+    }
+  };
 
   return (
     <View
-      style={{ paddingBottom: Math.max(insets.bottom, 10) }}
-      className="border-t border-gray-200 bg-white px-3 pt-2 dark:border-dark-400 dark:bg-dark-500"
+      style={{ paddingBottom: Math.max(insets.bottom, 10), paddingTop: 14 }}
+      className="relative border-t border-gray-200 bg-white px-3 dark:border-dark-400 dark:bg-dark-500"
     >
-      <View className="flex-row-reverse items-center justify-between gap-2">
+      <View className={`${rowClassName} items-end justify-between gap-2`}>
         {state.routes.map((route, index) => {
           const key = route.name as TabKey;
           const config = tabConfig[key];
           if (!config) {
             return null;
+          }
+
+          if (key === "create-post") {
+            return <View key={route.key} className="min-h-[60px] flex-1" />;
           }
 
           const { label, Icon } = config;
@@ -48,14 +73,8 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
               : "text-gray-400";
 
           const onPress = () => {
-            const event = navigation.emit({
-              type: "tabPress",
-              target: route.key,
-              canPreventDefault: true,
-            });
-
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name, route.params);
+            if (!isFocused) {
+              triggerTabPress(route.name, route.key, route.params);
             }
           };
 
@@ -92,6 +111,41 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
           );
         })}
       </View>
+
+      {floatingRoute ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={state.routes[state.index].key === floatingRoute.key ? { selected: true } : {}}
+          accessibilityLabel={descriptors[floatingRoute.key].options.tabBarAccessibilityLabel}
+          testID={descriptors[floatingRoute.key].options.tabBarButtonTestID}
+          onPress={() => triggerTabPress(floatingRoute.name, floatingRoute.key, floatingRoute.params)}
+          onLongPress={() => {
+            navigation.emit({
+              type: "tabLongPress",
+              target: floatingRoute.key,
+            });
+          }}
+          style={{
+            position: "absolute",
+            top: -24,
+            left: "50%",
+            width: 64,
+            height: 64,
+            marginLeft: -32,
+            borderRadius: 32,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#405d72",
+            shadowColor: "#1F2937",
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.24,
+            shadowRadius: 14,
+            elevation: 10,
+          }}
+        >
+          <CreatePostIcon size={24} color="#FFFFFF" strokeWidth={2.5} />
+        </Pressable>
+      ) : null}
     </View>
   );
 }

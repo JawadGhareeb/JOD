@@ -68,6 +68,7 @@ export default function RootLayout() {
             <Stack.Screen name="notifications" />
             <Stack.Screen name="posts/[id]" />
             <Stack.Screen name="saved-posts" />
+            <Stack.Screen name="search" />
             <Stack.Screen name="terms-privacy" />
           </Stack>
         </SafeAreaProvider>

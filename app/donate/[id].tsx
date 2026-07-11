@@ -1,40 +1,22 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { HeartHandshake, PhoneCall } from "lucide-react-native";
-import { useMemo, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { HeartHandshake } from "lucide-react-native";
+import { useMemo } from "react";
 import { View } from "react-native";
-import { z } from "zod";
 import { mainImage } from "@/src/constants/images";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
-import Dialog from "@/src/components/ui/Dialog";
 import { EmptyState } from "@/src/components/ui/EmptyState";
-import Input from "@/src/components/ui/Input";
 import KeyboardAvoider from "@/src/components/ui/KeyboardAvoider";
 import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
 import {
   getHomePostById,
   getRelatedDonationCampaign,
+  openPostContact,
 } from "@/src/lib/engagement";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/helpers/home";
-
-const donationSchema = z.object({
-  donationValue: z.string().trim().min(1, "يرجى إدخال قيمة أو نوع التبرع"),
-  phoneNumber: z.string().trim().min(1, "رقم الهاتف مطلوب"),
-  note: z.string().trim().optional(),
-});
-
-type DonationFormValues = z.infer<typeof donationSchema>;
-
-const defaultValues: DonationFormValues = {
-  donationValue: "",
-  phoneNumber: "0999999999",
-  note: "",
-};
 
 export default function DonatePage() {
   const router = useRouter();
@@ -42,23 +24,6 @@ export default function DonatePage() {
   const postId = Array.isArray(id) ? id[0] : id;
   const post = useMemo(() => getHomePostById(postId), [postId]);
   const campaign = useMemo(() => getRelatedDonationCampaign(post), [post]);
-  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<DonationFormValues>({
-    resolver: zodResolver(donationSchema),
-    defaultValues: {
-      ...defaultValues,
-      phoneNumber: post?.phoneNumber || post?.publisher.phoneNumber || defaultValues.phoneNumber,
-    },
-  });
-
-  const onSubmit = handleSubmit(() => {
-    setIsSuccessOpen(true);
-  });
 
   if (!post) {
     return (
@@ -109,7 +74,7 @@ export default function DonatePage() {
                 <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
                   {campaign?.title || post.title || "حملة تبرع"}
                 </Text>
-              <Text size="xs" className="text-gray-500 dark:text-gray-300">
+                <Text size="xs" className="text-gray-500 dark:text-gray-300">
                   {post.publisher.name} • {post.publisher.city || "مدينة غير محددة"}
                 </Text>
               </View>
@@ -140,97 +105,22 @@ export default function DonatePage() {
             </Text>
           </Card>
 
-          <Card padding="lg" className="gap-4 border-gray-200 dark:border-dark-400">
-            <View className="gap-1">
+          <Card padding="lg" className="gap-3 border-gray-200 dark:border-dark-400">
+            <View className="flex-row-reverse items-center gap-2">
+              <HeartHandshake size={20} color="#405d72" />
               <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
-                بيانات التبرع
-              </Text>
-              <Text size="xs" className="text-gray-500 dark:text-gray-300">
-                أدخل المبلغ أو نوع التبرع ورقم الهاتف للتواصل.
+                متابعة التبرع
               </Text>
             </View>
-
-            <Controller
-              control={control}
-              name="donationValue"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label="قيمة التبرع أو نوعه"
-                  placeholder="مثال: 50,000 ل.س أو سلة غذائية"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.donationValue?.message}
-                  leftIcon={<HeartHandshake size={18} />}
-                  fullWidth
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="phoneNumber"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label="رقم الهاتف"
-                  placeholder="0999999999"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  keyboardType="phone-pad"
-                  autoComplete="tel"
-                  textContentType="telephoneNumber"
-                  error={errors.phoneNumber?.message}
-                  leftIcon={<PhoneCall size={18} />}
-                  fullWidth
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="note"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label="ملاحظة اختيارية"
-                  placeholder="أضف أي تفاصيل إضافية"
-                  value={value || ""}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  multiline
-                  showStatusIcon={false}
-                  error={errors.note?.message}
-                  fullWidth
-                />
-              )}
-            />
-
-            <Button fullWidth loading={isSubmitting} onPress={onSubmit}>
-              إرسال طلب التبرع
+            <Text size="xs" className="text-gray-500 dark:text-gray-300">
+              تم حذف نموذج الإدخال من هذه الصفحة، ويمكنك المتابعة مباشرة عبر التواصل مع الجهة
+              الناشرة للحملة.
+            </Text>
+            <Button fullWidth onPress={() => void openPostContact(post)}>
+              التواصل للتبرع
             </Button>
           </Card>
         </View>
-
-        <Dialog
-          visible={isSuccessOpen}
-          title="تم إرسال طلب التبرع"
-          message="تم حفظ طلبك بنجاح وسيتم التواصل معك عند الحاجة."
-          icon={<HeartHandshake size={26} color="#405d72" />}
-          onClose={() => {
-            setIsSuccessOpen(false);
-            router.replace("/(tabs)/home");
-          }}
-          buttons={[
-            {
-              text: "العودة إلى الرئيسية",
-              variant: "primary",
-              onPress: () => {
-                setIsSuccessOpen(false);
-                router.replace("/(tabs)/home");
-              },
-            },
-          ]}
-        />
       </Container>
     </KeyboardAvoider>
   );

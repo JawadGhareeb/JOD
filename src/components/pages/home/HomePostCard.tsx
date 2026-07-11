@@ -18,6 +18,7 @@ import {
   formatHomePostRelativeDate,
 } from "@/src/helpers/home";
 import { openPostContact } from "@/src/lib/engagement";
+import { useRTL } from "@/src/providers/RTLProvider";
 import type { HomePost } from "@/src/types/home";
 import type { CreatePostType } from "@/src/types/menu";
 import type { ProfilePostStatus } from "@/src/types/profile";
@@ -83,6 +84,7 @@ export function HomePostCard({
   onEdit,
 }: HomePostCardProps) {
   const router = useRouter();
+  const { isRTL } = useRTL();
   const [expanded, setExpanded] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isSaved, setIsSaved] = useState(Boolean(post.saved || mode === "saved"));
@@ -120,6 +122,9 @@ export function HomePostCard({
   const isSavedPostList = mode === "saved";
   const canArchiveOwnPost = isOwnPost && ownPostStatus !== "archived";
   const canEditRejectedPost = isOwnPost && ownPostStatus === "unposted";
+  const actionRowClassName = isRTL ? "flex-row-reverse" : "flex-row";
+  const actionItemClassName = isRTL ? "flex-row-reverse" : "flex-row";
+  const optionsMenuPositionClassName = isRTL ? "left-0" : "right-0";
 
   const handlePrimaryAction = async () => {
     if (isSubmitted || isClosed) {
@@ -368,10 +373,12 @@ export function HomePostCard({
         </View>
       ) : null}
 
-      <View className="mt-3 flex-row-reverse items-center justify-between border-t border-gray-100 pt-3 dark:border-dark-400">
+      <View
+        className={`mt-3 ${actionRowClassName} items-center gap-3 border-t border-gray-100 pt-3 dark:border-dark-400`}
+      >
         <Pressable
           onPress={handleToggleLike}
-          className="flex-row-reverse items-center gap-1 rounded-full px-2 py-1"
+          className={`${actionItemClassName} items-center gap-1 rounded-full px-2 py-1`}
           accessibilityRole="button"
           accessibilityLabel={isLiked ? "إلغاء الإعجاب" : "إعجاب بالمنشور"}
         >
@@ -388,7 +395,9 @@ export function HomePostCard({
         <Pressable
           onPress={handleSharePost}
           disabled={isSharing}
-          className={`flex-row-reverse items-center gap-1 ${isSharing ? "opacity-60" : "opacity-100"}`}
+          className={`${actionItemClassName} items-center gap-1 rounded-full px-2 py-1 ${
+            isSharing ? "opacity-60" : "opacity-100"
+          }`}
           accessibilityRole="button"
           accessibilityLabel={`مشاركة منشور ${post.publisher.name}`}
         >
@@ -412,13 +421,15 @@ export function HomePostCard({
           </Pressable>
 
           {isOptionsOpen ? (
-            <View className="absolute left-0 top-9 z-20 w-48 rounded-xl border border-gray-200 bg-white p-1 shadow-sm dark:border-dark-400 dark:bg-dark-500">
+            <View
+              className={`absolute top-9 z-20 w-48 rounded-xl border border-gray-200 bg-white p-1 shadow-sm dark:border-dark-400 dark:bg-dark-500 ${optionsMenuPositionClassName}`}
+            >
               {isOwnPost ? (
                 <>
                   {canEditRejectedPost ? (
                     <Pressable
                       onPress={handleEditOwnPost}
-                      className="flex-row-reverse items-center justify-between rounded-lg px-3 py-2"
+                      className={`${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
                       accessibilityRole="button"
                       accessibilityLabel="تعديل المنشور المرفوض"
                     >
@@ -432,7 +443,7 @@ export function HomePostCard({
                   {canArchiveOwnPost ? (
                     <Pressable
                       onPress={handleArchiveOwnPost}
-                      className="mt-1 flex-row-reverse items-center justify-between rounded-lg px-3 py-2"
+                      className={`mt-1 ${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
                       accessibilityRole="button"
                       accessibilityLabel="أرشفة المنشور"
                     >
@@ -445,7 +456,7 @@ export function HomePostCard({
 
                   <Pressable
                     onPress={handleDeleteOwnPost}
-                    className="mt-1 flex-row-reverse items-center justify-between rounded-lg px-3 py-2"
+                    className={`mt-1 ${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
                     accessibilityRole="button"
                     accessibilityLabel="حذف المنشور"
                   >
@@ -459,7 +470,7 @@ export function HomePostCard({
                 <>
                   <Pressable
                     onPress={isSavedPostList ? handleUnsavePost : handleTogglePostSaved}
-                    className="flex-row-reverse items-center justify-between rounded-lg px-3 py-2"
+                    className={`${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
                     accessibilityRole="button"
                     accessibilityLabel={isSaved ? "إلغاء حفظ المنشور" : "حفظ المنشور"}
                   >
@@ -476,7 +487,7 @@ export function HomePostCard({
 
                   <Pressable
                     onPress={handleReportPost}
-                    className="mt-1 flex-row-reverse items-center justify-between rounded-lg px-3 py-2"
+                    className={`mt-1 ${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
                     accessibilityRole="button"
                     accessibilityLabel="إبلاغ عن المنشور"
                   >

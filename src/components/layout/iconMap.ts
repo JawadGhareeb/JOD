@@ -4,6 +4,7 @@ import {
   Bookmark,
   ChevronRight,
   Clock3,
+  Search,
   Heart,
   Home,
   LogOut,
@@ -27,6 +28,7 @@ import {
 
 export const appIcons = {
   notification: Bell,
+  search: Search,
   menu: Menu,
   close: X,
   home: Home,
