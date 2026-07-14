@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { View } from "react-native";
-import Animated from "react-native-reanimated";
+import { Animated, View } from "react-native";
 import Text from "@/src/components/ui/Text";
 import { mockBlogsPayload } from "@/src/data/mockBlogs";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
@@ -12,7 +11,7 @@ import { BlogPostCardSkeleton } from "./BlogPostCardSkeleton";
 const PAGE_SIZE = 6;
 
 export function BlogsScreen() {
-  const { contentAnimatedStyle, onScroll } = useCollapsibleHeaderScreen();
+  const { onScroll } = useCollapsibleHeaderScreen();
   const [selectedCategory, setSelectedCategory] = useState<BlogCategory>("all");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -46,7 +45,7 @@ export function BlogsScreen() {
   };
 
   return (
-    <Animated.View className="flex-1 bg-light-100 dark:bg-dark-300" style={contentAnimatedStyle}>
+    <View className="flex-1 bg-light-100 dark:bg-dark-300">
       <Animated.FlatList
         className="flex-1 px-4 dark:bg-dark-300"
         contentContainerStyle={{ paddingBottom: 24 }}
@@ -87,7 +86,7 @@ export function BlogsScreen() {
             </View>
           )
         }
-      />
-    </Animated.View>
+        />
+    </View>
   );
 }

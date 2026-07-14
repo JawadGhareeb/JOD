@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { ImagePlus, MapPin, X } from "lucide-react-native";
-import { Alert, Image, Pressable, View } from "react-native";
-import Animated from "react-native-reanimated";
+import { Alert, Animated, Image, Pressable, View } from "react-native";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Dialog from "@/src/components/ui/Dialog";
@@ -77,7 +76,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const isDiscardExitConfirmedRef = useRef(false);
   const router = useRouter();
   const navigation = useNavigation();
-  const { contentAnimatedStyle, onScroll } = useCollapsibleHeaderScreen();
+  const { onScroll } = useCollapsibleHeaderScreen();
 
   const editMode = readParam(params.mode) === "edit";
   const editingPostId = readParam(params.postId);
@@ -273,7 +272,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   };
 
   return (
-    <Animated.View className="flex-1 bg-light-100 px-4 dark:bg-dark-300" style={!showPageHeader ? contentAnimatedStyle : undefined}>
+    <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
       {showPageHeader ? <MenuPageHeader title={pageTitle} onBackPress={handleHeaderBackPress} /> : null}
 
       <Animated.ScrollView
@@ -536,6 +535,6 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         ]}
       />
 
-    </Animated.View>
+    </View>
   );
 }

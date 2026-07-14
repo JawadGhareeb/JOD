@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { RefreshControl, View } from "react-native";
-import Animated from "react-native-reanimated";
+import { Animated, RefreshControl, View } from "react-native";
 import Text from "@/src/components/ui/Text";
 import { mockHomePayload } from "@/src/data/mockHome";
 import { HomePostCard } from "./HomePostCard";
@@ -13,7 +12,7 @@ export function HomeScreen() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const { contentAnimatedStyle, onScroll, resetHeader } = useCollapsibleHeaderScreen();
+  const { onScroll, resetHeader } = useCollapsibleHeaderScreen();
   const filteredPosts = useMemo(() => mockHomePayload.posts, []);
 
   const visiblePosts = useMemo(
@@ -44,7 +43,7 @@ export function HomeScreen() {
   }, [resetHeader]);
 
   return (
-    <Animated.View className="flex-1 bg-light-100 dark:bg-dark-300" style={contentAnimatedStyle}>
+    <View className="flex-1 bg-light-100 dark:bg-dark-300">
       <Animated.FlatList
         className="flex-1 px-4"
         data={visiblePosts}
@@ -80,8 +79,8 @@ export function HomeScreen() {
               </Text>
             </View>
           )
-        }
-      />
-    </Animated.View>
+          }
+        />
+    </View>
   );
 }

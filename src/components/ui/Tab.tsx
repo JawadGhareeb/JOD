@@ -51,7 +51,7 @@ const Tab = ({ focused, iconName, title, onPress }: TabProps) => {
       duration: 300,
       useNativeDriver: false,
     }).start();
-  }, [focused]);
+  }, [backgroundColorAnim, focused, scaleAnim]);
 
   const handlePressIn = () => {
     scaleAnim.stopAnimation();

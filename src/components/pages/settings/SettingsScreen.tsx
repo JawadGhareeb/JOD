@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { View } from "react-native";
-import Animated from "react-native-reanimated";
+import { Animated, View } from "react-native";
 import { useRouter, type Href } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { appIcons } from "@/src/components/layout/iconMap";
@@ -91,7 +90,7 @@ const LogoutIcon = appIcons.logout;
 export function SettingsScreen() {
   const router = useRouter();
   const { colorScheme, setColorScheme } = useColorScheme();
-  const { contentAnimatedStyle, onScroll } = useCollapsibleHeaderScreen();
+  const { onScroll } = useCollapsibleHeaderScreen();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const isDark = colorScheme === "dark";
   const themeMode = useMemo(() => (isDark ? "dark" : "light"), [isDark]);
@@ -100,7 +99,7 @@ export function SettingsScreen() {
   const arrowIconColor = isDark ? "#D1D5DB" : "#9CA3AF";
 
   return (
-    <Animated.View className="flex-1 bg-light-100 px-4 dark:bg-dark-300" style={contentAnimatedStyle}>
+    <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
@@ -226,6 +225,6 @@ export function SettingsScreen() {
           },
         ]}
       />
-    </Animated.View>
+    </View>
   );
 }

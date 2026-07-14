@@ -8,7 +8,6 @@ import { Appearance } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { RTLProvider } from "@/src/providers/RTLProvider";
-import { CollapsibleHeaderProvider } from "@/src/providers/CollapsibleHeaderProvider";
 import "./global.css";
 
 SplashScreen.preventAutoHideAsync();
@@ -47,33 +46,31 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <RTLProvider>
         <SafeAreaProvider>
-          <CollapsibleHeaderProvider>
-            <StatusBar
-              style={isDark ? "light" : "dark"}
-              translucent={false}
-              backgroundColor={isDark ? "#1f222b" : "#FFFFFF"}
-            />
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="apply/[id]" />
-              <Stack.Screen name="author/[id]" />
-              <Stack.Screen name="donate/[id]" />
-              <Stack.Screen name="blogs/[id]" />
-              <Stack.Screen name="about" />
-              <Stack.Screen name="account-settings" />
-              <Stack.Screen name="change-password" />
-              <Stack.Screen name="create-post" />
-              <Stack.Screen name="edit-information" />
-              <Stack.Screen name="help-center" />
-              <Stack.Screen name="my-donations" />
-              <Stack.Screen name="notifications" />
-              <Stack.Screen name="posts/[id]" />
-              <Stack.Screen name="saved-posts" />
-              <Stack.Screen name="search" />
-              <Stack.Screen name="terms-privacy" />
-            </Stack>
-          </CollapsibleHeaderProvider>
+          <StatusBar
+            style={isDark ? "light" : "dark"}
+            translucent={false}
+            backgroundColor={isDark ? "#1f222b" : "#FFFFFF"}
+          />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="apply/[id]" />
+            <Stack.Screen name="author/[id]" />
+            <Stack.Screen name="donate/[id]" />
+            <Stack.Screen name="blogs/[id]" />
+            <Stack.Screen name="about" />
+            <Stack.Screen name="account-settings" />
+            <Stack.Screen name="change-password" />
+            <Stack.Screen name="create-post" />
+            <Stack.Screen name="edit-information" />
+            <Stack.Screen name="help-center" />
+            <Stack.Screen name="my-donations" />
+            <Stack.Screen name="notifications" />
+            <Stack.Screen name="posts/[id]" />
+            <Stack.Screen name="saved-posts" />
+            <Stack.Screen name="search" />
+            <Stack.Screen name="terms-privacy" />
+          </Stack>
         </SafeAreaProvider>
       </RTLProvider>
     </GestureHandlerRootView>

@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { Alert, Pressable, View } from "react-native";
-import Animated from "react-native-reanimated";
+import { Alert, Animated, Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import Text from "@/src/components/ui/Text";
 import { SectionHeader } from "@/src/components/shared/SectionHeader";
@@ -30,7 +29,7 @@ const mapPostTypeToCreateType = (postType: HomePost["postType"]): CreatePostType
 
 export function ProfileScreen() {
   const router = useRouter();
-  const { contentAnimatedStyle, onScroll } = useCollapsibleHeaderScreen();
+  const { onScroll } = useCollapsibleHeaderScreen();
   const [activeTab, setActiveTab] = useState<ProfilePostStatus>("posted");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -95,7 +94,7 @@ export function ProfileScreen() {
   };
 
   return (
-    <Animated.View className="flex-1 bg-light-100 dark:bg-dark-300" style={contentAnimatedStyle}>
+    <View className="flex-1 bg-light-100 dark:bg-dark-300">
       <Animated.FlatList
         className="flex-1 px-4 dark:bg-dark-300"
         contentContainerStyle={{ paddingBottom: 24 }}
@@ -185,7 +184,7 @@ export function ProfileScreen() {
             </View>
           )
         }
-      />
-    </Animated.View>
+        />
+    </View>
   );
 }
