@@ -84,9 +84,15 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
       }}
       className={surfaceClassName}
     >
-      <Animated.View style={{ transform: [{ translateY: contentTranslateY }] }}>
-        {topInsetHeight > 0 ? <View style={{ height: topInsetHeight }} className={surfaceClassName} /> : null}
-        <View onLayout={handleHeaderLayout} className="border-b border-gray-200 px-5 py-4 dark:border-dark-400">
+      {topInsetHeight > 0 ? <View style={{ height: topInsetHeight }} className={surfaceClassName} /> : null}
+      <Animated.View
+        style={{
+          height: contentHeight,
+          transform: [{ translateY: contentTranslateY }],
+          overflow: "hidden",
+        }}
+      >
+        <View onLayout={handleHeaderLayout} className="px-5 py-3">
           <View className={`${rowClassName} items-center justify-between`}>
             <View className={`w-[124px] min-h-[40px] ${justifyClassName} justify-center`}>
               <Pressable
