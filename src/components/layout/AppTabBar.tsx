@@ -63,7 +63,7 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
           }
 
           if (key === "create-post") {
-            return <View key={route.key} className="min-h-[54px] flex-1" />;
+            return <View key={route.key} className="min-h-[48px] flex-1" />;
           }
 
           const { label, Icon } = config;
@@ -130,12 +130,12 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
           }}
           style={{
             position: "absolute",
-            top: -20,
+            top: -16,
             left: "50%",
-            width: 64,
-            height: 64,
-            marginLeft: -32,
-            borderRadius: 32,
+            width: 56,
+            height: 56,
+            marginLeft: -28,
+            borderRadius: 28,
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: "#405d72",
@@ -146,7 +146,7 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
             elevation: 10,
           }}
         >
-          <CreatePostIcon size={24} color="#FFFFFF" strokeWidth={2.5} />
+          <CreatePostIcon size={22} color="#FFFFFF" strokeWidth={2.5} />
         </Pressable>
       ) : null}
     </View>
