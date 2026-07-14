@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Alert, FlatList, Pressable, View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import Text from "@/src/components/ui/Text";
 import { SectionHeader } from "@/src/components/shared/SectionHeader";
@@ -11,6 +12,7 @@ import type { HomePost } from "@/src/types/home";
 import type { CreatePostType } from "@/src/types/menu";
 import { ProfilePostStatus, type ProfilePost } from "@/src/types/profile";
 import { ProfileHeaderCard } from "./ProfileHeaderCard";
+import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 
 const PAGE_SIZE = 6;
 
@@ -28,6 +30,7 @@ const mapPostTypeToCreateType = (postType: HomePost["postType"]): CreatePostType
 
 export function ProfileScreen() {
   const router = useRouter();
+  const { contentAnimatedStyle, onScroll } = useCollapsibleHeaderScreen();
   const [activeTab, setActiveTab] = useState<ProfilePostStatus>("posted");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -92,93 +95,97 @@ export function ProfileScreen() {
   };
 
   return (
-    <FlatList
-      className="flex-1 bg-light-100 px-4 pt-4 dark:bg-dark-300"
-      contentContainerStyle={{ paddingBottom: 24 }}
-      data={visiblePosts}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-        <HomePostCard
-          post={item}
-          showCta={false}
-          mode="own"
-          ownPostStatus={item.profileStatus}
-          onArchive={handleArchivePost}
-          onDelete={handleDeletePost}
-          onEdit={handleEditRejectedPost}
-        />
-      )}
-      showsVerticalScrollIndicator={false}
-      onEndReached={handleLoadMore}
-      onEndReachedThreshold={0.35}
-      ListHeaderComponent={
-        <View>
-          <ProfileHeaderCard summary={mockProfilePayload.summary} />
-          <SectionHeader title="منشوراتي" />
-          <View className="mb-3 flex-row-reverse gap-2">
-            {profilePostTabs.map((tab) => {
-              const isActive = activeTab === tab.key;
+    <Animated.View className="flex-1 bg-light-100 dark:bg-dark-300" style={contentAnimatedStyle}>
+      <Animated.FlatList
+        className="flex-1 px-4 dark:bg-dark-300"
+        contentContainerStyle={{ paddingBottom: 24 }}
+        data={visiblePosts}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <HomePostCard
+            post={item}
+            showCta={false}
+            mode="own"
+            ownPostStatus={item.profileStatus}
+            onArchive={handleArchivePost}
+            onDelete={handleDeletePost}
+            onEdit={handleEditRejectedPost}
+          />
+        )}
+        showsVerticalScrollIndicator={false}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.35}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        ListHeaderComponent={
+          <View>
+            <ProfileHeaderCard summary={mockProfilePayload.summary} />
+            <SectionHeader title="منشوراتي" />
+            <View className="mb-3 flex-row-reverse gap-2">
+              {profilePostTabs.map((tab) => {
+                const isActive = activeTab === tab.key;
 
-              return (
-                <Pressable
-                  key={tab.key}
-                  onPress={() => handleTabChange(tab.key)}
-                  className={`flex-1 rounded-xl px-3 py-2 ${
-                    isActive ? "bg-primary-400/15" : "bg-white dark:bg-dark-500"
-                  }`}
-                  accessibilityRole="button"
-                  accessibilityLabel={tab.label}
-                >
-                  <View className="flex-row items-center justify-center gap-2">
-                    <Text
-                      size="xs"
-                      weight="medium"
-                      className={isActive ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}
-                    >
-                      {tab.label}
-                    </Text>
-                    <View
-                      className={`size-6 items-center justify-center rounded-full ${
-                        isActive ? "bg-primary-400" : "bg-gray-200 dark:bg-dark-350"
-                      }`}
-                    >
+                return (
+                  <Pressable
+                    key={tab.key}
+                    onPress={() => handleTabChange(tab.key)}
+                    className={`flex-1 rounded-xl px-3 py-2 ${
+                      isActive ? "bg-primary-400/15" : "bg-white dark:bg-dark-500"
+                    }`}
+                    accessibilityRole="button"
+                    accessibilityLabel={tab.label}
+                  >
+                    <View className="flex-row items-center justify-center gap-2">
                       <Text
-                        size="2xs"
+                        size="xs"
                         weight="medium"
-                        className={isActive ? "text-light-50" : "text-gray-600 dark:text-gray-200"}
+                        className={isActive ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}
                       >
-                        {getTabCount(tab.key)}
+                        {tab.label}
                       </Text>
+                      <View
+                        className={`size-6 items-center justify-center rounded-full ${
+                          isActive ? "bg-primary-400" : "bg-gray-200 dark:bg-dark-350"
+                        }`}
+                      >
+                        <Text
+                          size="2xs"
+                          weight="medium"
+                          className={isActive ? "text-light-50" : "text-gray-600 dark:text-gray-200"}
+                        >
+                          {getTabCount(tab.key)}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                </Pressable>
-              );
-            })}
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
-        </View>
-      }
-      ListEmptyComponent={
-        <View className="items-center py-8">
-          <Text size="sm" className="text-gray-500 dark:text-gray-300">
-            لا توجد منشورات لعرضها حالياً.
-          </Text>
-        </View>
-      }
-      ListFooterComponent={
-        loadingMore ? (
-          <View className="py-2">
-            <HomePostCardSkeleton />
-          </View>
-        ) : hasMore ? (
-          <View className="py-2" />
-        ) : (
-          <View className="items-center py-4">
-            <Text size="xs" className="text-gray-500 dark:text-gray-300">
-              تم عرض جميع المنشورات
+        }
+        ListEmptyComponent={
+          <View className="items-center py-8">
+            <Text size="sm" className="text-gray-500 dark:text-gray-300">
+              لا توجد منشورات لعرضها حالياً.
             </Text>
           </View>
-        )
-      }
-    />
+        }
+        ListFooterComponent={
+          loadingMore ? (
+            <View className="py-2">
+              <HomePostCardSkeleton />
+            </View>
+          ) : hasMore ? (
+            <View className="py-2" />
+          ) : (
+            <View className="items-center py-4">
+              <Text size="xs" className="text-gray-500 dark:text-gray-300">
+                تم عرض جميع المنشورات
+              </Text>
+            </View>
+          )
+        }
+      />
+    </Animated.View>
   );
 }

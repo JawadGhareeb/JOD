@@ -10,7 +10,7 @@ export default function TabsLayout() {
       }}
       tabBar={(props) => <AppTabBar {...props} />}
     >
-      <Tabs.Screen name="home" options={{ title: "الرئيسية", headerShown: false }} />
+      <Tabs.Screen name="home" options={{ title: "الرئيسية" }} />
       <Tabs.Screen name="blogs" options={{ title: "المدونات" }} />
       <Tabs.Screen name="create-post" options={{ title: "نشر بوست" }} />
       <Tabs.Screen name="post" options={{ href: null }} />

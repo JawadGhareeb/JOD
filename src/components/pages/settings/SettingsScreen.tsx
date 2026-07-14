@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useRouter, type Href } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { appIcons } from "@/src/components/layout/iconMap";
@@ -8,6 +9,7 @@ import Card from "@/src/components/ui/Card";
 import Dialog from "@/src/components/ui/Dialog";
 import Text from "@/src/components/ui/Text";
 import { clearMockAuth } from "@/src/lib/auth";
+import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 
 type SettingsRow = {
   title: string;
@@ -89,6 +91,7 @@ const LogoutIcon = appIcons.logout;
 export function SettingsScreen() {
   const router = useRouter();
   const { colorScheme, setColorScheme } = useColorScheme();
+  const { contentAnimatedStyle, onScroll } = useCollapsibleHeaderScreen();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const isDark = colorScheme === "dark";
   const themeMode = useMemo(() => (isDark ? "dark" : "light"), [isDark]);
@@ -97,10 +100,12 @@ export function SettingsScreen() {
   const arrowIconColor = isDark ? "#D1D5DB" : "#9CA3AF";
 
   return (
-    <View className="flex-1 bg-light-100 px-4 pt-4 dark:bg-dark-300">
-      <ScrollView
+    <Animated.View className="flex-1 bg-light-100 px-4 dark:bg-dark-300" style={contentAnimatedStyle}>
+      <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
       >
         {settingsGroups.map((group) => (
           <View key={group.title} className="mb-3">
@@ -196,7 +201,7 @@ export function SettingsScreen() {
         >
           تسجيل الخروج
         </Button>
-      </ScrollView>
+      </Animated.ScrollView>
 
       <Dialog
         visible={isLogoutDialogOpen}
@@ -221,6 +226,6 @@ export function SettingsScreen() {
           },
         ]}
       />
-    </View>
+    </Animated.View>
   );
 }

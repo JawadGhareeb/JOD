@@ -1,19 +1,14 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useCallback, useMemo } from "react";
-import {
-  Animated,
-  Pressable,
-  View,
-  type LayoutChangeEvent,
-  type StyleProp,
-  type ViewStyle,
-} from "react-native";
+import { Pressable, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { Avatar } from "@/src/components/shared/Avatar";
 import Text from "@/src/components/ui/Text";
 import { useAuthStatus } from "@/src/hooks/useAuthStatus";
 import { useRTL } from "@/src/providers/RTLProvider";
+import { useCollapsibleHeaderState } from "@/src/providers/CollapsibleHeaderProvider";
 import { appIcons } from "./iconMap";
 
 const NotificationIcon = appIcons.notification;
@@ -22,20 +17,19 @@ const UserIcon = appIcons.profile;
 
 type AppHeaderProps = {
   includeTopInset?: boolean;
-  animatedContentStyle?: StyleProp<ViewStyle>;
-  onContentLayout?: (event: LayoutChangeEvent) => void;
+  animatedContainerStyle?: StyleProp<ViewStyle>;
 };
 
 export function AppHeader({
   includeTopInset = true,
-  animatedContentStyle,
-  onContentLayout,
+  animatedContainerStyle,
 }: AppHeaderProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isRTL } = useRTL();
   const { colorScheme } = useColorScheme();
   const { isAuthenticated, isLoading, user, refreshAuthStatus } = useAuthStatus();
+  const { hiddenAmount, registerHeaderHeight } = useCollapsibleHeaderState();
   const isDark = colorScheme === "dark";
   const actionBgClass = isDark ? "bg-dark-350" : "bg-primary-100";
   const iconColor = isDark ? "#F9FAFB" : "#405d72";
@@ -47,6 +41,9 @@ export function AppHeader({
     [user?.firstName, user?.lastName],
   );
   const topInsetHeight = includeTopInset ? insets.top : 0;
+  const headerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -hiddenAmount.value }],
+  }));
 
   useFocusEffect(
     useCallback(() => {
@@ -63,16 +60,21 @@ export function AppHeader({
     router.push("/(auth)/login");
   };
 
-  const HeaderContentContainer = animatedContentStyle ? Animated.View : View;
+  const handleHeaderLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      registerHeaderHeight(Math.ceil(event.nativeEvent.layout.height));
+    },
+    [registerHeaderHeight],
+  );
 
   return (
-    <View className={surfaceClassName}>
+    <Animated.View
+      onLayout={handleHeaderLayout}
+      style={[headerAnimatedStyle, animatedContainerStyle]}
+      className={surfaceClassName}
+    >
       {topInsetHeight > 0 ? <View style={{ height: topInsetHeight }} className={surfaceClassName} /> : null}
-      <HeaderContentContainer
-        onLayout={onContentLayout}
-        style={animatedContentStyle}
-        className="border-b border-gray-200 px-5 py-4 dark:border-dark-400"
-      >
+      <View className="border-b border-gray-200 px-5 py-4 dark:border-dark-400">
         <View className={`${rowClassName} items-center justify-between`}>
           <View className={`w-[124px] min-h-[40px] ${justifyClassName} justify-center`}>
             <Pressable
@@ -137,7 +139,7 @@ export function AppHeader({
             </Pressable>
           </View>
         </View>
-      </HeaderContentContainer>
-    </View>
+      </View>
+    </Animated.View>
   );
 }

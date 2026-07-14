@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { ImagePlus, MapPin, X } from "lucide-react-native";
-import { Alert, Image, Pressable, ScrollView, View } from "react-native";
+import { Alert, Image, Pressable, View } from "react-native";
+import Animated from "react-native-reanimated";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Dialog from "@/src/components/ui/Dialog";
@@ -10,6 +11,7 @@ import Input from "@/src/components/ui/Input";
 import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
 import { appIcons } from "@/src/components/layout/iconMap";
+import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import type { CreatePostType } from "@/src/types/menu";
 import { MenuPageHeader } from "../settings/MenuPageHeader";
 
@@ -75,6 +77,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const isDiscardExitConfirmedRef = useRef(false);
   const router = useRouter();
   const navigation = useNavigation();
+  const { contentAnimatedStyle, onScroll } = useCollapsibleHeaderScreen();
 
   const editMode = readParam(params.mode) === "edit";
   const editingPostId = readParam(params.postId);
@@ -270,12 +273,14 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   };
 
   return (
-    <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
+    <Animated.View className="flex-1 bg-light-100 px-4 dark:bg-dark-300" style={!showPageHeader ? contentAnimatedStyle : undefined}>
       {showPageHeader ? <MenuPageHeader title={pageTitle} onBackPress={handleHeaderBackPress} /> : null}
 
-      <ScrollView
+      <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 28, paddingTop: showPageHeader ? 0 : 12 }}
+        onScroll={showPageHeader ? undefined : onScroll}
+        scrollEventThrottle={showPageHeader ? undefined : 16}
       >
         <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
@@ -465,7 +470,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
             أكمل الحقول المطلوبة (العنوان، المدينة، الوصف) لتفعيل النشر.
           </Text>
         ) : null}
-      </ScrollView>
+      </Animated.ScrollView>
 
       <SelectionModal
         visible={isCityModalOpen}
@@ -531,6 +536,6 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         ]}
       />
 
-    </View>
+    </Animated.View>
   );
 }
