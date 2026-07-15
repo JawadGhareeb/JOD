@@ -3,7 +3,6 @@ import { Image, View } from "react-native";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
-import { BLOG_CATEGORY_LABELS } from "@/src/data/mockBlogs";
 import { appIcons } from "@/src/components/layout/iconMap";
 import type { BlogPost } from "@/src/types/blogs";
 
@@ -38,11 +37,6 @@ export function BlogPostCard({ post }: BlogPostCardProps) {
 
       <View className="p-4">
         <View className="mb-3 flex-row-reverse items-center justify-between">
-          <View className="rounded-full bg-primary-400/15 px-3 py-1">
-            <Text size="2xs" weight="medium" className="text-primary-400">
-              {BLOG_CATEGORY_LABELS[post.category]}
-            </Text>
-          </View>
           <Text size="2xs" className="text-gray-500 dark:text-gray-300">
             {formatRelativeDateAr(post.publishedAt)}
           </Text>
