@@ -13,6 +13,7 @@ import { appIcons } from "./iconMap";
 const NotificationIcon = appIcons.notification;
 const SearchIcon = appIcons.search;
 const UserIcon = appIcons.profile;
+const MIN_HEADER_CONTENT_HEIGHT = 64;
 
 type AppHeaderProps = {
   includeTopInset?: boolean;
@@ -24,7 +25,7 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   const { isRTL } = useRTL();
   const { colorScheme } = useColorScheme();
   const { isAuthenticated, isLoading, user, refreshAuthStatus } = useAuthStatus();
-  const [contentHeight, setContentHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(MIN_HEADER_CONTENT_HEIGHT);
   const isDark = colorScheme === "dark";
   const actionBgClass = isDark ? "bg-dark-350" : "bg-primary-100";
   const iconColor = isDark ? "#F9FAFB" : "#405d72";
@@ -38,17 +39,18 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   );
 
   const topInsetHeight = includeTopInset ? insets.top : 0;
-  const collapseRange = Math.max(1, contentHeight);
-  const headerHeight = topInsetHeight + contentHeight;
+  const resolvedContentHeight = Math.max(contentHeight, MIN_HEADER_CONTENT_HEIGHT);
+  const headerHeight = topInsetHeight + resolvedContentHeight;
+  const collapseRange = Math.max(1, headerHeight);
   const clampedScrollY = Animated.diffClamp(headerScrollY, 0, collapseRange);
   const wrapperHeight = clampedScrollY.interpolate({
     inputRange: [0, collapseRange],
-    outputRange: [headerHeight, topInsetHeight],
+    outputRange: [headerHeight, 0],
     extrapolate: "clamp",
   });
   const contentTranslateY = clampedScrollY.interpolate({
     inputRange: [0, collapseRange],
-    outputRange: [0, -contentHeight],
+    outputRange: [0, -headerHeight],
     extrapolate: "clamp",
   });
 
@@ -84,14 +86,14 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
       }}
       className={surfaceClassName}
     >
-      {topInsetHeight > 0 ? <View style={{ height: topInsetHeight }} className={surfaceClassName} /> : null}
       <Animated.View
         style={{
-          height: contentHeight,
+          height: headerHeight,
           transform: [{ translateY: contentTranslateY }],
           overflow: "hidden",
         }}
       >
+        {topInsetHeight > 0 ? <View style={{ height: topInsetHeight }} className={surfaceClassName} /> : null}
         <View onLayout={handleHeaderLayout} className="px-5 py-3">
           <View className={`${rowClassName} items-center justify-between`}>
             <View className={`w-[124px] min-h-[40px] ${justifyClassName} justify-center`}>

@@ -3,6 +3,7 @@ import { useColorScheme } from "nativewind";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRTL } from "@/src/providers/RTLProvider";
+import { resetHeader } from "@/src/providers/CollapsibleHeaderProvider";
 import { appIcons } from "./iconMap";
 
 type TabKey = "home" | "blogs" | "create-post" | "profile" | "settings";
@@ -32,6 +33,8 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
   const floatingRoute = state.routes.find((route) => route.name === "create-post");
 
   const triggerTabPress = (routeName: string, routeKey: string, routeParams?: object) => {
+    resetHeader();
+
     const event = navigation.emit({
       type: "tabPress",
       target: routeKey,
