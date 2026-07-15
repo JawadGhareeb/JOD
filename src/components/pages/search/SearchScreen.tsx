@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SlidersHorizontal } from "lucide-react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
 import Card from "@/src/components/ui/Card";
@@ -24,6 +33,13 @@ type ActiveFilter = {
   onRemove: () => void;
 };
 
+type FilterSectionProps<T extends string> = {
+  title: string;
+  items: SelectableChipItem<T>[];
+  selectedKey: T;
+  onSelect: (key: T) => void;
+};
+
 type FilterChipProps = {
   label: string;
   onRemove: () => void;
@@ -39,6 +55,7 @@ const BackIcon = appIcons.chevronRight;
 const ForwardIcon = appIcons.chevronLeft;
 const SearchIcon = appIcons.search;
 const ClearIcon = appIcons.close;
+const FilterIcon = SlidersHorizontal;
 
 const statusLabels: Record<SearchStatusFilter, string> = {
   all: "كل الحالات",
@@ -104,6 +121,22 @@ function SelectableChipRow<T extends string>({
           </Pressable>
         );
       })}
+    </View>
+  );
+}
+
+function FilterSection<T extends string>({
+  title,
+  items,
+  selectedKey,
+  onSelect,
+}: FilterSectionProps<T>) {
+  return (
+    <View className="gap-3">
+      <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
+        {title}
+      </Text>
+      <SelectableChipRow items={items} selectedKey={selectedKey} onSelect={onSelect} />
     </View>
   );
 }
@@ -188,6 +221,7 @@ export function SearchScreen() {
   const [selectedStatus, setSelectedStatus] = useState<SearchStatusFilter>("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [selectedSort, setSelectedSort] = useState<SearchSortKey>("newest");
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -385,10 +419,13 @@ export function SearchScreen() {
   };
 
   const clearAllFilters = () => {
-    setSelectedCategory(HOME_FILTER_ALL);
     setSelectedStatus("all");
     setSelectedLocation("all");
     setSelectedSort("newest");
+  };
+
+  const closeFilterModal = () => {
+    setIsFilterModalOpen(false);
   };
 
   const retrySearch = () => {
@@ -401,176 +438,221 @@ export function SearchScreen() {
   };
 
   return (
-    <FlatList
-      className="flex-1 bg-light-100 px-4 dark:bg-dark-300"
-      contentContainerStyle={{
-        paddingTop: insets.top + 12,
-        paddingBottom: 28,
-      }}
-      data={error || isLoading ? [] : visibleResults}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-        <SearchResultCard post={item} onPress={() => handleOpenResult(item)} />
-      )}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-      onEndReached={handleLoadMore}
-      onEndReachedThreshold={0.35}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#405d72" />
-      }
-      ListHeaderComponent={
-        <View className="pb-3">
-          <View className={`mb-4 ${rowClassName} items-center justify-between`}>
+    <View className="flex-1 bg-light-100 dark:bg-dark-300">
+      <View className="px-4">
+        <View
+          style={{ paddingTop: Math.max(insets.top, 8) }}
+          className="mb-3 flex-row-reverse items-center justify-between border-b border-gray-200 py-3 dark:border-dark-400"
+        >
+          <Pressable
+            onPress={() => router.back()}
+            className="h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-dark-500"
+            accessibilityRole="button"
+            accessibilityLabel="العودة"
+          >
+            <BackButtonIcon size={20} color="#405d72" strokeWidth={2.25} />
+          </Pressable>
+          <Text size="lg" weight="semibold" className="text-dark-100 dark:text-light-50">
+            البحث
+          </Text>
+          <View className="h-10 w-10" />
+        </View>
+
+        <Card padding="md" className="mb-4 gap-4 border-gray-200 dark:border-dark-400">
+          <View className="flex-row-reverse items-center gap-2">
+            <View className="flex-1">
+              <Input
+                placeholder="ابحث في المنشورات، الجهات، المدن..."
+                value={query}
+                onChangeText={setQuery}
+                leftIcon={<SearchIcon size={18} color="#405d72" strokeWidth={2.25} />}
+                rightIcon={
+                  query ? <ClearIcon size={16} color="#9CA3AF" strokeWidth={2.25} /> : undefined
+                }
+                onRightIconPress={() => setQuery("")}
+                fullWidth
+              />
+            </View>
             <Pressable
-              onPress={() => router.back()}
-              className="h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-dark-500"
+              onPress={() => setIsFilterModalOpen(true)}
+              className="h-12 w-12 items-center justify-center rounded-xl border border-gray-200 bg-white dark:border-dark-400 dark:bg-dark-500"
               accessibilityRole="button"
-              accessibilityLabel="العودة"
+              accessibilityLabel="فتح الفلاتر"
             >
-              <BackButtonIcon size={20} color="#405d72" strokeWidth={2.25} />
+              <FilterIcon size={18} color="#405d72" strokeWidth={2.25} />
             </Pressable>
-            <Text size="lg" weight="semibold" className="text-dark-100 dark:text-light-50">
-              البحث
-            </Text>
-            <View className="h-10 w-10" />
           </View>
 
-          <Card padding="md" className="mb-4 gap-4 border-gray-200 dark:border-dark-400">
-            <Input
-              placeholder="ابحث في المنشورات، الجهات، المدن..."
-              value={query}
-              onChangeText={setQuery}
-              leftIcon={<SearchIcon size={18} color="#405d72" strokeWidth={2.25} />}
-              rightIcon={
-                query ? <ClearIcon size={16} color="#9CA3AF" strokeWidth={2.25} /> : undefined
-              }
-              onRightIconPress={() => setQuery("")}
-              fullWidth
+          <View className="gap-3">
+            <View className={`${rowClassName} items-center justify-between`}>
+              <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
+                الفئات
+              </Text>
+              {hasActiveFilters ? (
+                <Pressable onPress={clearAllFilters} accessibilityRole="button">
+                  <Text size="xs" weight="semibold" className="text-primary-400">
+                    مسح الفلاتر
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
+            <HomeTypeSlider
+              posts={mockHomePayload.posts}
+              selectedType={selectedCategory}
+              onSelectType={setSelectedCategory}
             />
+          </View>
 
-            <View className="gap-3">
-              <View className={`${rowClassName} items-center justify-between`}>
-                <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
-                  الفئات
-                </Text>
-                {hasActiveFilters ? (
-                  <Pressable onPress={clearAllFilters} accessibilityRole="button">
-                    <Text size="xs" weight="semibold" className="text-primary-400">
-                      مسح كل الفلاتر
-                    </Text>
-                  </Pressable>
-                ) : null}
-              </View>
-              <HomeTypeSlider
-                posts={mockHomePayload.posts}
-                selectedType={selectedCategory}
-                onSelectType={setSelectedCategory}
-              />
+          {activeFilters.length > 0 ? (
+            <View className={`${rowClassName} flex-wrap gap-2`}>
+              {activeFilters.map((filter) => (
+                <FilterChip key={filter.key} label={filter.label} onRemove={filter.onRemove} />
+              ))}
             </View>
-
-            <View className="gap-3">
-              <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
-                الحالة
-              </Text>
-              <SelectableChipRow
-                items={statusItems}
-                selectedKey={selectedStatus}
-                onSelect={setSelectedStatus}
-              />
-            </View>
-
-            <View className="gap-3">
-              <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
-                الموقع
-              </Text>
-              <SelectableChipRow
-                items={locationItems}
-                selectedKey={selectedLocation}
-                onSelect={setSelectedLocation}
-              />
-            </View>
-
-            <View className="gap-3">
-              <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
-                الترتيب
-              </Text>
-              <SelectableChipRow
-                items={sortItems}
-                selectedKey={selectedSort}
-                onSelect={setSelectedSort}
-              />
-            </View>
-
-            {activeFilters.length > 0 ? (
-              <View className={`${rowClassName} flex-wrap gap-2`}>
-                {activeFilters.map((filter) => (
-                  <FilterChip key={filter.key} label={filter.label} onRemove={filter.onRemove} />
-                ))}
-              </View>
-            ) : null}
-          </Card>
+          ) : null}
 
           {!isLoading && !error ? (
             <Text size="xs" className="text-gray-500 dark:text-gray-300">
               {results.length} نتيجة {debouncedQuery ? `لـ "${debouncedQuery}"` : ""}
             </Text>
           ) : null}
-        </View>
-      }
-      ListEmptyComponent={
-        isLoading ? (
-          <View className="gap-3">
-            <HomePostCardSkeleton />
-            <HomePostCardSkeleton />
-          </View>
-        ) : error ? (
-          <Card padding="lg" className="items-center gap-3 border-gray-200 dark:border-dark-400">
-            <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
-              حدث خطأ أثناء البحث
-            </Text>
-            <Text size="xs" className="text-center text-gray-500 dark:text-gray-300">
-              {error}
-            </Text>
-            <Pressable
-              onPress={retrySearch}
-              className="rounded-xl bg-primary-400 px-4 py-3"
-              accessibilityRole="button"
-              accessibilityLabel="إعادة المحاولة"
-            >
-              <Text size="xs" weight="semibold" className="text-light-50">
-                إعادة المحاولة
-              </Text>
-            </Pressable>
-          </Card>
-        ) : (
-          <Card padding="lg" className="items-center gap-3 border-gray-200 dark:border-dark-400">
-            <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
-              لا توجد نتائج مطابقة
-            </Text>
-            <Text size="xs" className="text-center text-gray-500 dark:text-gray-300">
-              جرّب تعديل الكلمات المفتاحية أو إزالة بعض الفلاتر.
-            </Text>
-          </Card>
-        )
-      }
-      ListFooterComponent={
-        !error && !isLoading ? (
-          loadingMore ? (
-            <View className="items-center py-4">
-              <ActivityIndicator size="small" color="#405d72" />
+        </Card>
+      </View>
+
+      <FlatList
+        className="flex-1 bg-light-100 px-4 dark:bg-dark-300"
+        contentContainerStyle={{
+          paddingBottom: 28,
+        }}
+        data={error || isLoading ? [] : visibleResults}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <SearchResultCard post={item} onPress={() => handleOpenResult(item)} />
+        )}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.35}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#405d72" />
+        }
+        ListEmptyComponent={
+          isLoading ? (
+            <View className="gap-3">
+              <HomePostCardSkeleton />
+              <HomePostCardSkeleton />
             </View>
-          ) : hasMore ? (
-            <View className="py-3" />
-          ) : results.length > 0 ? (
-            <View className="items-center py-4">
-              <Text size="xs" className="text-gray-500 dark:text-gray-300">
-                وصلت إلى آخر النتائج
+          ) : error ? (
+            <Card padding="lg" className="items-center gap-3 border-gray-200 dark:border-dark-400">
+              <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
+                حدث خطأ أثناء البحث
               </Text>
-            </View>
+              <Text size="xs" className="text-center text-gray-500 dark:text-gray-300">
+                {error}
+              </Text>
+              <Pressable
+                onPress={retrySearch}
+                className="rounded-xl bg-primary-400 px-4 py-3"
+                accessibilityRole="button"
+                accessibilityLabel="إعادة المحاولة"
+              >
+                <Text size="xs" weight="semibold" className="text-light-50">
+                  إعادة المحاولة
+                </Text>
+              </Pressable>
+            </Card>
+          ) : (
+            <Card padding="lg" className="items-center gap-3 border-gray-200 dark:border-dark-400">
+              <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
+                لا توجد نتائج مطابقة
+              </Text>
+              <Text size="xs" className="text-center text-gray-500 dark:text-gray-300">
+                جرّب تعديل الكلمات المفتاحية أو إزالة بعض الفلاتر.
+              </Text>
+            </Card>
+          )
+        }
+        ListFooterComponent={
+          !error && !isLoading ? (
+            loadingMore ? (
+              <View className="items-center py-4">
+                <ActivityIndicator size="small" color="#405d72" />
+              </View>
+            ) : hasMore ? (
+              <View className="py-3" />
+            ) : results.length > 0 ? (
+              <View className="items-center py-4">
+                <Text size="xs" className="text-gray-500 dark:text-gray-300">
+                  وصلت إلى آخر النتائج
+                </Text>
+              </View>
+            ) : null
           ) : null
-        ) : null
-      }
-    />
+        }
+      />
+      <Modal
+        visible={isFilterModalOpen}
+        transparent
+        animationType="slide"
+        statusBarTranslucent
+        onRequestClose={closeFilterModal}
+      >
+        <Pressable
+          className="flex-1 justify-end"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          onPress={closeFilterModal}
+        >
+          <Pressable
+            onPress={(event) => event.stopPropagation()}
+            className="max-h-[78%] w-full rounded-t-3xl bg-white dark:bg-dark-500"
+          >
+            <View className="flex-row-reverse items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-dark-400">
+              <Pressable
+                onPress={closeFilterModal}
+                className="h-8 w-8 items-center justify-center rounded-lg"
+                accessibilityRole="button"
+                accessibilityLabel="إغلاق"
+              >
+                <ClearIcon size={18} color="#6B7280" strokeWidth={2.25} />
+              </Pressable>
+              <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
+                الفلاتر
+              </Text>
+              <Pressable onPress={clearAllFilters} accessibilityRole="button">
+                <Text size="xs" weight="semibold" className="text-primary-400">
+                  مسح الفلاتر
+                </Text>
+              </Pressable>
+            </View>
+
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ padding: 16, gap: 16 }}
+            >
+              <FilterSection
+                title="الحالة"
+                items={statusItems}
+                selectedKey={selectedStatus}
+                onSelect={setSelectedStatus}
+              />
+
+              <FilterSection
+                title="الموقع"
+                items={locationItems}
+                selectedKey={selectedLocation}
+                onSelect={setSelectedLocation}
+              />
+
+              <FilterSection
+                title="الترتيب"
+                items={sortItems}
+                selectedKey={selectedSort}
+                onSelect={setSelectedSort}
+              />
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </View>
   );
 }
