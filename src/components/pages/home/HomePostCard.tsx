@@ -1,6 +1,14 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "expo-router";
-import { Alert, Image, Pressable, Share, View } from "react-native";
+import {
+  Alert,
+  Image,
+  Modal,
+  Pressable,
+  Share,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { Archive, Pencil, Trash2 } from "lucide-react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import Button from "@/src/components/ui/Button";
@@ -38,6 +46,11 @@ type HomePostCardProps = {
 };
 
 const MAX_CONTENT = 120;
+const ACTION_MENU_WIDTH = 208;
+const ACTION_MENU_GAP = 8;
+const ACTION_MENU_PADDING = 12;
+const ACTION_MENU_ESTIMATED_HEIGHT_DEFAULT = 122;
+const ACTION_MENU_ESTIMATED_HEIGHT_OWN = 164;
 const reportTypeOptions: SelectionOption[] = [
   {
     label: "محتوى مضلل",
@@ -84,6 +97,7 @@ export function HomePostCard({
   onEdit,
 }: HomePostCardProps) {
   const router = useRouter();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const { isRTL } = useRTL();
   const [expanded, setExpanded] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -96,6 +110,8 @@ export function HomePostCard({
   const [isReportSuccessOpen, setIsReportSuccessOpen] = useState(false);
   const [lastReportType, setLastReportType] = useState("");
   const [otherReportReason, setOtherReportReason] = useState("");
+  const optionsButtonRef = useRef<View>(null);
+  const [optionsAnchor, setOptionsAnchor] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [pendingOwnPostAction, setPendingOwnPostAction] = useState<
     "archive" | "delete" | "edit" | null
   >(null);
@@ -124,14 +140,55 @@ export function HomePostCard({
   const canEditRejectedPost = isOwnPost && ownPostStatus === "unposted";
   const actionRowClassName = isRTL ? "flex-row-reverse" : "flex-row";
   const actionItemClassName = isRTL ? "flex-row-reverse" : "flex-row";
-  const optionsMenuPositionClassName = isRTL ? "left-0" : "right-0";
+  const estimatedOptionsMenuHeight = isOwnPost
+    ? ACTION_MENU_ESTIMATED_HEIGHT_OWN
+    : ACTION_MENU_ESTIMATED_HEIGHT_DEFAULT;
+  const openOptionsMenu = () => {
+    const anchorNode = optionsButtonRef.current;
+    if (!anchorNode) {
+      setIsOptionsOpen(true);
+      return;
+    }
+
+    anchorNode.measureInWindow((x, y, width, height) => {
+      setOptionsAnchor({ x, y, width, height });
+      setIsOptionsOpen(true);
+    });
+  };
+
+  const closeOptionsMenu = () => {
+    setIsOptionsOpen(false);
+  };
+
+  const getOptionsMenuStyle = () => {
+    const desiredTop = optionsAnchor.y + optionsAnchor.height + ACTION_MENU_GAP;
+    const maxTop = Math.max(ACTION_MENU_PADDING, desiredTop);
+    const fallbackTop = Math.max(
+      ACTION_MENU_PADDING,
+      optionsAnchor.y - estimatedOptionsMenuHeight - ACTION_MENU_GAP,
+    );
+    const top = maxTop + estimatedOptionsMenuHeight > windowHeight ? fallbackTop : maxTop;
+
+    const left = Math.max(
+      ACTION_MENU_PADDING,
+      Math.min(
+        isRTL ? optionsAnchor.x + optionsAnchor.width - ACTION_MENU_WIDTH : optionsAnchor.x,
+        windowWidth - ACTION_MENU_WIDTH - ACTION_MENU_PADDING,
+      ),
+    );
+
+    return {
+      top,
+      left,
+    };
+  };
 
   const handlePrimaryAction = async () => {
     if (isSubmitted || isClosed) {
       return;
     }
 
-    setIsOptionsOpen(false);
+    closeOptionsMenu();
 
     if (post.cta.type === "donate") {
       router.push({
@@ -174,7 +231,7 @@ export function HomePostCard({
     if (isSharing) return;
 
     try {
-      setIsOptionsOpen(false);
+      closeOptionsMenu();
       setIsSharing(true);
       const postLink = buildHomePostShareLink(post.id);
       const message = buildHomePostShareMessage(post);
@@ -207,7 +264,7 @@ export function HomePostCard({
   const handleTogglePostSaved = () => {
     const willSave = !isSaved;
     setIsSaved(willSave);
-    setIsOptionsOpen(false);
+    closeOptionsMenu();
     Alert.alert(
       willSave ? "تم حفظ المنشور" : "تم إزالة الحفظ",
       willSave ? "يمكنك العثور عليه لاحقًا في المنشورات المحفوظة." : "تمت إزالة المنشور من المحفوظات.",
@@ -215,19 +272,19 @@ export function HomePostCard({
   };
 
   const handleUnsavePost = () => {
-    setIsOptionsOpen(false);
+    closeOptionsMenu();
     setIsSaved(false);
     onUnsave?.(post);
     Alert.alert("تم إلغاء الحفظ", "تمت إزالة المنشور من صفحة المنشورات المحفوظة.");
   };
 
   const handleArchiveOwnPost = () => {
-    setIsOptionsOpen(false);
+    closeOptionsMenu();
     setPendingOwnPostAction("archive");
   };
 
   const handleDeleteOwnPost = () => {
-    setIsOptionsOpen(false);
+    closeOptionsMenu();
     setPendingOwnPostAction("delete");
   };
 
@@ -252,7 +309,7 @@ export function HomePostCard({
   };
 
   const handleEditOwnPost = () => {
-    setIsOptionsOpen(false);
+    closeOptionsMenu();
     setPendingOwnPostAction("edit");
   };
 
@@ -276,7 +333,7 @@ export function HomePostCard({
   };
 
   const handleReportPost = () => {
-    setIsOptionsOpen(false);
+    closeOptionsMenu();
     setIsReportModalOpen(true);
   };
 
@@ -408,7 +465,15 @@ export function HomePostCard({
         </Pressable>
         <View className="relative">
           <Pressable
-            onPress={() => setIsOptionsOpen((prev) => !prev)}
+            ref={optionsButtonRef}
+            onPress={() => {
+              if (isOptionsOpen) {
+                closeOptionsMenu();
+                return;
+              }
+
+              openOptionsMenu();
+            }}
             className="h-8 w-8 items-center justify-center rounded-lg"
             accessibilityRole="button"
             accessibilityLabel="خيارات المنشور"
@@ -420,86 +485,98 @@ export function HomePostCard({
             />
           </Pressable>
 
-          {isOptionsOpen ? (
-            <View
-              className={`absolute top-9 z-20 w-48 rounded-xl border border-gray-200 bg-white p-1 shadow-sm dark:border-dark-400 dark:bg-dark-500 ${optionsMenuPositionClassName}`}
-            >
-              {isOwnPost ? (
-                <>
-                  {canEditRejectedPost ? (
-                    <Pressable
-                      onPress={handleEditOwnPost}
-                      className={`${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
-                      accessibilityRole="button"
-                      accessibilityLabel="تعديل المنشور المرفوض"
-                    >
-                      <Text size="xs" className="text-dark-100 dark:text-light-50">
-                        تعديل المنشور
-                      </Text>
-                      <Pencil size={15} color="#405d72" strokeWidth={2.25} />
-                    </Pressable>
-                  ) : null}
+          <Modal
+            visible={isOptionsOpen}
+            transparent
+            animationType="fade"
+            statusBarTranslucent
+            onRequestClose={closeOptionsMenu}
+          >
+            <View className="flex-1" onTouchStart={closeOptionsMenu}>
+              <View className="absolute inset-0 bg-transparent" />
+              <View
+                className="absolute z-30 w-52 rounded-xl border border-gray-200 bg-white p-1 shadow-sm dark:border-dark-400 dark:bg-dark-500"
+                style={getOptionsMenuStyle()}
+                onStartShouldSetResponder={() => true}
+                onTouchStart={(event) => event.stopPropagation()}
+              >
+                {isOwnPost ? (
+                  <>
+                    {canEditRejectedPost ? (
+                      <Pressable
+                        onPress={handleEditOwnPost}
+                        className={`${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
+                        accessibilityRole="button"
+                        accessibilityLabel="تعديل المنشور المرفوض"
+                      >
+                        <Text size="xs" className="text-dark-100 dark:text-light-50">
+                          تعديل المنشور
+                        </Text>
+                        <Pencil size={15} color="#405d72" strokeWidth={2.25} />
+                      </Pressable>
+                    ) : null}
 
-                  {canArchiveOwnPost ? (
+                    {canArchiveOwnPost ? (
+                      <Pressable
+                        onPress={handleArchiveOwnPost}
+                        className={`mt-1 ${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
+                        accessibilityRole="button"
+                        accessibilityLabel="أرشفة المنشور"
+                      >
+                        <Text size="xs" className="text-dark-100 dark:text-light-50">
+                          أرشفة المنشور
+                        </Text>
+                        <Archive size={15} color="#405d72" strokeWidth={2.25} />
+                      </Pressable>
+                    ) : null}
+
                     <Pressable
-                      onPress={handleArchiveOwnPost}
+                      onPress={handleDeleteOwnPost}
                       className={`mt-1 ${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
                       accessibilityRole="button"
-                      accessibilityLabel="أرشفة المنشور"
+                      accessibilityLabel="حذف المنشور"
+                    >
+                      <Text size="xs" className="text-error-300">
+                        حذف المنشور
+                      </Text>
+                      <Trash2 size={15} color="#DC2626" strokeWidth={2.25} />
+                    </Pressable>
+                  </>
+                ) : (
+                  <>
+                    <Pressable
+                      onPress={isSavedPostList ? handleUnsavePost : handleTogglePostSaved}
+                      className={`${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
+                      accessibilityRole="button"
+                      accessibilityLabel={isSaved ? "إلغاء حفظ المنشور" : "حفظ المنشور"}
                     >
                       <Text size="xs" className="text-dark-100 dark:text-light-50">
-                        أرشفة المنشور
+                        {isSaved ? "إلغاء الحفظ" : "حفظ المنشور"}
                       </Text>
-                      <Archive size={15} color="#405d72" strokeWidth={2.25} />
+                      <BookmarkIcon
+                        size={15}
+                        color={isSaved ? "#405d72" : "#9CA3AF"}
+                        fill={isSaved ? "#405d72" : "transparent"}
+                        strokeWidth={2.25}
+                      />
                     </Pressable>
-                  ) : null}
 
-                  <Pressable
-                    onPress={handleDeleteOwnPost}
-                    className={`mt-1 ${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
-                    accessibilityRole="button"
-                    accessibilityLabel="حذف المنشور"
-                  >
-                    <Text size="xs" className="text-error-300">
-                      حذف المنشور
-                    </Text>
-                    <Trash2 size={15} color="#DC2626" strokeWidth={2.25} />
-                  </Pressable>
-                </>
-              ) : (
-                <>
-                  <Pressable
-                    onPress={isSavedPostList ? handleUnsavePost : handleTogglePostSaved}
-                    className={`${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
-                    accessibilityRole="button"
-                    accessibilityLabel={isSaved ? "إلغاء حفظ المنشور" : "حفظ المنشور"}
-                  >
-                    <Text size="xs" className="text-dark-100 dark:text-light-50">
-                      {isSaved ? "إلغاء الحفظ" : "حفظ المنشور"}
-                    </Text>
-                    <BookmarkIcon
-                      size={15}
-                      color={isSaved ? "#405d72" : "#9CA3AF"}
-                      fill={isSaved ? "#405d72" : "transparent"}
-                      strokeWidth={2.25}
-                    />
-                  </Pressable>
-
-                  <Pressable
-                    onPress={handleReportPost}
-                    className={`mt-1 ${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
-                    accessibilityRole="button"
-                    accessibilityLabel="إبلاغ عن المنشور"
-                  >
-                    <Text size="xs" className="text-error-300">
-                      إبلاغ عن المنشور
-                    </Text>
-                    <ShieldIcon size={15} color="#DC2626" strokeWidth={2.25} />
-                  </Pressable>
-                </>
-              )}
+                    <Pressable
+                      onPress={handleReportPost}
+                      className={`mt-1 ${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
+                      accessibilityRole="button"
+                      accessibilityLabel="إبلاغ عن المنشور"
+                    >
+                      <Text size="xs" className="text-error-300">
+                        إبلاغ عن المنشور
+                      </Text>
+                      <ShieldIcon size={15} color="#DC2626" strokeWidth={2.25} />
+                    </Pressable>
+                  </>
+                )}
+              </View>
             </View>
-          ) : null}
+          </Modal>
         </View>
       </View>
 
