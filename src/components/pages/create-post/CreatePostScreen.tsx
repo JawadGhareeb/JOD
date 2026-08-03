@@ -1,17 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
-import { ImagePlus, MapPin, X } from "lucide-react-native";
-import { Alert, Animated, Image, Pressable, View } from "react-native";
+import { appIcons } from "@/src/components/layout/iconMap";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Dialog from "@/src/components/ui/Dialog";
 import Input from "@/src/components/ui/Input";
-import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
+import SelectionModal, {
+  type SelectionOption,
+} from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
-import { appIcons } from "@/src/components/layout/iconMap";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import type { CreatePostType } from "@/src/types/menu";
+import * as ImagePicker from "expo-image-picker";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { ImagePlus, MapPin, X } from "lucide-react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Alert, Animated, Image, Pressable, View } from "react-native";
 import { MenuPageHeader } from "../settings/MenuPageHeader";
 
 type PendingExitAction = () => void;
@@ -25,7 +27,7 @@ const postTypes: { key: CreatePostType; label: string; hint: string }[] = [
   { key: "donation", label: "حملة تبرع", hint: "مناسب لجمع التبرعات" },
   { key: "help", label: "طلب مساعدة", hint: "مناسب لحالات الدعم الفردية" },
 ];
-
+/// test push
 const cityOptions: SelectionOption[] = [
   { label: "دمشق", value: "دمشق" },
   { label: "حلب", value: "حلب" },
@@ -52,7 +54,9 @@ const readParam = (value: string | string[] | undefined) => {
 const isCreatePostType = (value: string): value is CreatePostType =>
   postTypes.some((type) => type.key === value);
 
-export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProps = {}) {
+export function CreatePostScreen({
+  showPageHeader = true,
+}: CreatePostScreenProps = {}) {
   const params = useLocalSearchParams<{
     mode?: string;
     postId?: string;
@@ -98,28 +102,48 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     setDetails(paramDetails);
     setCity(paramCity);
     setSelectedImages(paramImages.split("|").filter(Boolean));
-  }, [editMode, params.city, params.details, params.images, params.postType, params.title]);
+  }, [
+    editMode,
+    params.city,
+    params.details,
+    params.images,
+    params.postType,
+    params.title,
+  ]);
 
   const typeHint = useMemo(
     () => postTypes.find((type) => type.key === postType)?.hint,
     [postType],
   );
-  const canPublish = title.trim().length > 3 && city.trim().length > 1 && details.trim().length > 10;
+  const canPublish =
+    title.trim().length > 3 &&
+    city.trim().length > 1 &&
+    details.trim().length > 10;
   const pageTitle = editMode ? "تعديل بوست" : "نشر بوست";
   const submitLabel = editMode ? "إعادة إرسال للمراجعة" : "نشر الآن";
 
   const initialSnapshot = useMemo(() => {
     const paramPostType = readParam(params.postType);
-    const initialPostType = editMode && isCreatePostType(paramPostType) ? paramPostType : "volunteer";
+    const initialPostType =
+      editMode && isCreatePostType(paramPostType) ? paramPostType : "volunteer";
 
     return JSON.stringify({
       postType: initialPostType,
       title: editMode ? readParam(params.title) : "",
       details: editMode ? readParam(params.details) : "",
       city: editMode ? readParam(params.city) : "",
-      images: editMode ? readParam(params.images).split("|").filter(Boolean).join("|") : "",
+      images: editMode
+        ? readParam(params.images).split("|").filter(Boolean).join("|")
+        : "",
     });
-  }, [editMode, params.city, params.details, params.images, params.postType, params.title]);
+  }, [
+    editMode,
+    params.city,
+    params.details,
+    params.images,
+    params.postType,
+    params.title,
+  ]);
 
   const currentSnapshot = useMemo(
     () =>
@@ -137,7 +161,8 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     setBaselineSnapshot(initialSnapshot);
   }, [initialSnapshot]);
 
-  const hasUnsavedChanges = currentSnapshot !== (baselineSnapshot || initialSnapshot);
+  const hasUnsavedChanges =
+    currentSnapshot !== (baselineSnapshot || initialSnapshot);
 
   const requestPageExit = useCallback(
     (exitAction: PendingExitAction) => {
@@ -176,17 +201,29 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
 
   useEffect(() => {
     const guardedNavigation = navigation as unknown as {
-      addListener?: (eventName: string, listener: (event: any) => void) => () => void;
+      addListener?: (
+        eventName: string,
+        listener: (event: any) => void,
+      ) => () => void;
       dispatch?: (action: unknown) => void;
     };
 
-    const unsubscribe = guardedNavigation.addListener?.("beforeRemove", (event: any) => {
-      if (!hasUnsavedChanges || isDiscardExitConfirmedRef.current || isDiscardConfirmOpen) return;
+    const unsubscribe = guardedNavigation.addListener?.(
+      "beforeRemove",
+      (event: any) => {
+        if (
+          !hasUnsavedChanges ||
+          isDiscardExitConfirmedRef.current ||
+          isDiscardConfirmOpen
+        )
+          return;
 
-      event.preventDefault();
-      pendingExitActionRef.current = () => guardedNavigation.dispatch?.(event.data.action);
-      setIsDiscardConfirmOpen(true);
-    });
+        event.preventDefault();
+        pendingExitActionRef.current = () =>
+          guardedNavigation.dispatch?.(event.data.action);
+        setIsDiscardConfirmOpen(true);
+      },
+    );
 
     return unsubscribe;
   }, [hasUnsavedChanges, isDiscardConfirmOpen, navigation]);
@@ -195,19 +232,30 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     const parentNavigation = (navigation as any).getParent?.();
     if (!parentNavigation?.addListener) return;
 
-    const unsubscribe = parentNavigation.addListener("tabPress", (event: any) => {
-      if (!hasUnsavedChanges || isDiscardExitConfirmedRef.current || isDiscardConfirmOpen) return;
+    const unsubscribe = parentNavigation.addListener(
+      "tabPress",
+      (event: any) => {
+        if (
+          !hasUnsavedChanges ||
+          isDiscardExitConfirmedRef.current ||
+          isDiscardConfirmOpen
+        )
+          return;
 
-      const parentState = parentNavigation.getState?.();
-      const targetRoute = parentState?.routes?.find((route: any) => route.key === event.target);
-      const currentRoute = parentState?.routes?.[parentState.index];
+        const parentState = parentNavigation.getState?.();
+        const targetRoute = parentState?.routes?.find(
+          (route: any) => route.key === event.target,
+        );
+        const currentRoute = parentState?.routes?.[parentState.index];
 
-      if (!targetRoute || targetRoute.key === currentRoute?.key) return;
+        if (!targetRoute || targetRoute.key === currentRoute?.key) return;
 
-      event.preventDefault();
-      pendingExitActionRef.current = () => parentNavigation.navigate(targetRoute.name, targetRoute.params);
-      setIsDiscardConfirmOpen(true);
-    });
+        event.preventDefault();
+        pendingExitActionRef.current = () =>
+          parentNavigation.navigate(targetRoute.name, targetRoute.params);
+        setIsDiscardConfirmOpen(true);
+      },
+    );
 
     return unsubscribe;
   }, [hasUnsavedChanges, isDiscardConfirmOpen, navigation]);
@@ -261,7 +309,9 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
       setIsSubmitConfirmOpen(false);
       Alert.alert(
         editMode ? "تم إرسال التعديلات" : "تم نشر المنشور",
-        editMode ? "تم إرسال المنشور بعد التعديل للمراجعة." : "تم تجهيز المنشور للنشر.",
+        editMode
+          ? "تم إرسال المنشور بعد التعديل للمراجعة."
+          : "تم تجهيز المنشور للنشر.",
       );
     }, 500);
   };
@@ -273,27 +323,49 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
 
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
-      {showPageHeader ? <MenuPageHeader title={pageTitle} onBackPress={handleHeaderBackPress} /> : null}
+      {showPageHeader ? (
+        <MenuPageHeader title={pageTitle} onBackPress={handleHeaderBackPress} />
+      ) : null}
 
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 28, paddingTop: showPageHeader ? 0 : 12 }}
+        contentContainerStyle={{
+          paddingBottom: 28,
+          paddingTop: showPageHeader ? 0 : 12,
+        }}
         onScroll={showPageHeader ? undefined : onScroll}
         scrollEventThrottle={showPageHeader ? undefined : 16}
       >
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
-          <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
+        <Card
+          padding="md"
+          className="mb-3 border-gray-200 dark:border-dark-400"
+        >
+          <Text
+            weight="semibold"
+            size="sm"
+            className="text-dark-100 dark:text-light-50"
+          >
             {editMode ? "تعديل منشور مرفوض" : "قبل النشر"}
           </Text>
-          <Text size="xs" className="mt-2 leading-6 text-gray-500 dark:text-gray-300">
+          <Text
+            size="xs"
+            className="mt-2 leading-6 text-gray-500 dark:text-gray-300"
+          >
             {editMode
               ? `عدّل بيانات المنشور${editingPostId ? ` رقم ${editingPostId}` : ""} ثم أعد إرساله للمراجعة.`
               : "اكتب عنوان واضح، وصف مختصر ومباشر، وأضف صور حقيقية لزيادة موثوقية المنشور."}
           </Text>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
-          <Text weight="semibold" size="sm" className="mb-3 text-dark-100 dark:text-light-50">
+        <Card
+          padding="md"
+          className="mb-3 border-gray-200 dark:border-dark-400"
+        >
+          <Text
+            weight="semibold"
+            size="sm"
+            className="mb-3 text-dark-100 dark:text-light-50"
+          >
             نوع المنشور
           </Text>
 
@@ -327,8 +399,15 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
           </Text>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
-          <Text weight="semibold" size="sm" className="mb-3 text-dark-100 dark:text-light-50">
+        <Card
+          padding="md"
+          className="mb-3 border-gray-200 dark:border-dark-400"
+        >
+          <Text
+            weight="semibold"
+            size="sm"
+            className="mb-3 text-dark-100 dark:text-light-50"
+          >
             تفاصيل المنشور
           </Text>
 
@@ -394,9 +473,16 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
           </View>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card
+          padding="md"
+          className="mb-3 border-gray-200 dark:border-dark-400"
+        >
           <View className="mb-3 flex-row-reverse items-center justify-between">
-            <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
+            <Text
+              weight="semibold"
+              size="sm"
+              className="text-dark-100 dark:text-light-50"
+            >
               صور المنشور
             </Text>
             <Text size="2xs" className="text-gray-500 dark:text-gray-300">
@@ -404,7 +490,8 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
             </Text>
           </View>
           <Text size="2xs" className="mb-2 text-gray-500 dark:text-gray-300">
-            يمكنك إضافة أي عدد من الصور من المعرض. إضافة صورة واحدة على الأقل ترفع فرصة التفاعل.
+            يمكنك إضافة أي عدد من الصور من المعرض. إضافة صورة واحدة على الأقل
+            ترفع فرصة التفاعل.
           </Text>
           <View className="flex-row-reverse flex-wrap justify-between gap-y-2">
             {selectedImages.map((imageUri, index) => (
@@ -413,7 +500,11 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
                 style={{ width: "48%" }}
                 className="h-24 overflow-hidden rounded-xl bg-gray-200 dark:bg-dark-350"
               >
-                <Image source={{ uri: imageUri }} className="h-full w-full" resizeMode="cover" />
+                <Image
+                  source={{ uri: imageUri }}
+                  className="h-full w-full"
+                  resizeMode="cover"
+                />
                 <Pressable
                   onPress={() => handleRemoveImage(imageUri)}
                   className="absolute left-2 top-2 h-7 w-7 items-center justify-center rounded-full bg-gray-900/70"
@@ -433,14 +524,20 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
               accessibilityLabel="إضافة صور للمنشور"
             >
               <ImageIcon size={18} color="#405d72" strokeWidth={2.25} />
-              <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
+              <Text
+                size="2xs"
+                className="mt-1 text-gray-500 dark:text-gray-300"
+              >
                 إضافة صور
               </Text>
             </Pressable>
           </View>
         </Card>
 
-        <Card padding="sm" className="mb-2 border-gray-200 dark:border-dark-400">
+        <Card
+          padding="sm"
+          className="mb-2 border-gray-200 dark:border-dark-400"
+        >
           <Text size="2xs" className="text-gray-500 dark:text-gray-300">
             بالضغط على {submitLabel} أنت توافق على سياسات المحتوى في المنصة.
           </Text>
@@ -448,7 +545,12 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
 
         <View className="mb-2 flex-row-reverse items-stretch gap-2">
           <View className="min-w-0 flex-1">
-            <Button fullWidth size="small" disabled={!canPublish} onPress={handleSubmitPress}>
+            <Button
+              fullWidth
+              size="small"
+              disabled={!canPublish}
+              onPress={handleSubmitPress}
+            >
               {submitLabel}
             </Button>
           </View>
@@ -465,7 +567,10 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         </View>
 
         {!canPublish ? (
-          <Text size="2xs" className="text-center text-gray-500 dark:text-gray-300">
+          <Text
+            size="2xs"
+            className="text-center text-gray-500 dark:text-gray-300"
+          >
             أكمل الحقول المطلوبة (العنوان، المدينة، الوصف) لتفعيل النشر.
           </Text>
         ) : null}
@@ -534,7 +639,6 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
           },
         ]}
       />
-
     </View>
   );
 }
