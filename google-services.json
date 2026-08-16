@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "403366748330",
+    "project_id": "jawad-b4fcd",
+    "storage_bucket": "jawad-b4fcd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:403366748330:android:fee7a8a39bbe5179e5b0d3",
+        "android_client_info": {
+          "package_name": "com.jod.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBdhlFKRKt3aokReqhpRPS0Og9bCUwNyVg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
