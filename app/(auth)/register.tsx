@@ -4,6 +4,7 @@ import {
   Eye,
   EyeOff,
   LockKeyhole,
+  Mail,
   PhoneCall,
   UserRound,
 } from "lucide-react-native";
@@ -12,7 +13,9 @@ import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 import { z } from "zod";
 import { useAuthStatus } from "@/src/hooks/useAuthStatus";
-import { setMockAuth } from "@/src/lib/auth";
+import { applyApiFormErrors } from "@/src/lib/api-error-utils";
+import { authApi } from "@/src/lib/auth-api";
+import { storeSession } from "@/src/lib/auth";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
@@ -23,9 +26,13 @@ import Text from "@/src/components/ui/Text";
 
 const registerSchema = z
   .object({
-    firstName: z.string().trim().min(1, "الاسم الأول مطلوب"),
-    lastName: z.string().trim().min(1, "اسم العائلة مطلوب"),
-    phoneNumber: z.string().trim().min(1, "رقم الهاتف مطلوب"),
+    name: z.string().trim().min(1, "الاسم مطلوب"),
+    email: z
+      .string()
+      .trim()
+      .min(1, "البريد الإلكتروني مطلوب")
+      .email("صيغة البريد الإلكتروني غير صحيحة"),
+    phoneNumber: z.string().trim().optional(),
     password: z
       .string()
       .trim()
@@ -41,11 +48,11 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const defaultValues: RegisterFormValues = {
-  firstName: "أحمد",
-  lastName: "محمد",
-  phoneNumber: "0999999999",
-  password: "Password123!",
-  confirmPassword: "Password123!",
+  name: "",
+  email: "",
+  phoneNumber: "",
+  password: "",
+  confirmPassword: "",
 };
 
 export default function RegisterScreen() {
@@ -53,10 +60,12 @@ export default function RegisterScreen() {
   const { isAuthenticated, isLoading } = useAuthStatus();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const {
     control,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -70,12 +79,25 @@ export default function RegisterScreen() {
   }, [isAuthenticated, isLoading, router]);
 
   const onSubmit = handleSubmit(async (values) => {
-    await setMockAuth({
-      firstName: values.firstName,
-      lastName: values.lastName,
-      phoneNumber: values.phoneNumber,
-    });
-    router.replace("/(tabs)/home");
+    setFormError("");
+
+    try {
+      const session = await authApi.register({
+        name: values.name,
+        email: values.email,
+        phone: values.phoneNumber?.trim() || undefined,
+        password: values.password,
+        password_confirmation: values.confirmPassword,
+      });
+
+      await storeSession(session.token);
+      router.replace("/(tabs)/home");
+    } catch (error) {
+      const message = applyApiFormErrors(error, setError, {
+        password_confirmation: "confirmPassword",
+      });
+      if (message) setFormError(message);
+    }
   });
 
   if (isLoading || isAuthenticated) {
@@ -113,17 +135,17 @@ export default function RegisterScreen() {
           <Card padding="lg" className="gap-4 border-gray-200 dark:border-dark-400">
             <Controller
               control={control}
-              name="firstName"
+              name="name"
               render={({ field: { onChange, onBlur, value } }) => (
                 <Input
-                  label="الاسم الأول"
-                  placeholder="أحمد"
+                  label="الاسم الكامل"
+                  placeholder="أحمد محمد"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
-                  autoComplete="given-name"
-                  textContentType="givenName"
-                  error={errors.firstName?.message}
+                  autoComplete="name"
+                  textContentType="name"
+                  error={errors.name?.message}
                   leftIcon={<UserRound size={18} />}
                   fullWidth
                 />
@@ -132,18 +154,20 @@ export default function RegisterScreen() {
 
             <Controller
               control={control}
-              name="lastName"
+              name="email"
               render={({ field: { onChange, onBlur, value } }) => (
                 <Input
-                  label="اسم العائلة"
-                  placeholder="محمد"
+                  label="البريد الإلكتروني"
+                  placeholder="ahmad@example.com"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
-                  autoComplete="family-name"
-                  textContentType="familyName"
-                  error={errors.lastName?.message}
-                  leftIcon={<UserRound size={18} />}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  textContentType="emailAddress"
+                  error={errors.email?.message}
+                  leftIcon={<Mail size={18} />}
                   fullWidth
                 />
               )}
@@ -154,7 +178,7 @@ export default function RegisterScreen() {
               name="phoneNumber"
               render={({ field: { onChange, onBlur, value } }) => (
                 <Input
-                  label="رقم الهاتف"
+                  label="رقم الهاتف (اختياري)"
                   placeholder="0999999999"
                   value={value}
                   onChangeText={onChange}
@@ -216,6 +240,12 @@ export default function RegisterScreen() {
                 />
               )}
             />
+
+            {formError ? (
+              <Text size="sm" color="error" rtlAlign="center">
+                {formError}
+              </Text>
+            ) : null}
 
             <Button fullWidth loading={isSubmitting} onPress={onSubmit}>
               إنشاء الحساب

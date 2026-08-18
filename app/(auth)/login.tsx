@@ -1,12 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { Eye, EyeOff, LockKeyhole, PhoneCall } from "lucide-react-native";
+import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 import { z } from "zod";
 import { useAuthStatus } from "@/src/hooks/useAuthStatus";
-import { setMockAuth } from "@/src/lib/auth";
+import { applyApiFormErrors } from "@/src/lib/api-error-utils";
+import { authApi } from "@/src/lib/auth-api";
+import { storeSession } from "@/src/lib/auth";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
@@ -16,7 +18,11 @@ import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
 
 const loginSchema = z.object({
-  phoneNumber: z.string().trim().min(1, "رقم الهاتف مطلوب"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "البريد الإلكتروني مطلوب")
+    .email("صيغة البريد الإلكتروني غير صحيحة"),
   password: z
     .string()
     .trim()
@@ -27,18 +33,20 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const defaultValues: LoginFormValues = {
-  phoneNumber: "0999999999",
-  password: "Password123!",
+  email: "",
+  password: "",
 };
 
 export default function LoginScreen() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthStatus();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const {
     control,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -52,12 +60,20 @@ export default function LoginScreen() {
   }, [isAuthenticated, isLoading, router]);
 
   const onSubmit = handleSubmit(async (values) => {
-    await setMockAuth({
-      firstName: "مستخدم",
-      lastName: "",
-      phoneNumber: values.phoneNumber,
-    });
-    router.replace("/(tabs)/home");
+    setFormError("");
+
+    try {
+      const session = await authApi.login({
+        email: values.email,
+        password: values.password,
+      });
+
+      await storeSession(session.token);
+      router.replace("/(tabs)/home");
+    } catch (error) {
+      const message = applyApiFormErrors(error, setError);
+      if (message) setFormError(message);
+    }
   });
 
   if (isLoading || isAuthenticated) {
@@ -95,19 +111,20 @@ export default function LoginScreen() {
           <Card padding="lg" className="gap-4 border-gray-200 dark:border-dark-400">
             <Controller
               control={control}
-              name="phoneNumber"
+              name="email"
               render={({ field: { onChange, onBlur, value } }) => (
                 <Input
-                  label="رقم الهاتف"
-                  placeholder="0999999999"
+                  label="البريد الإلكتروني"
+                  placeholder="ahmad@example.com"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
-                  keyboardType="phone-pad"
-                  autoComplete="tel"
-                  textContentType="telephoneNumber"
-                  error={errors.phoneNumber?.message}
-                  leftIcon={<PhoneCall size={18} />}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  textContentType="emailAddress"
+                  error={errors.email?.message}
+                  leftIcon={<Mail size={18} />}
                   fullWidth
                 />
               )}
@@ -134,6 +151,12 @@ export default function LoginScreen() {
                 />
               )}
             />
+
+            {formError ? (
+              <Text size="sm" color="error" rtlAlign="center">
+                {formError}
+              </Text>
+            ) : null}
 
             <Button fullWidth loading={isSubmitting} onPress={onSubmit}>
               تسجيل الدخول

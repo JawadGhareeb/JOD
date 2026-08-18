@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { Check, LockKeyhole, PhoneCall } from "lucide-react-native";
+import { Check, LockKeyhole, Mail } from "lucide-react-native";
 import { Fragment, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
@@ -13,11 +13,16 @@ import KeyboardAvoider from "@/src/components/ui/KeyboardAvoider";
 import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
 import VerificationCodeInput from "@/src/components/ui/VerificationCodeInput";
+import { applyApiFormErrors } from "@/src/lib/api-error-utils";
+import { authApi } from "@/src/lib/auth-api";
 
-const VERIFICATION_CODE_LENGTH = 4;
+// Server requires exactly 6 characters for the reset code (see
+// VerifyResetCodeRequest / ResetPasswordRequest in MOBILE_API_CONTRACT.md).
+const VERIFICATION_CODE_LENGTH = 6;
+const emailSchema = z.string().trim().email();
 
 enum ResetPasswordStep {
-  Phone = 1,
+  Email = 1,
   Code = 2,
   Password = 3,
   Success = 4,
@@ -26,18 +31,27 @@ enum ResetPasswordStep {
 const buildResetPasswordSchema = (step: ResetPasswordStep) =>
   z
     .object({
-      phoneNumber: z.string().trim().optional(),
+      login: z.string().trim().optional(),
       code: z.string().trim().optional(),
       newPassword: z.string().trim().optional(),
       confirmPassword: z.string().trim().optional(),
     })
     .superRefine((values, context) => {
-      if (step === ResetPasswordStep.Phone) {
-        if (!values.phoneNumber?.trim()) {
+      if (step === ResetPasswordStep.Email) {
+        if (!values.login?.trim()) {
           context.addIssue({
             code: z.ZodIssueCode.custom,
-            path: ["phoneNumber"],
-            message: "رقم الهاتف مطلوب",
+            path: ["login"],
+            message: "البريد الإلكتروني مطلوب",
+          });
+          return;
+        }
+
+        if (!emailSchema.safeParse(values.login.trim()).success) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["login"],
+            message: "صيغة البريد الإلكتروني غير صحيحة",
           });
         }
         return;
@@ -105,15 +119,16 @@ type ResetPasswordFormValues = z.infer<
 >;
 
 const defaultValues: ResetPasswordFormValues = {
-  phoneNumber: "0999999999",
+  login: "",
   code: "",
-  newPassword: "Password123!",
-  confirmPassword: "Password123!",
+  newPassword: "",
+  confirmPassword: "",
 };
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
-  const [step, setStep] = useState<ResetPasswordStep>(ResetPasswordStep.Phone);
+  const [step, setStep] = useState<ResetPasswordStep>(ResetPasswordStep.Email);
+  const [stepError, setStepError] = useState("");
   const resetPasswordSchema = useMemo(
     () => buildResetPasswordSchema(step),
     [step],
@@ -122,7 +137,7 @@ export default function ResetPasswordScreen() {
   const {
     control,
     handleSubmit,
-    trigger,
+    setError,
     setValue,
     watch,
     formState: { errors, isSubmitting },
@@ -132,33 +147,59 @@ export default function ResetPasswordScreen() {
     mode: "onTouched",
   });
 
-  const phoneNumber = watch("phoneNumber");
+  const login = watch("login");
 
-  const goToCodeStep = async () => {
-    const isPhoneValid = await trigger("phoneNumber");
-    if (!isPhoneValid) {
-      return;
-    }
-
-    setStep(ResetPasswordStep.Code);
+  const goBackToStep = (previousStep: ResetPasswordStep) => {
+    setStepError("");
+    setStep(previousStep);
   };
 
-  const goToPasswordStep = async () => {
-    const isCodeValid = await trigger("code");
-    if (!isCodeValid) {
-      return;
+  const goToCodeStep = handleSubmit(async (values) => {
+    setStepError("");
+
+    try {
+      await authApi.forgotPassword(values.login!.trim());
+      setStep(ResetPasswordStep.Code);
+    } catch (error) {
+      const message = applyApiFormErrors(error, setError, { login: "login" });
+      if (message) setStepError(message);
     }
+  });
 
-    setStep(ResetPasswordStep.Password);
-  };
+  const goToPasswordStep = handleSubmit(async (values) => {
+    setStepError("");
 
-  const submitNewPassword = handleSubmit(async () => {
-    setStep(ResetPasswordStep.Success);
+    try {
+      await authApi.verifyResetCode(values.login!.trim(), values.code!.trim());
+      setStep(ResetPasswordStep.Password);
+    } catch (error) {
+      const message = applyApiFormErrors(error, setError, { login: "login" });
+      if (message) setStepError(message);
+    }
+  });
+
+  const submitNewPassword = handleSubmit(async (values) => {
+    setStepError("");
+
+    try {
+      await authApi.resetPassword({
+        login: values.login!.trim(),
+        code: values.code!.trim(),
+        password: values.newPassword!,
+        password_confirmation: values.confirmPassword!,
+      });
+      setStep(ResetPasswordStep.Success);
+    } catch (error) {
+      const message = applyApiFormErrors(error, setError, {
+        password_confirmation: "confirmPassword",
+      });
+      if (message) setStepError(message);
+    }
   });
 
   const renderStepIndicator = () => {
     const steps = [
-      { id: ResetPasswordStep.Phone, label: "رقم الهاتف" },
+      { id: ResetPasswordStep.Email, label: "البريد الإلكتروني" },
       { id: ResetPasswordStep.Code, label: "الرمز" },
       { id: ResetPasswordStep.Password, label: "كلمة المرور" },
       { id: ResetPasswordStep.Success, label: "النتيجة" },
@@ -225,32 +266,33 @@ export default function ResetPasswordScreen() {
     );
   };
 
-  const renderPhoneStep = () => (
+  const renderEmailStep = () => (
     <View className="gap-4">
       <View className="gap-2">
         <Text variant="heading" weight="bold" rtlAlign="center">
           إعادة تعيين كلمة المرور
         </Text>
         <Text size="sm" color="secondary" rtlAlign="center">
-          أدخل رقم الهاتف لإرسال رمز التحقق.
+          أدخل بريدك الإلكتروني لإرسال رمز التحقق.
         </Text>
       </View>
 
       <Controller
         control={control}
-        name="phoneNumber"
+        name="login"
         render={({ field: { onChange, onBlur, value } }) => (
           <Input
-            label="رقم الهاتف"
-            placeholder="0999999999"
+            label="البريد الإلكتروني"
+            placeholder="ahmad@example.com"
             value={value}
             onChangeText={onChange}
             onBlur={onBlur}
-            keyboardType="phone-pad"
-            autoComplete="tel"
-            textContentType="telephoneNumber"
-            error={errors.phoneNumber?.message}
-            leftIcon={<PhoneCall size={18} />}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            textContentType="emailAddress"
+            error={errors.login?.message}
+            leftIcon={<Mail size={18} />}
             fullWidth
           />
         )}
@@ -269,7 +311,7 @@ export default function ResetPasswordScreen() {
           تحقق من الرمز
         </Text>
         <Text size="sm" color="secondary" rtlAlign="center">
-          أدخل الرمز المرسل إلى {phoneNumber || "رقم الهاتف"}.
+          أدخل الرمز المرسل إلى {login || "بريدك الإلكتروني"}.
         </Text>
       </View>
 
@@ -315,7 +357,7 @@ export default function ResetPasswordScreen() {
           <Button
             fullWidth
             variant="tertiary"
-            onPress={() => setStep(ResetPasswordStep.Phone)}
+            onPress={() => goBackToStep(ResetPasswordStep.Email)}
           >
             رجوع
           </Button>
@@ -346,7 +388,7 @@ export default function ResetPasswordScreen() {
         render={({ field: { onChange, onBlur, value } }) => (
           <Input
             label="كلمة المرور الجديدة"
-            placeholder="Password123!"
+            placeholder="أدخل كلمة المرور الجديدة"
             value={value}
             onChangeText={onChange}
             onBlur={onBlur}
@@ -366,7 +408,7 @@ export default function ResetPasswordScreen() {
         render={({ field: { onChange, onBlur, value } }) => (
           <Input
             label="تأكيد كلمة المرور"
-            placeholder="Password123!"
+            placeholder="أعد إدخال كلمة المرور الجديدة"
             value={value}
             onChangeText={onChange}
             onBlur={onBlur}
@@ -385,7 +427,7 @@ export default function ResetPasswordScreen() {
           <Button
             fullWidth
             variant="tertiary"
-            onPress={() => setStep(ResetPasswordStep.Code)}
+            onPress={() => goBackToStep(ResetPasswordStep.Code)}
           >
             رجوع
           </Button>
@@ -418,7 +460,6 @@ export default function ResetPasswordScreen() {
         onPress={() => {
           router.replace("/(auth)/login");
         }}
-        
       >
         الذهاب إلى تسجيل الدخول
       </Button>
@@ -455,7 +496,14 @@ export default function ResetPasswordScreen() {
 
           <Card padding="lg" className="gap-5 border-gray-200 dark:border-dark-400">
             {renderStepIndicator()}
-            {step === ResetPasswordStep.Phone && renderPhoneStep()}
+
+            {stepError ? (
+              <Text size="sm" color="error" rtlAlign="center">
+                {stepError}
+              </Text>
+            ) : null}
+
+            {step === ResetPasswordStep.Email && renderEmailStep()}
             {step === ResetPasswordStep.Code && renderCodeStep()}
             {step === ResetPasswordStep.Password && renderPasswordStep()}
             {step === ResetPasswordStep.Success && renderSuccessStep()}

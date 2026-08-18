@@ -33,10 +33,7 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   const rowClassName = isRTL ? "flex-row-reverse" : "flex-row";
   const justifyClassName = isRTL ? "items-end" : "items-start";
 
-  const displayName = useMemo(
-    () => [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim(),
-    [user?.firstName, user?.lastName],
-  );
+  const displayName = useMemo(() => user?.name?.trim() ?? "", [user?.name]);
 
   const topInsetHeight = includeTopInset ? insets.top : 0;
   const resolvedContentHeight = Math.max(contentHeight, MIN_HEADER_CONTENT_HEIGHT);

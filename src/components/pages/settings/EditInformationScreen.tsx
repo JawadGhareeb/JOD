@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileText, Mail, MapPin, Phone } from "lucide-react-native";
 import { Alert, ScrollView, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
@@ -6,28 +6,57 @@ import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Input from "@/src/components/ui/Input";
 import Text from "@/src/components/ui/Text";
+import { useAuthStatus } from "@/src/hooks/useAuthStatus";
+import { ApiClientError } from "@/src/lib/api-client";
+import { meApi } from "@/src/lib/me-api";
 import { MenuPageHeader } from "./MenuPageHeader";
 
 const UserIcon = appIcons.profile;
+const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
 export function EditInformationScreen() {
-  const [fullName, setFullName] = useState("جواد");
-  const [email, setEmail] = useState("jawad.user@jod.org");
-  const [phoneNumber, setPhoneNumber] = useState("0999999999");
-  const [city, setCity] = useState("دمشق");
-  const [bio, setBio] = useState(
-    "مهتم بالعمل الإنساني والتطوعي، وبشارك منشورات وحملات لدعم المجتمع المحلي.",
-  );
+  const { user, refreshAuthStatus } = useAuthStatus();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  // City and bio have no field in the real profile contract (name/email/phone
+  // only) — kept as local inputs for now, but not sent or persisted anywhere.
+  const [city, setCity] = useState("");
+  const [bio, setBio] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    setFullName(user.name);
+    setEmail(user.email);
+    setPhoneNumber(user.phone ?? "");
+  }, [user]);
 
   const isEmailValid = useMemo(() => /\S+@\S+\.\S+/.test(email.trim()), [email]);
   const canSave =
     fullName.trim().length > 2 &&
     isEmailValid &&
     phoneNumber.trim().length >= 8 &&
-    city.trim().length > 1;
+    !isSubmitting;
 
-  const handleSave = () => {
-    Alert.alert("تم حفظ المعلومات", "تم تحديث بيانات الحساب بنجاح.");
+  const handleSave = async () => {
+    setIsSubmitting(true);
+
+    try {
+      await meApi.updateProfile({
+        name: fullName.trim(),
+        email: email.trim(),
+        phone: phoneNumber.trim() || undefined,
+      });
+      await refreshAuthStatus();
+      Alert.alert("تم حفظ المعلومات", "تم تحديث بيانات الحساب بنجاح.");
+    } catch (error) {
+      const message =
+        error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
+      Alert.alert("تعذر حفظ المعلومات", message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -87,7 +116,7 @@ export function EditInformationScreen() {
             />
 
             <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-              المدينة *
+              المدينة
             </Text>
             <Input
               fullWidth
@@ -120,10 +149,19 @@ export function EditInformationScreen() {
             <Text size="2xs" className="self-start text-gray-400 dark:text-gray-300">
               {bio.trim().length}/180
             </Text>
+            <Text size="2xs" className="text-gray-400 dark:text-gray-300">
+              المدينة والنبذة غير مرتبطتين بالخادم بعد، ولا يتم حفظهما حالياً.
+            </Text>
           </View>
         </Card>
 
-        <Button fullWidth size="small" disabled={!canSave} onPress={handleSave}>
+        <Button
+          fullWidth
+          size="small"
+          disabled={!canSave}
+          loading={isSubmitting}
+          onPress={handleSave}
+        >
           حفظ التعديلات
         </Button>
 

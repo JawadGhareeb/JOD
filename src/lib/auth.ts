@@ -1,56 +1,51 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { authApi, type AuthUser } from "./auth-api";
+import { getStoredToken, setStoredToken } from "./token-storage";
 
-export type MockAuthUser = {
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-};
+export type { AuthUser };
 
-export type MockAuthSession = {
+export interface SessionState {
   isAuthenticated: boolean;
-  user: MockAuthUser | null;
-};
+  user: AuthUser | null;
+}
 
-const MOCK_AUTH_STORAGE_KEY = "@jod/mock-auth";
-
-const defaultSession: MockAuthSession = {
+const signedOutState: SessionState = {
   isAuthenticated: false,
   user: null,
 };
 
-export async function getMockAuth(): Promise<MockAuthSession> {
-  const storedValue = await AsyncStorage.getItem(MOCK_AUTH_STORAGE_KEY);
-
-  if (!storedValue) {
-    return defaultSession;
+/**
+ * A stored token alone doesn't prove the session is still valid — it could
+ * be expired or revoked server-side — so this calls `/me` to confirm it
+ * rather than trusting local storage on its own.
+ */
+export async function getSessionState(): Promise<SessionState> {
+  const token = await getStoredToken();
+  if (!token) {
+    return signedOutState;
   }
 
   try {
-    const parsedValue = JSON.parse(storedValue) as MockAuthSession;
-
-    if (!parsedValue?.isAuthenticated) {
-      return defaultSession;
-    }
-
-    return {
-      isAuthenticated: true,
-      user: parsedValue.user ?? null,
-    };
+    const user = await authApi.me();
+    return { isAuthenticated: true, user };
   } catch {
-    await AsyncStorage.removeItem(MOCK_AUTH_STORAGE_KEY);
-    return defaultSession;
+    // Invalid/expired token — api-client's 401 handler already cleared it
+    // on an auth failure; this also covers e.g. a network error defensively.
+    return signedOutState;
   }
 }
 
-export async function setMockAuth(user: MockAuthUser): Promise<void> {
-  const session: MockAuthSession = {
-    isAuthenticated: true,
-    user,
-  };
-
-  await AsyncStorage.setItem(MOCK_AUTH_STORAGE_KEY, JSON.stringify(session));
+/** Persists the session after a successful register/login response. */
+export async function storeSession(token: string): Promise<void> {
+  await setStoredToken(token);
 }
 
-export async function clearMockAuth(): Promise<void> {
-  await AsyncStorage.removeItem(MOCK_AUTH_STORAGE_KEY);
+/** Best-effort server-side logout — the local session is cleared either way. */
+export async function endSession(): Promise<void> {
+  try {
+    await authApi.logout();
+  } catch {
+    // Local session is the source of truth for the client regardless.
+  }
+
+  await setStoredToken(null);
 }
