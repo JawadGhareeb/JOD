@@ -3,19 +3,19 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useColorScheme } from "nativewind";
+import { colorScheme as nativewindColorScheme, useColorScheme } from "nativewind";
 import { useEffect } from "react";
-import { Appearance } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { queryClient } from "@/src/lib/query-client";
+import { loadStoredColorScheme } from "@/src/lib/theme";
 import { RTLProvider } from "@/src/providers/RTLProvider";
 import "./global.css";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { colorScheme, setColorScheme } = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const [fontsLoaded] = useFonts({
     "NotoKufiArabic-Regular": require("../assets/fonts/Noto/NotoKufiArabic-Regular.ttf"),
@@ -30,9 +30,20 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    // Default app theme to system mode on startup.
-    setColorScheme(Appearance.getColorScheme() ?? "light");
-  }, [setColorScheme]);
+    // Restore the user's last choice once. Do NOT re-sync to system Appearance
+    // on every render — useColorScheme()'s setColorScheme identity changes and
+    // was resetting the theme (and desyncing the header from the body).
+    let cancelled = false;
+
+    void loadStoredColorScheme().then((stored) => {
+      if (cancelled || !stored) return;
+      nativewindColorScheme.set(stored);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded) {

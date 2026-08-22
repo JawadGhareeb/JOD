@@ -5,18 +5,18 @@ import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Input from "@/src/components/ui/Input";
 import Text from "@/src/components/ui/Text";
+import { useChangePassword } from "@/src/features/account/queries";
 import { ApiClientError } from "@/src/lib/api-client";
-import { authApi } from "@/src/lib/auth-api";
 import { MenuPageHeader } from "./MenuPageHeader";
 
 const MIN_PASSWORD_LENGTH = 8;
 const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
 export function ChangePasswordScreen() {
+  const changePasswordMutation = useChangePassword();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isStrongEnough = useMemo(
     () => newPassword.trim().length >= MIN_PASSWORD_LENGTH,
@@ -34,10 +34,8 @@ export function ChangePasswordScreen() {
     isDifferentFromCurrent;
 
   const handleUpdatePassword = async () => {
-    setIsSubmitting(true);
-
     try {
-      await authApi.changePassword({
+      await changePasswordMutation.mutateAsync({
         currentPassword,
         password: newPassword,
         password_confirmation: confirmPassword,
@@ -50,8 +48,6 @@ export function ChangePasswordScreen() {
       const message =
         error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
       Alert.alert("تعذر تغيير كلمة المرور", message);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -119,8 +115,8 @@ export function ChangePasswordScreen() {
         <Button
           fullWidth
           size="small"
-          disabled={!canUpdate || isSubmitting}
-          loading={isSubmitting}
+          disabled={!canUpdate || changePasswordMutation.isPending}
+          loading={changePasswordMutation.isPending}
           onPress={handleUpdatePassword}
         >
           تحديث كلمة المرور

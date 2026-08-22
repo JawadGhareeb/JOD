@@ -18,10 +18,10 @@ import Input from "@/src/components/ui/Input";
 import Text from "@/src/components/ui/Text";
 import { HOME_FILTER_ALL } from "@/src/constants/global";
 import { mockHomePayload } from "@/src/data/mockHome";
-import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/helpers/home";
-import { getPostDisplayTitle } from "@/src/lib/engagement";
+import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
+import { getPostDisplayTitle } from "@/src/features/posts/contact";
 import { useRTL } from "@/src/providers/RTLProvider";
-import type { HomePost } from "@/src/types/home";
+import type { HomePost } from "@/src/features/posts/types";
 import { HomePostCardSkeleton } from "../home/HomePostCardSkeleton";
 import { HomeTypeSlider, type HomeFilterType } from "../home/HomeTypeSlider";
 

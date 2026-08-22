@@ -1,5 +1,5 @@
 import { HomePostTypeEnum } from "@/src/constants/global";
-import { HomeFeedPayload, HomePost, HomePostAction, Publisher } from "@/src/types/home";
+import { HomeFeedPayload, HomePost, HomePostAction, Publisher } from "@/src/features/posts/types";
 
 // Backend-ready mock payload for home feed (20 posts).
 const publishers = [

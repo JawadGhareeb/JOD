@@ -7,8 +7,11 @@ import SelectionModal, {
   type SelectionOption,
 } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
+import { POST_TYPE_TO_API_TYPE } from "@/src/features/posts/api";
+import { useCreatePost, useSubmitPost, useUpdatePost } from "@/src/features/posts/queries";
+import type { CreatePostType } from "@/src/features/posts/types";
+import { ApiClientError } from "@/src/lib/api-client";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
-import type { CreatePostType } from "@/src/types/menu";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { ImagePlus, MapPin, X } from "lucide-react-native";
@@ -21,13 +24,14 @@ type PendingExitAction = () => void;
 const ImageIcon = ImagePlus;
 const TitleIcon = appIcons.campaign;
 const DescriptionIcon = appIcons.about;
+const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
 const postTypes: { key: CreatePostType; label: string; hint: string }[] = [
   { key: "volunteer", label: "فرصة تطوع", hint: "مناسب لطلبات المتطوعين" },
   { key: "donation", label: "حملة تبرع", hint: "مناسب لجمع التبرعات" },
   { key: "help", label: "طلب مساعدة", hint: "مناسب لحالات الدعم الفردية" },
 ];
-/// test push
+
 const cityOptions: SelectionOption[] = [
   { label: "دمشق", value: "دمشق" },
   { label: "حلب", value: "حلب" },
@@ -74,6 +78,7 @@ export function CreatePostScreen({
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
   const [isSubmittingPost, setIsSubmittingPost] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [baselineSnapshot, setBaselineSnapshot] = useState("");
   const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
   const pendingExitActionRef = useRef<PendingExitAction | null>(null);
@@ -81,9 +86,17 @@ export function CreatePostScreen({
   const router = useRouter();
   const navigation = useNavigation();
   const { onScroll } = useCollapsibleHeaderScreen();
+  const createPostMutation = useCreatePost();
+  const updatePostMutation = useUpdatePost();
+  const submitPostMutation = useSubmitPost();
 
   const editMode = readParam(params.mode) === "edit";
   const editingPostId = readParam(params.postId);
+  // Tracks the id to PATCH/submit against — starts as the post being edited,
+  // and gets set the first time a brand-new post is created, so a second
+  // "save draft" tap in the same session updates it instead of creating a
+  // duplicate.
+  const [activePostId, setActivePostId] = useState(editingPostId);
 
   useEffect(() => {
     if (!editMode) return;
@@ -115,10 +128,13 @@ export function CreatePostScreen({
     () => postTypes.find((type) => type.key === postType)?.hint,
     [postType],
   );
-  const canPublish =
-    title.trim().length > 3 &&
-    city.trim().length > 1 &&
-    details.trim().length > 10;
+  // Mirrors the server's PostRequest constraints exactly: title min 4, city
+  // min 2, details min 10 — checked individually so the UI can point at
+  // whichever field is actually the problem instead of one generic message.
+  const isTitleValid = title.trim().length >= 4;
+  const isCityValid = city.trim().length >= 2;
+  const isDetailsValid = details.trim().length >= 10;
+  const canPublish = isTitleValid && isCityValid && isDetailsValid;
   const pageTitle = editMode ? "تعديل بوست" : "نشر بوست";
   const submitLabel = editMode ? "إعادة إرسال للمراجعة" : "نشر الآن";
 
@@ -300,25 +316,86 @@ export function CreatePostScreen({
     setIsSubmitConfirmOpen(true);
   };
 
-  const handleConfirmSubmit = () => {
-    setIsSubmittingPost(true);
+  const buildPostInput = (saveAsDraft: boolean) => ({
+    type: POST_TYPE_TO_API_TYPE[postType],
+    title: title.trim() || undefined,
+    details: details.trim() || undefined,
+    city: city.trim() || undefined,
+    saveAsDraft,
+  });
 
-    setTimeout(() => {
-      setBaselineSnapshot(currentSnapshot);
-      setIsSubmittingPost(false);
-      setIsSubmitConfirmOpen(false);
-      Alert.alert(
-        editMode ? "تم إرسال التعديلات" : "تم نشر المنشور",
-        editMode
-          ? "تم إرسال المنشور بعد التعديل للمراجعة."
-          : "تم تجهيز المنشور للنشر.",
-      );
-    }, 500);
+  const resetToBlankForm = () => {
+    setPostType("volunteer");
+    setTitle("");
+    setDetails("");
+    setCity("");
+    setSelectedImages([]);
+    setActivePostId("");
+    // Non-edit mode's initialSnapshot is always this exact blank state —
+    // reuse it so the reset doesn't itself trigger the unsaved-changes guard.
+    setBaselineSnapshot(initialSnapshot);
   };
 
-  const handleSaveDraft = () => {
-    setBaselineSnapshot(currentSnapshot);
-    Alert.alert("تم حفظ المسودة", "تم حفظ بيانات المنشور كمسودة مؤقتة.");
+  const handleConfirmSubmit = async () => {
+    setIsSubmittingPost(true);
+
+    try {
+      const payload = buildPostInput(false);
+
+      if (activePostId) {
+        await updatePostMutation.mutateAsync({ postId: activePostId, input: payload });
+        await submitPostMutation.mutateAsync(activePostId);
+      } else {
+        const created = await createPostMutation.mutateAsync(payload);
+        setActivePostId(created.id);
+      }
+
+      setIsSubmitConfirmOpen(false);
+
+      if (editMode) {
+        Alert.alert(
+          "تم إرسال التعديلات",
+          "تم إرسال منشورك للمراجعة، وسيظهر بعد اعتماده من فريق الإشراف.",
+          [{ text: "حسنًا", onPress: () => router.back() }],
+        );
+      } else {
+        resetToBlankForm();
+        Alert.alert(
+          "تم إرسال المنشور",
+          "تم إرسال منشورك للمراجعة، وسيظهر بعد اعتماده من فريق الإشراف. يمكنك الآن نشر منشور آخر.",
+        );
+      }
+    } catch (error) {
+      const message =
+        error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
+      Alert.alert("تعذر نشر المنشور", message);
+    } finally {
+      setIsSubmittingPost(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    setIsSavingDraft(true);
+
+    try {
+      const payload = buildPostInput(true);
+
+      if (activePostId) {
+        await updatePostMutation.mutateAsync({ postId: activePostId, input: payload });
+      } else {
+        const created = await createPostMutation.mutateAsync(payload);
+        setActivePostId(created.id);
+      }
+
+      setBaselineSnapshot(currentSnapshot);
+      Alert.alert("تم حفظ المسودة", "تم حفظ بيانات المنشور كمسودة مؤقتة.");
+    } catch (error) {
+      const message =
+        error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
+      Alert.alert("تعذر حفظ المسودة", message);
+    } finally {
+      setIsSavingDraft(false);
+    }
   };
 
   return (
@@ -425,6 +502,11 @@ export function CreatePostScreen({
               placeholder="مثال: حملة دعم طلاب المدارس"
               placeholderTextColor="#9CA3AF"
             />
+            {!isTitleValid && title.trim().length > 0 ? (
+              <Text size="2xs" className="text-error-300">
+                العنوان يجب أن يتكون من 4 أحرف على الأقل.
+              </Text>
+            ) : null}
 
             <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
               المدينة *
@@ -447,6 +529,11 @@ export function CreatePostScreen({
                 />
               </View>
             </Pressable>
+            {!isCityValid ? (
+              <Text size="2xs" className="text-error-300">
+                هذا الحقل عبارة عن قائمة اختيار — اضغط عليه لفتح نافذة اختيار المدينة، لا يمكن الكتابة فيه مباشرة.
+              </Text>
+            ) : null}
 
             <View className="mt-1 flex-row-reverse items-center justify-between">
               <Text size="2xs" className="text-gray-500 dark:text-gray-300">
@@ -470,6 +557,11 @@ export function CreatePostScreen({
               textAlignVertical="top"
               maxLength={300}
             />
+            {!isDetailsValid && details.trim().length > 0 ? (
+              <Text size="2xs" className="text-error-300">
+                الوصف يجب أن يتكون من 10 أحرف على الأقل ({details.trim().length}/10).
+              </Text>
+            ) : null}
           </View>
         </Card>
 
@@ -492,6 +584,9 @@ export function CreatePostScreen({
           <Text size="2xs" className="mb-2 text-gray-500 dark:text-gray-300">
             يمكنك إضافة أي عدد من الصور من المعرض. إضافة صورة واحدة على الأقل
             ترفع فرصة التفاعل.
+          </Text>
+          <Text size="2xs" className="mb-2 text-gray-400 dark:text-gray-300">
+            رفع الصور غير مدعوم من الخادم حالياً — لن يتم إرسالها مع المنشور.
           </Text>
           <View className="flex-row-reverse flex-wrap justify-between gap-y-2">
             {selectedImages.map((imageUri, index) => (
@@ -559,7 +654,9 @@ export function CreatePostScreen({
               fullWidth
               size="small"
               variant="tertiary"
-              onPress={handleSaveDraft}
+              disabled={isSavingDraft || isSubmittingPost}
+              loading={isSavingDraft}
+              onPress={() => void handleSaveDraft()}
             >
               حفظ كمسودة
             </Button>
@@ -571,7 +668,11 @@ export function CreatePostScreen({
             size="2xs"
             className="text-center text-gray-500 dark:text-gray-300"
           >
-            أكمل الحقول المطلوبة (العنوان، المدينة، الوصف) لتفعيل النشر.
+            {!isTitleValid
+              ? "أكمل حقل العنوان لتفعيل النشر."
+              : !isCityValid
+                ? "اختر المدينة لتفعيل النشر."
+                : "أكمل حقل الوصف لتفعيل النشر."}
           </Text>
         ) : null}
       </Animated.ScrollView>
@@ -614,7 +715,7 @@ export function CreatePostScreen({
             text: editMode ? "تأكيد التعديلات" : "نشر الآن",
             variant: "primary",
             loading: isSubmittingPost,
-            onPress: handleConfirmSubmit,
+            onPress: () => void handleConfirmSubmit(),
           },
         ]}
       />

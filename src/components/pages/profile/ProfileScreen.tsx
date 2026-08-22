@@ -1,134 +1,152 @@
 import { useMemo, useState } from "react";
 import { Alert, Animated, Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
+import Button from "@/src/components/ui/Button";
 import Text from "@/src/components/ui/Text";
 import { SectionHeader } from "@/src/components/shared/SectionHeader";
-import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
-import { HomePostCardSkeleton } from "@/src/components/pages/home/HomePostCardSkeleton";
-import { HomePostTypeEnum } from "@/src/constants/global";
-import { mockProfilePayload } from "@/src/data/mockProfile";
-import type { HomePost } from "@/src/types/home";
-import type { CreatePostType } from "@/src/types/menu";
-import { ProfilePostStatus, type ProfilePost } from "@/src/types/profile";
+import { toProfileSummary } from "@/src/features/account/helpers";
+import { useAuthStatus } from "@/src/features/auth/queries";
+import { ApiClientError } from "@/src/lib/api-client";
+import {
+  useArchivePost,
+  useDeletePost,
+  useMyPosts,
+  useRepostPost,
+} from "@/src/features/posts/queries";
+import type { MyPostStatus } from "@/src/features/posts/types";
 import { ProfileHeaderCard } from "./ProfileHeaderCard";
+import { MyPostCard } from "./MyPostCard";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 
-const PAGE_SIZE = 6;
+const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
-const profilePostTabs: { key: ProfilePostStatus; label: string }[] = [
-  { key: "posted", label: "منشور" },
-  { key: "unposted", label: "مرفوض" },
+const STATUS_TABS: { key: MyPostStatus; label: string }[] = [
+  { key: "draft", label: "مسودة" },
+  { key: "pending", label: "قيد المراجعة" },
+  { key: "active", label: "منشور" },
+  { key: "rejected", label: "مرفوض" },
   { key: "archived", label: "مؤرشف" },
 ];
-
-const mapPostTypeToCreateType = (postType: HomePost["postType"]): CreatePostType => {
-  if (postType === HomePostTypeEnum.DonationCampaign) return "donation";
-  if (postType === HomePostTypeEnum.HelpRequest) return "help";
-  return "volunteer";
-};
 
 export function ProfileScreen() {
   const router = useRouter();
   const { onScroll } = useCollapsibleHeaderScreen();
-  const [activeTab, setActiveTab] = useState<ProfilePostStatus>("posted");
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [posts, setPosts] = useState<ProfilePost[]>(mockProfilePayload.posts);
+  const [activeTab, setActiveTab] = useState<MyPostStatus>("active");
 
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStatus();
+  const { data, isLoading, isError, refetch } = useMyPosts({
+    enabled: isAuthenticated,
+  });
+  const archiveMutation = useArchivePost();
+  const repostMutation = useRepostPost();
+  const deleteMutation = useDeletePost();
+
+  const posts = useMemo(() => data?.items ?? [], [data]);
   const filteredPosts = useMemo(
-    () => posts.filter((post) => post.profileStatus === activeTab),
-    [activeTab, posts],
+    () => posts.filter((post) => post.status === activeTab),
+    [posts, activeTab],
   );
-  const visiblePosts = useMemo(
-    () => filteredPosts.slice(0, visibleCount),
-    [filteredPosts, visibleCount],
-  );
-  const hasMore = visibleCount < filteredPosts.length;
+  const getTabCount = (status: MyPostStatus) =>
+    posts.filter((post) => post.status === status).length;
 
-  const getTabCount = (status: ProfilePostStatus) =>
-    posts.filter((post) => post.profileStatus === status).length;
-
-  const handleTabChange = (status: ProfilePostStatus) => {
-    setActiveTab(status);
-    setVisibleCount(PAGE_SIZE);
-    setLoadingMore(false);
-  };
-
-  const handleLoadMore = () => {
-    if (!hasMore || loadingMore) return;
-
-    setLoadingMore(true);
-    setTimeout(() => {
-      setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredPosts.length));
-      setLoadingMore(false);
-    }, 500);
-  };
-
-  const handleArchivePost = (post: HomePost) => {
-    setPosts((prev) =>
-      prev.map((item) =>
-        item.id === post.id ? { ...item, profileStatus: "archived" } : item,
-      ),
-    );
-    Alert.alert("تمت الأرشفة", "تم نقل المنشور إلى تبويب المنشورات المؤرشفة.");
-  };
-
-  const handleDeletePost = (post: HomePost) => {
-    setPosts((prev) => prev.filter((item) => item.id !== post.id));
-    Alert.alert("تم الحذف", "تم حذف المنشور من منشوراتك.");
-  };
-
-  const handleEditRejectedPost = (post: HomePost) => {
-    router.push({
-      pathname: "/(tabs)/create-post",
-      params: {
-        mode: "edit",
-        postId: post.id,
-        postType: mapPostTypeToCreateType(post.postType),
-        title: post.title || "",
-        details: post.content,
-        city: post.publisher.city || "",
-        images: post.images.join("|"),
-      },
+  const summary = useMemo(() => {
+    if (!user) return null;
+    return toProfileSummary(user, {
+      // Prefer the live list total when /me.stats is missing or stale.
+      postsCount: data?.meta?.total ?? user.stats?.postsCount,
     });
+  }, [user, data?.meta?.total]);
+
+  const handleArchive = async (postId: string) => {
+    try {
+      await archiveMutation.mutateAsync(postId);
+      Alert.alert("تمت الأرشفة", "تم نقل المنشور إلى تبويب المنشورات المؤرشفة.");
+    } catch (error) {
+      const message =
+        error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
+      Alert.alert("تعذر أرشفة المنشور", message);
+    }
   };
+
+  const handleRepost = async (postId: string) => {
+    try {
+      await repostMutation.mutateAsync(postId);
+      Alert.alert("تمت إعادة الإرسال", "تم إرسال المنشور للمراجعة مجدداً.");
+    } catch (error) {
+      const message =
+        error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
+      Alert.alert("تعذر إعادة نشر المنشور", message);
+    }
+  };
+
+  const handleDelete = async (postId: string) => {
+    try {
+      await deleteMutation.mutateAsync(postId);
+      Alert.alert("تم الحذف", "تم حذف المنشور من منشوراتك.");
+    } catch (error) {
+      const message =
+        error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
+      Alert.alert("تعذر حذف المنشور", message);
+    }
+  };
+
+  if (isAuthLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-light-100 dark:bg-dark-300">
+        <Text size="sm" className="text-gray-500 dark:text-gray-300">
+          جارِ تحميل الملف الشخصي...
+        </Text>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated || !summary) {
+    return (
+      <View className="flex-1 items-center justify-center gap-3 bg-light-100 px-6 dark:bg-dark-300">
+        <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
+          سجّل الدخول لعرض ملفك الشخصي
+        </Text>
+        <Text size="xs" className="text-center text-gray-500 dark:text-gray-300">
+          منشوراتك وإحصائياتك تظهر هنا بعد تسجيل الدخول.
+        </Text>
+        <Button size="small" onPress={() => router.push("/(auth)/login")}>
+          تسجيل الدخول
+        </Button>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-light-100 dark:bg-dark-300">
       <Animated.FlatList
         className="flex-1 px-4 dark:bg-dark-300"
         contentContainerStyle={{ paddingBottom: 24 }}
-        data={visiblePosts}
+        data={filteredPosts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <HomePostCard
+          <MyPostCard
             post={item}
-            showCta={false}
-            mode="own"
-            ownPostStatus={item.profileStatus}
-            onArchive={handleArchivePost}
-            onDelete={handleDeletePost}
-            onEdit={handleEditRejectedPost}
+            onArchive={handleArchive}
+            onDelete={handleDelete}
+            onRepost={handleRepost}
           />
         )}
         showsVerticalScrollIndicator={false}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.35}
         onScroll={onScroll}
         scrollEventThrottle={16}
         ListHeaderComponent={
           <View>
-            <ProfileHeaderCard summary={mockProfilePayload.summary} />
+            <ProfileHeaderCard summary={summary} />
             <SectionHeader title="منشوراتي" />
-            <View className="mb-3 flex-row-reverse gap-2">
-              {profilePostTabs.map((tab) => {
+            <View className="mb-3 flex-row-reverse flex-wrap gap-2">
+              {STATUS_TABS.map((tab) => {
                 const isActive = activeTab === tab.key;
 
                 return (
                   <Pressable
                     key={tab.key}
-                    onPress={() => handleTabChange(tab.key)}
-                    className={`flex-1 rounded-xl px-3 py-2 ${
+                    onPress={() => setActiveTab(tab.key)}
+                    className={`rounded-xl px-3 py-2 ${
                       isActive ? "bg-primary-400/15" : "bg-white dark:bg-dark-500"
                     }`}
                     accessibilityRole="button"
@@ -163,28 +181,30 @@ export function ProfileScreen() {
           </View>
         }
         ListEmptyComponent={
-          <View className="items-center py-8">
-            <Text size="sm" className="text-gray-500 dark:text-gray-300">
-              لا توجد منشورات لعرضها حالياً.
-            </Text>
-          </View>
-        }
-        ListFooterComponent={
-          loadingMore ? (
-            <View className="py-2">
-              <HomePostCardSkeleton />
+          isLoading ? (
+            <View className="items-center py-8">
+              <Text size="sm" className="text-gray-500 dark:text-gray-300">
+                جارِ تحميل منشوراتك...
+              </Text>
             </View>
-          ) : hasMore ? (
-            <View className="py-2" />
+          ) : isError ? (
+            <View className="items-center gap-3 py-8">
+              <Text size="sm" className="text-center text-gray-500 dark:text-gray-300">
+                تعذر تحميل منشوراتك. تحقق من اتصالك وحاول مرة أخرى.
+              </Text>
+              <Button size="small" onPress={() => void refetch()}>
+                إعادة المحاولة
+              </Button>
+            </View>
           ) : (
-            <View className="items-center py-4">
-              <Text size="xs" className="text-gray-500 dark:text-gray-300">
-                تم عرض جميع المنشورات
+            <View className="items-center py-8">
+              <Text size="sm" className="text-gray-500 dark:text-gray-300">
+                لا توجد منشورات لعرضها حالياً.
               </Text>
             </View>
           )
         }
-        />
+      />
     </View>
   );
 }

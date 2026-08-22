@@ -1,6 +1,4 @@
-import type { HomePost } from "@/src/types/home";
-
-export type CreatePostType = "volunteer" | "donation" | "help";
+import type { HomePost } from "@/src/features/posts/types";
 
 export type DonationStatus = "active" | "completed" | "scheduled";
 export type DonationFlow = "contributed" | "received";

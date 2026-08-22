@@ -15,6 +15,8 @@ const statLabels = {
 } as const;
 
 export function ProfileHeaderCard({ summary }: ProfileHeaderCardProps) {
+  const metaParts = [`@${summary.username}`, summary.city].filter(Boolean);
+
   return (
     <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
       <View className="flex-row-reverse items-start gap-3">
@@ -32,13 +34,17 @@ export function ProfileHeaderCard({ summary }: ProfileHeaderCardProps) {
             ) : null}
           </View>
 
-          <Text size="xs" className="mt-1 text-gray-500 dark:text-gray-300">
-            @{summary.username} • {summary.city}
-          </Text>
+          {metaParts.length > 0 ? (
+            <Text size="xs" className="mt-1 text-gray-500 dark:text-gray-300">
+              {metaParts.join(" • ")}
+            </Text>
+          ) : null}
 
-          <Text size="xs" className="mt-2 leading-6 text-gray-600 dark:text-gray-200">
-            {summary.bio}
-          </Text>
+          {summary.bio ? (
+            <Text size="xs" className="mt-2 leading-6 text-gray-600 dark:text-gray-200">
+              {summary.bio}
+            </Text>
+          ) : null}
         </View>
       </View>
 

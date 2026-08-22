@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
-import { useAuthStatus } from "@/src/hooks/useAuthStatus";
+import { useAuthStatus } from "@/src/features/auth/queries";
 
 export default function Index() {
   const router = useRouter();

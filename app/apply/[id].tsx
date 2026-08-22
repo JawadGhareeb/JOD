@@ -1,6 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { BriefcaseBusiness } from "lucide-react-native";
-import { useMemo } from "react";
 import { View } from "react-native";
 import { mainImage } from "@/src/constants/images";
 import Button from "@/src/components/ui/Button";
@@ -11,19 +10,29 @@ import KeyboardAvoider from "@/src/components/ui/KeyboardAvoider";
 import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
-import {
-  getHomePostById,
-  getRelatedVolunteeringCampaign,
-  openPostContact,
-} from "@/src/lib/engagement";
-import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/helpers/home";
+import { openPostContact } from "@/src/features/posts/contact";
+import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
+import { useCampaign, usePost } from "@/src/features/posts/queries";
 
 export default function ApplyPage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
   const postId = Array.isArray(id) ? id[0] : id;
-  const post = useMemo(() => getHomePostById(postId), [postId]);
-  const campaign = useMemo(() => getRelatedVolunteeringCampaign(post), [post]);
+
+  const { data: post, isLoading } = usePost(postId);
+  const { data: campaign } = useCampaign(post?.campaignId);
+
+  if (isLoading) {
+    return (
+      <Container className="bg-light-100 px-4 pt-4 dark:bg-dark-300">
+        <View className="items-center py-8">
+          <Text size="sm" className="text-gray-500 dark:text-gray-300">
+            جارِ تحميل بيانات الفرصة...
+          </Text>
+        </View>
+      </Container>
+    );
+  }
 
   if (!post) {
     return (
@@ -75,7 +84,7 @@ export default function ApplyPage() {
                   {campaign?.title || post.title || "فرصة تطوعية"}
                 </Text>
                 <Text size="xs" className="text-gray-500 dark:text-gray-300">
-                  {post.publisher.name} • {post.publisher.city || "مدينة غير محددة"}
+                  {post.publisher.name} • {post.location || post.publisher.city || "مدينة غير محددة"}
                 </Text>
               </View>
               <View className="rounded-full bg-primary-400/15 px-3 py-1">
@@ -92,10 +101,10 @@ export default function ApplyPage() {
             {campaign ? (
               <View className="gap-1 rounded-xl bg-gray-50 p-3 dark:bg-dark-350">
                 <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-                  {campaign.statusTag}
+                  {campaign.status === "active" ? "فرصة نشطة" : campaign.status}
                 </Text>
                 <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-                  عدد المتطوعين: {campaign.joinedVolunteers} / {campaign.requiredVolunteers}
+                  عدد المتطوعين المسجّلين: {campaign.applicantsCount}
                 </Text>
               </View>
             ) : null}

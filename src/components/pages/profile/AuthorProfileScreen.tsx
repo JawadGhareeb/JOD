@@ -7,7 +7,7 @@ import { Avatar } from "@/src/components/shared/Avatar";
 import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
-import { getHomePostsByPublisherId, getHomePublisherById } from "@/src/data/mockHome";
+import { usePostsByOrganization } from "@/src/features/posts/queries";
 
 const BackIcon = appIcons.chevronRight;
 
@@ -17,15 +17,14 @@ export function AuthorProfileScreen() {
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
 
   const authorId = Array.isArray(id) ? id[0] : id;
-  const posts = useMemo(
-    () => (authorId ? getHomePostsByPublisherId(authorId) : []),
-    [authorId],
-  );
 
-  const author = useMemo(() => {
-    if (!authorId) return undefined;
-    return getHomePublisherById(authorId) ?? posts[0]?.publisher;
-  }, [authorId, posts]);
+  const { data, isLoading } = usePostsByOrganization(authorId);
+
+  const posts = data?.items ?? [];
+
+  // No dedicated "get publisher profile" endpoint exists — the publisher
+  // object embedded in their own posts is the only source for this info.
+  const author = posts[0]?.publisher;
 
   const totalLikes = useMemo(
     () => posts.reduce((sum, post) => sum + post.stats.likes, 0),
@@ -35,6 +34,16 @@ export function AuthorProfileScreen() {
     () => posts.reduce((sum, post) => sum + post.stats.shares, 0),
     [posts],
   );
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-light-100 px-4 dark:bg-dark-300">
+        <Text size="sm" className="text-gray-500 dark:text-gray-300">
+          جارِ تحميل ملف الناشر...
+        </Text>
+      </View>
+    );
+  }
 
   if (!author) {
     return (

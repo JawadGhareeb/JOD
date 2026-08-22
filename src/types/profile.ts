@@ -1,4 +1,4 @@
-import type { HomePost } from "@/src/types/home";
+import type { HomePost } from "@/src/features/posts/types";
 
 export type ProfilePostStatus = "posted" | "unposted" | "archived";
 

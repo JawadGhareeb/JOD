@@ -24,11 +24,11 @@ import {
   buildHomePostShareMessage,
   HOME_POST_TYPE_LABELS,
   formatHomePostRelativeDate,
-} from "@/src/helpers/home";
-import { openPostContact } from "@/src/lib/engagement";
+} from "@/src/features/posts/helpers";
+import { openPostContact } from "@/src/features/posts/contact";
+import { useLikePost, useSavePost } from "@/src/features/posts/queries";
+import type { CreatePostType, HomePost } from "@/src/features/posts/types";
 import { useRTL } from "@/src/providers/RTLProvider";
-import type { HomePost } from "@/src/types/home";
-import type { CreatePostType } from "@/src/types/menu";
 import type { ProfilePostStatus } from "@/src/types/profile";
 
 type HomePostCardMode = "default" | "own" | "saved";
@@ -99,6 +99,8 @@ export function HomePostCard({
   const router = useRouter();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const { isRTL } = useRTL();
+  const likeMutation = useLikePost();
+  const saveMutation = useSavePost();
   const [expanded, setExpanded] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isSaved, setIsSaved] = useState(Boolean(post.saved || mode === "saved"));
@@ -253,29 +255,58 @@ export function HomePostCard({
     }
   };
 
-  const handleToggleLike = () => {
-    setIsLiked((prev) => {
-      const next = !prev;
-      setLikesCount((current) => current + (next ? 1 : -1));
-      return next;
-    });
+  const handleToggleLike = async () => {
+    const wasLiked = isLiked;
+    const previousCount = likesCount;
+    const nextLiked = !wasLiked;
+
+    setIsLiked(nextLiked);
+    setLikesCount((current) => current + (nextLiked ? 1 : -1));
+
+    try {
+      const result = await likeMutation.mutateAsync({ postId: post.id, like: nextLiked });
+      setIsLiked(result.isLiked);
+      setLikesCount(result.likesCount);
+    } catch {
+      setIsLiked(wasLiked);
+      setLikesCount(previousCount);
+      Alert.alert("تعذر تنفيذ الإجراء", "لم نتمكن من تحديث الإعجاب الآن. حاول مرة أخرى.");
+    }
   };
 
-  const handleTogglePostSaved = () => {
-    const willSave = !isSaved;
+  const handleTogglePostSaved = async () => {
+    const wasSaved = isSaved;
+    const willSave = !wasSaved;
+
     setIsSaved(willSave);
     closeOptionsMenu();
-    Alert.alert(
-      willSave ? "تم حفظ المنشور" : "تم إزالة الحفظ",
-      willSave ? "يمكنك العثور عليه لاحقًا في المنشورات المحفوظة." : "تمت إزالة المنشور من المحفوظات.",
-    );
+
+    try {
+      const result = await saveMutation.mutateAsync({ postId: post.id, save: willSave });
+      setIsSaved(result.isSaved);
+      Alert.alert(
+        result.isSaved ? "تم حفظ المنشور" : "تم إزالة الحفظ",
+        result.isSaved
+          ? "يمكنك العثور عليه لاحقًا في المنشورات المحفوظة."
+          : "تمت إزالة المنشور من المحفوظات.",
+      );
+    } catch {
+      setIsSaved(wasSaved);
+      Alert.alert("تعذر تنفيذ الإجراء", "لم نتمكن من تحديث الحفظ الآن. حاول مرة أخرى.");
+    }
   };
 
-  const handleUnsavePost = () => {
+  const handleUnsavePost = async () => {
     closeOptionsMenu();
-    setIsSaved(false);
-    onUnsave?.(post);
-    Alert.alert("تم إلغاء الحفظ", "تمت إزالة المنشور من صفحة المنشورات المحفوظة.");
+
+    try {
+      await saveMutation.mutateAsync({ postId: post.id, save: false });
+      setIsSaved(false);
+      onUnsave?.(post);
+      Alert.alert("تم إلغاء الحفظ", "تمت إزالة المنشور من صفحة المنشورات المحفوظة.");
+    } catch {
+      Alert.alert("تعذر إلغاء الحفظ", "لم نتمكن من إزالة الحفظ الآن. حاول مرة أخرى.");
+    }
   };
 
   const handleArchiveOwnPost = () => {
@@ -434,7 +465,7 @@ export function HomePostCard({
         className={`mt-3 ${actionRowClassName} items-center gap-3 border-t border-gray-100 pt-3 dark:border-dark-400`}
       >
         <Pressable
-          onPress={handleToggleLike}
+          onPress={() => void handleToggleLike()}
           className={`${actionItemClassName} items-center gap-1 rounded-full px-2 py-1`}
           accessibilityRole="button"
           accessibilityLabel={isLiked ? "إلغاء الإعجاب" : "إعجاب بالمنشور"}
@@ -545,7 +576,9 @@ export function HomePostCard({
                 ) : (
                   <>
                     <Pressable
-                      onPress={isSavedPostList ? handleUnsavePost : handleTogglePostSaved}
+                      onPress={() =>
+                        void (isSavedPostList ? handleUnsavePost() : handleTogglePostSaved())
+                      }
                       className={`${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
                       accessibilityRole="button"
                       accessibilityLabel={isSaved ? "إلغاء حفظ المنشور" : "حفظ المنشور"}

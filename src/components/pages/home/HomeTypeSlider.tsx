@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { HOME_FILTER_ALL, HomePostTypeEnum } from "@/src/constants/global";
 import { FilterCountSlider } from "@/src/components/shared";
-import { HomePost } from "@/src/types/home";
+import { HomePost } from "@/src/features/posts/types";
 
 export type HomeFilterType = typeof HOME_FILTER_ALL | HomePostTypeEnum;
 

@@ -6,16 +6,17 @@ import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Input from "@/src/components/ui/Input";
 import Text from "@/src/components/ui/Text";
-import { useAuthStatus } from "@/src/hooks/useAuthStatus";
+import { useAuthStatus } from "@/src/features/auth/queries";
+import { useUpdateProfile } from "@/src/features/account/queries";
 import { ApiClientError } from "@/src/lib/api-client";
-import { meApi } from "@/src/lib/me-api";
 import { MenuPageHeader } from "./MenuPageHeader";
 
 const UserIcon = appIcons.profile;
 const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
 export function EditInformationScreen() {
-  const { user, refreshAuthStatus } = useAuthStatus();
+  const { user } = useAuthStatus();
+  const updateProfileMutation = useUpdateProfile();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -23,7 +24,6 @@ export function EditInformationScreen() {
   // only) — kept as local inputs for now, but not sent or persisted anywhere.
   const [city, setCity] = useState("");
   const [bio, setBio] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -33,29 +33,24 @@ export function EditInformationScreen() {
   }, [user]);
 
   const isEmailValid = useMemo(() => /\S+@\S+\.\S+/.test(email.trim()), [email]);
+  // Phone is optional server-side (ProfileRequest only requires name/email) —
+  // only validate its length when the user actually typed something.
+  const isPhoneValid = phoneNumber.trim().length === 0 || phoneNumber.trim().length >= 8;
   const canSave =
-    fullName.trim().length > 2 &&
-    isEmailValid &&
-    phoneNumber.trim().length >= 8 &&
-    !isSubmitting;
+    fullName.trim().length > 2 && isEmailValid && isPhoneValid && !updateProfileMutation.isPending;
 
   const handleSave = async () => {
-    setIsSubmitting(true);
-
     try {
-      await meApi.updateProfile({
+      await updateProfileMutation.mutateAsync({
         name: fullName.trim(),
         email: email.trim(),
         phone: phoneNumber.trim() || undefined,
       });
-      await refreshAuthStatus();
       Alert.alert("تم حفظ المعلومات", "تم تحديث بيانات الحساب بنجاح.");
     } catch (error) {
       const message =
         error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
       Alert.alert("تعذر حفظ المعلومات", message);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -101,7 +96,7 @@ export function EditInformationScreen() {
             />
 
             <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-              رقم الجوال *
+              رقم الجوال (اختياري)
             </Text>
             <Input
               fullWidth
@@ -159,7 +154,7 @@ export function EditInformationScreen() {
           fullWidth
           size="small"
           disabled={!canSave}
-          loading={isSubmitting}
+          loading={updateProfileMutation.isPending}
           onPress={handleSave}
         >
           حفظ التعديلات
@@ -168,6 +163,11 @@ export function EditInformationScreen() {
         {!isEmailValid ? (
           <Text size="2xs" className="mt-2 text-center text-error-300">
             البريد الإلكتروني غير صالح.
+          </Text>
+        ) : null}
+        {!isPhoneValid ? (
+          <Text size="2xs" className="mt-2 text-center text-error-300">
+            رقم الجوال قصير جداً.
           </Text>
         ) : null}
       </ScrollView>

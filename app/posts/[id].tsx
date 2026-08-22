@@ -9,23 +9,17 @@ import { EmptyState } from "@/src/components/ui/EmptyState";
 import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
-import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/helpers/home";
-import {
-  getHomePostById,
-  getPostActionLabel,
-  getPostDisplayTitle,
-  getRelatedDonationCampaign,
-  getRelatedVolunteeringCampaign,
-  openPostContact,
-} from "@/src/lib/engagement";
+import { getPostActionLabel, getPostDisplayTitle, openPostContact } from "@/src/features/posts/contact";
+import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
+import { useCampaign, usePost } from "@/src/features/posts/queries";
 
 export default function PostDetailsPage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
   const postId = Array.isArray(id) ? id[0] : id;
-  const post = getHomePostById(postId);
-  const donationCampaign = getRelatedDonationCampaign(post);
-  const volunteeringCampaign = getRelatedVolunteeringCampaign(post);
+
+  const { data: post, isLoading, isError } = usePost(postId);
+  const { data: campaign } = useCampaign(post?.campaignId);
 
   const handlePrimaryAction = async () => {
     if (!post) return;
@@ -45,7 +39,19 @@ export default function PostDetailsPage() {
     }
   };
 
-  if (!post) {
+  if (isLoading) {
+    return (
+      <Container className="bg-light-100 px-4 pt-4 dark:bg-dark-300">
+        <View className="items-center py-8">
+          <Text size="sm" className="text-gray-500 dark:text-gray-300">
+            جارِ تحميل تفاصيل المنشور...
+          </Text>
+        </View>
+      </Container>
+    );
+  }
+
+  if (isError || !post) {
     return (
       <Container className="bg-light-100 px-4 pt-4 dark:bg-dark-300">
         <EmptyState title="تعذر العثور على تفاصيل المنشور" image={mainImage} />
@@ -133,7 +139,7 @@ export default function PostDetailsPage() {
             <View className="flex-row-reverse items-center gap-1">
               <MapPin size={14} color="#9CA3AF" />
               <Text size="xs" className="text-gray-500 dark:text-gray-300">
-                {post.publisher.city || "مدينة غير محددة"}
+                {post.location || post.publisher.city || "مدينة غير محددة"}
               </Text>
             </View>
             <View className="flex-row-reverse items-center gap-1">
@@ -170,38 +176,32 @@ export default function PostDetailsPage() {
         ) : null}
       </Card>
 
-      {(donationCampaign || volunteeringCampaign) ? (
+      {campaign ? (
         <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
-            معلومات إضافية
+            معلومات الحملة
           </Text>
-          {donationCampaign ? (
-            <View className="gap-1">
-              <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-                {donationCampaign.title}
-              </Text>
+          <View className="gap-1">
+            <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
+              {campaign.title}
+            </Text>
+            {campaign.goalAmount > 0 ? (
               <Text size="xs" className="text-gray-500 dark:text-gray-300">
-                {donationCampaign.statusTag} • {donationCampaign.orgName}
+                تم جمع {campaign.raisedAmount.toLocaleString("ar-SY")} من أصل{" "}
+                {campaign.goalAmount.toLocaleString("ar-SY")}
               </Text>
+            ) : null}
+            {campaign.applicantsCount > 0 ? (
               <Text size="xs" className="text-gray-500 dark:text-gray-300">
-                تم جمع {donationCampaign.raisedAmount.toLocaleString("ar-SY")} من أصل{" "}
-                {donationCampaign.goalAmount.toLocaleString("ar-SY")} ل.س
+                {campaign.applicantsCount} متطوع مسجّل
               </Text>
-            </View>
-          ) : null}
-          {volunteeringCampaign ? (
-            <View className="gap-1">
-              <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-                {volunteeringCampaign.title}
-              </Text>
+            ) : null}
+            {campaign.beneficiariesCount > 0 ? (
               <Text size="xs" className="text-gray-500 dark:text-gray-300">
-                {volunteeringCampaign.statusTag} • {volunteeringCampaign.date} {volunteeringCampaign.time}
+                {campaign.beneficiariesCount} مستفيد
               </Text>
-              <Text size="xs" className="text-gray-500 dark:text-gray-300">
-                {volunteeringCampaign.joinedVolunteers} / {volunteeringCampaign.requiredVolunteers} متطوع
-              </Text>
-            </View>
-          ) : null}
+            ) : null}
+          </View>
         </Card>
       ) : null}
 

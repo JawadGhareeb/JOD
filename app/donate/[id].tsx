@@ -1,6 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { HeartHandshake } from "lucide-react-native";
-import { useMemo } from "react";
 import { View } from "react-native";
 import { mainImage } from "@/src/constants/images";
 import Button from "@/src/components/ui/Button";
@@ -10,20 +9,30 @@ import { EmptyState } from "@/src/components/ui/EmptyState";
 import KeyboardAvoider from "@/src/components/ui/KeyboardAvoider";
 import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
-import {
-  getHomePostById,
-  getRelatedDonationCampaign,
-  openPostContact,
-} from "@/src/lib/engagement";
+import { openPostContact } from "@/src/features/posts/contact";
+import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
+import { useCampaign, usePost } from "@/src/features/posts/queries";
 import { Avatar } from "@/src/components/shared/Avatar";
-import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/helpers/home";
 
 export default function DonatePage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
   const postId = Array.isArray(id) ? id[0] : id;
-  const post = useMemo(() => getHomePostById(postId), [postId]);
-  const campaign = useMemo(() => getRelatedDonationCampaign(post), [post]);
+
+  const { data: post, isLoading } = usePost(postId);
+  const { data: campaign } = useCampaign(post?.campaignId);
+
+  if (isLoading) {
+    return (
+      <Container className="bg-light-100 px-4 pt-4 dark:bg-dark-300">
+        <View className="items-center py-8">
+          <Text size="sm" className="text-gray-500 dark:text-gray-300">
+            جارِ تحميل بيانات الحملة...
+          </Text>
+        </View>
+      </Container>
+    );
+  }
 
   if (!post) {
     return (
@@ -75,7 +84,7 @@ export default function DonatePage() {
                   {campaign?.title || post.title || "حملة تبرع"}
                 </Text>
                 <Text size="xs" className="text-gray-500 dark:text-gray-300">
-                  {post.publisher.name} • {post.publisher.city || "مدينة غير محددة"}
+                  {post.publisher.name} • {post.location || post.publisher.city || "مدينة غير محددة"}
                 </Text>
               </View>
               <View className="rounded-full bg-primary-400/15 px-3 py-1">
@@ -92,10 +101,11 @@ export default function DonatePage() {
             {campaign ? (
               <View className="gap-1 rounded-xl bg-gray-50 p-3 dark:bg-dark-350">
                 <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-                  {campaign.statusTag}
+                  {campaign.status === "active" ? "حملة نشطة" : campaign.status}
                 </Text>
                 <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-                  التبرعات الحالية: {campaign.raisedAmount.toLocaleString("ar-SY")} ل.س
+                  التبرعات الحالية: {campaign.raisedAmount.toLocaleString("ar-SY")} من أصل{" "}
+                  {campaign.goalAmount.toLocaleString("ar-SY")}
                 </Text>
               </View>
             ) : null}

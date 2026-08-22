@@ -7,7 +7,8 @@ import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Dialog from "@/src/components/ui/Dialog";
 import Text from "@/src/components/ui/Text";
-import { endSession } from "@/src/lib/auth";
+import { useLogout } from "@/src/features/auth/queries";
+import { applyColorScheme } from "@/src/lib/theme";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 
 type SettingsRow = {
@@ -89,7 +90,8 @@ const LogoutIcon = appIcons.logout;
 
 export function SettingsScreen() {
   const router = useRouter();
-  const { colorScheme, setColorScheme } = useColorScheme();
+  const logoutMutation = useLogout();
+  const { colorScheme } = useColorScheme();
   const { onScroll } = useCollapsibleHeaderScreen();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const isDark = colorScheme === "dark";
@@ -166,7 +168,7 @@ export function SettingsScreen() {
                     strokeWidth={2.25}
                   />
                 }
-                onPress={() => setColorScheme("light")}
+                onPress={() => applyColorScheme("light")}
               >
                 فاتح
               </Button>
@@ -183,7 +185,7 @@ export function SettingsScreen() {
                     strokeWidth={2.25}
                   />
                 }
-                onPress={() => setColorScheme("dark")}
+                onPress={() => applyColorScheme("dark")}
               >
                 داكن
               </Button>
@@ -219,7 +221,7 @@ export function SettingsScreen() {
             variant: "primary",
             onPress: async () => {
               setIsLogoutDialogOpen(false);
-              await endSession();
+              await logoutMutation.mutateAsync();
               router.replace("/(auth)/login");
             },
           },
