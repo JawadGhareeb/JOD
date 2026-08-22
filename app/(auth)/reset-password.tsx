@@ -13,8 +13,12 @@ import KeyboardAvoider from "@/src/components/ui/KeyboardAvoider";
 import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
 import VerificationCodeInput from "@/src/components/ui/VerificationCodeInput";
+import {
+  useForgotPassword,
+  useResetPassword,
+  useVerifyResetCode,
+} from "@/src/features/auth/queries";
 import { applyApiFormErrors } from "@/src/lib/api-error-utils";
-import { authApi } from "@/src/lib/auth-api";
 
 // Server requires exactly 6 characters for the reset code (see
 // VerifyResetCodeRequest / ResetPasswordRequest in MOBILE_API_CONTRACT.md).
@@ -129,6 +133,9 @@ export default function ResetPasswordScreen() {
   const router = useRouter();
   const [step, setStep] = useState<ResetPasswordStep>(ResetPasswordStep.Email);
   const [stepError, setStepError] = useState("");
+  const forgotPasswordMutation = useForgotPassword();
+  const verifyResetCodeMutation = useVerifyResetCode();
+  const resetPasswordMutation = useResetPassword();
   const resetPasswordSchema = useMemo(
     () => buildResetPasswordSchema(step),
     [step],
@@ -158,7 +165,7 @@ export default function ResetPasswordScreen() {
     setStepError("");
 
     try {
-      await authApi.forgotPassword(values.login!.trim());
+      await forgotPasswordMutation.mutateAsync(values.login!.trim());
       setStep(ResetPasswordStep.Code);
     } catch (error) {
       const message = applyApiFormErrors(error, setError, { login: "login" });
@@ -170,7 +177,10 @@ export default function ResetPasswordScreen() {
     setStepError("");
 
     try {
-      await authApi.verifyResetCode(values.login!.trim(), values.code!.trim());
+      await verifyResetCodeMutation.mutateAsync({
+        login: values.login!.trim(),
+        code: values.code!.trim(),
+      });
       setStep(ResetPasswordStep.Password);
     } catch (error) {
       const message = applyApiFormErrors(error, setError, { login: "login" });
@@ -182,7 +192,7 @@ export default function ResetPasswordScreen() {
     setStepError("");
 
     try {
-      await authApi.resetPassword({
+      await resetPasswordMutation.mutateAsync({
         login: values.login!.trim(),
         code: values.code!.trim(),
         password: values.newPassword!,

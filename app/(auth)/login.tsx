@@ -5,10 +5,8 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 import { z } from "zod";
-import { useAuthStatus } from "@/src/hooks/useAuthStatus";
+import { useAuthStatus, useLogin } from "@/src/features/auth/queries";
 import { applyApiFormErrors } from "@/src/lib/api-error-utils";
-import { authApi } from "@/src/lib/auth-api";
-import { storeSession } from "@/src/lib/auth";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
@@ -40,6 +38,7 @@ const defaultValues: LoginFormValues = {
 export default function LoginScreen() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthStatus();
+  const loginMutation = useLogin();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [formError, setFormError] = useState("");
 
@@ -63,12 +62,11 @@ export default function LoginScreen() {
     setFormError("");
 
     try {
-      const session = await authApi.login({
+      await loginMutation.mutateAsync({
         email: values.email,
         password: values.password,
       });
 
-      await storeSession(session.token);
       router.replace("/(tabs)/home");
     } catch (error) {
       const message = applyApiFormErrors(error, setError);

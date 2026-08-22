@@ -12,10 +12,8 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 import { z } from "zod";
-import { useAuthStatus } from "@/src/hooks/useAuthStatus";
+import { useAuthStatus, useRegister } from "@/src/features/auth/queries";
 import { applyApiFormErrors } from "@/src/lib/api-error-utils";
-import { authApi } from "@/src/lib/auth-api";
-import { storeSession } from "@/src/lib/auth";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
@@ -58,6 +56,7 @@ const defaultValues: RegisterFormValues = {
 export default function RegisterScreen() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthStatus();
+  const registerMutation = useRegister();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
   const [formError, setFormError] = useState("");
@@ -82,7 +81,7 @@ export default function RegisterScreen() {
     setFormError("");
 
     try {
-      const session = await authApi.register({
+      await registerMutation.mutateAsync({
         name: values.name,
         email: values.email,
         phone: values.phoneNumber?.trim() || undefined,
@@ -90,7 +89,6 @@ export default function RegisterScreen() {
         password_confirmation: values.confirmPassword,
       });
 
-      await storeSession(session.token);
       router.replace("/(tabs)/home");
     } catch (error) {
       const message = applyApiFormErrors(error, setError, {
