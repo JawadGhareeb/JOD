@@ -5,6 +5,7 @@ import { useColorScheme } from "nativewind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Button from "@/src/components/ui/Button";
 import Dialog from "@/src/components/ui/Dialog";
+import { applyColorScheme } from "@/src/lib/theme";
 import { appIcons } from "./iconMap";
 
 const CloseIcon = appIcons.close;
@@ -37,11 +38,11 @@ const menuItems = [
 export function AppSidebar({ visible, onClose }: AppSidebarProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colorScheme, setColorScheme } = useColorScheme();
-  const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
+  const { colorScheme } = useColorScheme();
   const [shouldRender, setShouldRender] = useState(visible);
   const progress = useRef(new Animated.Value(visible ? 1 : 0)).current;
   const isDark = colorScheme === "dark";
+  const themeMode = isDark ? "dark" : "light";
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const panelClass = isDark
     ? "border-dark-400 bg-dark-500"
@@ -161,10 +162,7 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
                       strokeWidth={2.25}
                     />
                   }
-                  onPress={() => {
-                    setThemeMode("light");
-                    setColorScheme("light");
-                  }}
+                  onPress={() => applyColorScheme("light")}
                 >
                   فاتح
                 </Button>
@@ -181,10 +179,7 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
                       strokeWidth={2.25}
                     />
                   }
-                  onPress={() => {
-                    setThemeMode("dark");
-                    setColorScheme("dark");
-                  }}
+                  onPress={() => applyColorScheme("dark")}
                 >
                   داكن
                 </Button>

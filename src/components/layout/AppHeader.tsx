@@ -5,7 +5,7 @@ import { Animated, Pressable, View, type LayoutChangeEvent } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/src/components/shared/Avatar";
 import Text from "@/src/components/ui/Text";
-import { useAuthStatus } from "@/src/hooks/useAuthStatus";
+import { useAuthStatus } from "@/src/features/auth/queries";
 import { useRTL } from "@/src/providers/RTLProvider";
 import { headerScrollY } from "@/src/providers/CollapsibleHeaderProvider";
 import { appIcons } from "./iconMap";
@@ -29,7 +29,9 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   const isDark = colorScheme === "dark";
   const actionBgClass = isDark ? "bg-dark-350" : "bg-primary-100";
   const iconColor = isDark ? "#F9FAFB" : "#405d72";
-  const surfaceClassName = isDark ? "bg-dark-500" : "bg-white";
+  // Animated.View often doesn't re-apply NativeWind className when the scheme
+  // changes — drive the surface color via style so light/dark always sync.
+  const surfaceColor = isDark ? "#1f222b" : "#FFFFFF";
   const rowClassName = isRTL ? "flex-row-reverse" : "flex-row";
   const justifyClassName = isRTL ? "items-end" : "items-start";
 
@@ -80,17 +82,20 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
         overflow: "hidden",
         zIndex: 20,
         elevation: 20,
+        backgroundColor: surfaceColor,
       }}
-      className={surfaceClassName}
     >
       <Animated.View
         style={{
           height: headerHeight,
           transform: [{ translateY: contentTranslateY }],
           overflow: "hidden",
+          backgroundColor: surfaceColor,
         }}
       >
-        {topInsetHeight > 0 ? <View style={{ height: topInsetHeight }} className={surfaceClassName} /> : null}
+        {topInsetHeight > 0 ? (
+          <View style={{ height: topInsetHeight, backgroundColor: surfaceColor }} />
+        ) : null}
         <View onLayout={handleHeaderLayout} className="px-5 py-3">
           <View className={`${rowClassName} items-center justify-between`}>
             <View className={`w-[124px] min-h-[40px] ${justifyClassName} justify-center`}>
