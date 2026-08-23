@@ -1,743 +1,339 @@
+import * as ImagePicker from "expo-image-picker";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { ImagePlus, MapPin, X } from "lucide-react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, Animated, Image, Pressable, View } from "react-native";
+
 import { appIcons } from "@/src/components/layout/iconMap";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Dialog from "@/src/components/ui/Dialog";
 import Input from "@/src/components/ui/Input";
-import SelectionModal, {
-  type SelectionOption,
-} from "@/src/components/ui/SelectionModal";
+import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
-import { POST_TYPE_TO_API_TYPE } from "@/src/features/posts/api";
-import { useCreatePost, useSubmitPost, useUpdatePost } from "@/src/features/posts/queries";
-import type { CreatePostType } from "@/src/features/posts/types";
+import { useCities, usePostTypesLookup } from "@/src/features/lookups/queries";
+import { API_TYPE_TO_POST_TYPE, POST_TYPE_TO_API_TYPE } from "@/src/features/posts/api";
+import {
+  useCategories,
+  useCreatePost,
+  useDeletePostImage,
+  useMyPost,
+  useSubmitPost,
+  useUpdatePost,
+  useUploadPostImage,
+} from "@/src/features/posts/queries";
+import type { ApiPostType, CreatePostType, MobileImageFile } from "@/src/features/posts/types";
 import { ApiClientError } from "@/src/lib/api-client";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
-import * as ImagePicker from "expo-image-picker";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { ImagePlus, MapPin, X } from "lucide-react-native";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Animated, Image, Pressable, View } from "react-native";
 import { MenuPageHeader } from "../settings/MenuPageHeader";
-
-type PendingExitAction = () => void;
 
 const ImageIcon = ImagePlus;
 const TitleIcon = appIcons.campaign;
 const DescriptionIcon = appIcons.about;
+const MAX_POST_IMAGES = 10;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
-const postTypes: { key: CreatePostType; label: string; hint: string }[] = [
-  { key: "volunteer", label: "فرصة تطوع", hint: "مناسب لطلبات المتطوعين" },
-  { key: "donation", label: "حملة تبرع", hint: "مناسب لجمع التبرعات" },
-  { key: "help", label: "طلب مساعدة", hint: "مناسب لحالات الدعم الفردية" },
-];
+const readParam = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] || "" : value || "";
+const isRemoteImage = (uri: string) => /^https?:\/\//i.test(uri);
+const isCreateType = (value: string): value is ApiPostType =>
+  value === "volunteer_opportunity" || value === "donation_campaign" || value === "help_request";
 
-const cityOptions: SelectionOption[] = [
-  { label: "دمشق", value: "دمشق" },
-  { label: "حلب", value: "حلب" },
-  { label: "حمص", value: "حمص" },
-  { label: "حماة", value: "حماة" },
-  { label: "اللاذقية", value: "اللاذقية" },
-  { label: "طرطوس", value: "طرطوس" },
-  { label: "درعا", value: "درعا" },
-  { label: "السويداء", value: "السويداء" },
-  { label: "دير الزور", value: "دير الزور" },
-  { label: "الرقة", value: "الرقة" },
-  { label: "إدلب", value: "إدلب" },
-];
+function toUploadFile(uri: string, index: number): MobileImageFile {
+  const filename = uri.split("?")[0].split("/").pop() || `image-${index + 1}.jpg`;
+  const extension = filename.split(".").pop()?.toLowerCase();
+  const type = extension === "png" ? "image/png" : extension === "webp" ? "image/webp" : "image/jpeg";
+  return { uri, name: filename, type };
+}
 
-type CreatePostScreenProps = {
-  showPageHeader?: boolean;
-};
+type CreatePostScreenProps = { showPageHeader?: boolean };
 
-const readParam = (value: string | string[] | undefined) => {
-  if (Array.isArray(value)) return value[0] || "";
-  return value || "";
-};
+export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProps = {}) {
+  const params = useLocalSearchParams<{ mode?: string; postId?: string }>();
+  const editMode = readParam(params.mode) === "edit";
+  const editingPostId = readParam(params.postId);
+  const router = useRouter();
+  const { onScroll } = useCollapsibleHeaderScreen();
 
-const isCreatePostType = (value: string): value is CreatePostType =>
-  postTypes.some((type) => type.key === value);
-
-export function CreatePostScreen({
-  showPageHeader = true,
-}: CreatePostScreenProps = {}) {
-  const params = useLocalSearchParams<{
-    mode?: string;
-    postId?: string;
-    postType?: string;
-    title?: string;
-    details?: string;
-    city?: string;
-    images?: string;
-  }>();
   const [postType, setPostType] = useState<CreatePostType>("volunteer");
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   const [city, setCity] = useState("");
-  const [isCityModalOpen, setIsCityModalOpen] = useState(false);
+  const [categoryId, setCategoryId] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
-  const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
-  const [isSubmittingPost, setIsSubmittingPost] = useState(false);
-  const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [baselineSnapshot, setBaselineSnapshot] = useState("");
-  const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
-  const pendingExitActionRef = useRef<PendingExitAction | null>(null);
-  const isDiscardExitConfirmedRef = useRef(false);
-  const router = useRouter();
-  const navigation = useNavigation();
-  const { onScroll } = useCollapsibleHeaderScreen();
-  const createPostMutation = useCreatePost();
-  const updatePostMutation = useUpdatePost();
-  const submitPostMutation = useSubmitPost();
-
-  const editMode = readParam(params.mode) === "edit";
-  const editingPostId = readParam(params.postId);
-  // Tracks the id to PATCH/submit against — starts as the post being edited,
-  // and gets set the first time a brand-new post is created, so a second
-  // "save draft" tap in the same session updates it instead of creating a
-  // duplicate.
   const [activePostId, setActivePostId] = useState(editingPostId);
+  const [isCityModalOpen, setIsCityModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [initializedPostId, setInitializedPostId] = useState<string | null>(null);
+
+  const citiesQuery = useCities();
+  const postTypesQuery = usePostTypesLookup();
+  const categoriesQuery = useCategories({ status: "active", target: "post" });
+  const myPostQuery = useMyPost(activePostId || undefined);
+  const createMutation = useCreatePost();
+  const updateMutation = useUpdatePost();
+  const submitMutation = useSubmitPost();
+  const uploadImageMutation = useUploadPostImage();
+  const deleteImageMutation = useDeletePostImage();
 
   useEffect(() => {
-    if (!editMode) return;
+    const post = myPostQuery.data;
+    if (!editMode || !post || initializedPostId === post.id) return;
+    if (isCreateType(post.type)) setPostType(API_TYPE_TO_POST_TYPE[post.type]);
+    setTitle(post.title ?? "");
+    setDetails(post.details ?? "");
+    setCity(post.city ?? "");
+    setCategoryId(post.categoryId ?? "");
+    setSelectedImages(post.images ?? []);
+    setActivePostId(post.id);
+    setInitializedPostId(post.id);
+  }, [editMode, initializedPostId, myPostQuery.data]);
 
-    const paramPostType = readParam(params.postType);
-    const paramTitle = readParam(params.title);
-    const paramDetails = readParam(params.details);
-    const paramCity = readParam(params.city);
-    const paramImages = readParam(params.images);
+  const postTypeOptions = useMemo(
+    () => (postTypesQuery.data ?? [])
+      .filter((item) => item.canCreate)
+      .flatMap((item) => isCreateType(item.code) ? [{ key: API_TYPE_TO_POST_TYPE[item.code], label: item.label, hint: item.hint }] : []),
+    [postTypesQuery.data],
+  );
+  const cityOptions: SelectionOption[] = useMemo(
+    () => (citiesQuery.data ?? []).map((item) => ({ label: item.name, value: item.name })),
+    [citiesQuery.data],
+  );
+  const categoryOptions: SelectionOption[] = useMemo(
+    () => (categoriesQuery.data?.items ?? []).map((item) => ({ label: item.name, value: item.id, hint: item.description ?? undefined })),
+    [categoriesQuery.data?.items],
+  );
 
-    if (isCreatePostType(paramPostType)) {
-      setPostType(paramPostType);
+  const typeHint = postTypeOptions.find((item) => item.key === postType)?.hint;
+  const selectedCategoryLabel = categoryOptions.find((item) => item.value === categoryId)?.label ?? "";
+  const canPublish = title.trim().length >= 4 && details.trim().length >= 10 && city.trim().length >= 2;
+  const isBusy = isSavingDraft || isPublishing || uploadImageMutation.isPending || deleteImageMutation.isPending;
+  const pageTitle = editMode ? "تعديل المنشور" : "إنشاء منشور";
+
+  const buildCreateInput = (saveAsDraft: boolean) => ({
+    type: POST_TYPE_TO_API_TYPE[postType],
+    title: title.trim() || null,
+    details: details.trim() || null,
+    city: city.trim() || null,
+    categoryId: categoryId || null,
+    saveAsDraft,
+  });
+  const buildUpdateInput = () => ({
+    type: POST_TYPE_TO_API_TYPE[postType],
+    title: title.trim() || null,
+    details: details.trim() || null,
+    city: city.trim() || null,
+    categoryId: categoryId || null,
+  });
+
+  const uploadLocalImages = async (postId: string) => {
+    const local = selectedImages.filter((uri) => !isRemoteImage(uri));
+    if (local.length === 0) return false;
+
+    for (const [index, uri] of local.entries()) {
+      const media = await uploadImageMutation.mutateAsync({
+        postId,
+        image: toUploadFile(uri, index),
+      });
+      setSelectedImages((current) =>
+        current.map((item) => (item === uri ? media.url : item)),
+      );
     }
 
-    setTitle(paramTitle);
-    setDetails(paramDetails);
-    setCity(paramCity);
-    setSelectedImages(paramImages.split("|").filter(Boolean));
-  }, [
-    editMode,
-    params.city,
-    params.details,
-    params.images,
-    params.postType,
-    params.title,
-  ]);
-
-  const typeHint = useMemo(
-    () => postTypes.find((type) => type.key === postType)?.hint,
-    [postType],
-  );
-  // Mirrors the server's PostRequest constraints exactly: title min 4, city
-  // min 2, details min 10 — checked individually so the UI can point at
-  // whichever field is actually the problem instead of one generic message.
-  const isTitleValid = title.trim().length >= 4;
-  const isCityValid = city.trim().length >= 2;
-  const isDetailsValid = details.trim().length >= 10;
-  const canPublish = isTitleValid && isCityValid && isDetailsValid;
-  const pageTitle = editMode ? "تعديل بوست" : "نشر بوست";
-  const submitLabel = editMode ? "إعادة إرسال للمراجعة" : "نشر الآن";
-
-  const initialSnapshot = useMemo(() => {
-    const paramPostType = readParam(params.postType);
-    const initialPostType =
-      editMode && isCreatePostType(paramPostType) ? paramPostType : "volunteer";
-
-    return JSON.stringify({
-      postType: initialPostType,
-      title: editMode ? readParam(params.title) : "",
-      details: editMode ? readParam(params.details) : "",
-      city: editMode ? readParam(params.city) : "",
-      images: editMode
-        ? readParam(params.images).split("|").filter(Boolean).join("|")
-        : "",
-    });
-  }, [
-    editMode,
-    params.city,
-    params.details,
-    params.images,
-    params.postType,
-    params.title,
-  ]);
-
-  const currentSnapshot = useMemo(
-    () =>
-      JSON.stringify({
-        postType,
-        title,
-        details,
-        city,
-        images: selectedImages.filter(Boolean).join("|"),
-      }),
-    [city, details, postType, selectedImages, title],
-  );
-
-  useEffect(() => {
-    setBaselineSnapshot(initialSnapshot);
-  }, [initialSnapshot]);
-
-  const hasUnsavedChanges =
-    currentSnapshot !== (baselineSnapshot || initialSnapshot);
-
-  const requestPageExit = useCallback(
-    (exitAction: PendingExitAction) => {
-      if (!hasUnsavedChanges) {
-        exitAction();
-        return;
-      }
-
-      pendingExitActionRef.current = exitAction;
-      setIsDiscardConfirmOpen(true);
-    },
-    [hasUnsavedChanges],
-  );
-
-  const handleHeaderBackPress = useCallback(() => {
-    requestPageExit(() => router.back());
-  }, [requestPageExit, router]);
-
-  const handleCancelDiscardExit = useCallback(() => {
-    pendingExitActionRef.current = null;
-    setIsDiscardConfirmOpen(false);
-  }, []);
-
-  const handleConfirmDiscardExit = useCallback(() => {
-    const pendingExitAction = pendingExitActionRef.current;
-    pendingExitActionRef.current = null;
-    isDiscardExitConfirmedRef.current = true;
-    setIsDiscardConfirmOpen(false);
-
-    pendingExitAction?.();
-
-    requestAnimationFrame(() => {
-      isDiscardExitConfirmedRef.current = false;
-    });
-  }, []);
-
-  useEffect(() => {
-    const guardedNavigation = navigation as unknown as {
-      addListener?: (
-        eventName: string,
-        listener: (event: any) => void,
-      ) => () => void;
-      dispatch?: (action: unknown) => void;
-    };
-
-    const unsubscribe = guardedNavigation.addListener?.(
-      "beforeRemove",
-      (event: any) => {
-        if (
-          !hasUnsavedChanges ||
-          isDiscardExitConfirmedRef.current ||
-          isDiscardConfirmOpen
-        )
-          return;
-
-        event.preventDefault();
-        pendingExitActionRef.current = () =>
-          guardedNavigation.dispatch?.(event.data.action);
-        setIsDiscardConfirmOpen(true);
-      },
-    );
-
-    return unsubscribe;
-  }, [hasUnsavedChanges, isDiscardConfirmOpen, navigation]);
-
-  useEffect(() => {
-    const parentNavigation = (navigation as any).getParent?.();
-    if (!parentNavigation?.addListener) return;
-
-    const unsubscribe = parentNavigation.addListener(
-      "tabPress",
-      (event: any) => {
-        if (
-          !hasUnsavedChanges ||
-          isDiscardExitConfirmedRef.current ||
-          isDiscardConfirmOpen
-        )
-          return;
-
-        const parentState = parentNavigation.getState?.();
-        const targetRoute = parentState?.routes?.find(
-          (route: any) => route.key === event.target,
-        );
-        const currentRoute = parentState?.routes?.[parentState.index];
-
-        if (!targetRoute || targetRoute.key === currentRoute?.key) return;
-
-        event.preventDefault();
-        pendingExitActionRef.current = () =>
-          parentNavigation.navigate(targetRoute.name, targetRoute.params);
-        setIsDiscardConfirmOpen(true);
-      },
-    );
-
-    return unsubscribe;
-  }, [hasUnsavedChanges, isDiscardConfirmOpen, navigation]);
+    return true;
+  };
 
   const handlePickImages = async () => {
+    const remaining = MAX_POST_IMAGES - selectedImages.length;
+    if (remaining <= 0) {
+      Alert.alert("الحد الأقصى للصور", "يمكن إرفاق 10 صور كحد أقصى لكل منشور.");
+      return;
+    }
+
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permission.status !== "granted") {
-      Alert.alert(
-        "إذن الصور مطلوب",
-        "اسمح للتطبيق بالوصول للصور حتى تقدر تضيف صور للمنشور.",
-      );
+      Alert.alert("إذن الصور مطلوب", "اسمح للتطبيق بالوصول إلى الصور حتى تتمكن من إرفاقها بالمنشور.");
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
-      selectionLimit: 0,
+      selectionLimit: remaining,
       quality: 0.85,
     });
-
     if (result.canceled) return;
 
-    const pickedImages = result.assets
-      .map((asset) => asset.uri)
-      .filter((uri): uri is string => Boolean(uri));
-
-    setSelectedImages((current) => {
-      const uniqueImages = [...current, ...pickedImages].filter(
-        (uri, index, list) => list.indexOf(uri) === index,
-      );
-      return uniqueImages;
+    const accepted: string[] = [];
+    const rejected: string[] = [];
+    result.assets.forEach((asset) => {
+      const mime = asset.mimeType?.toLowerCase();
+      const typeAllowed = !mime || mime === "image/jpeg" || mime === "image/png" || mime === "image/webp";
+      const sizeAllowed = !asset.fileSize || asset.fileSize <= MAX_IMAGE_BYTES;
+      if (typeAllowed && sizeAllowed) accepted.push(asset.uri);
+      else rejected.push(asset.fileName ?? asset.uri.split("/").pop() ?? "صورة");
     });
+
+    setSelectedImages((current) => [...new Set([...current, ...accepted])].slice(0, MAX_POST_IMAGES));
+    if (rejected.length) Alert.alert("بعض الصور لم تُضف", `تحقق من الصيغة والحجم (5MB): ${rejected.join("، ")}`);
   };
 
-  const handleRemoveImage = (imageUri: string) => {
-    setSelectedImages((current) => current.filter((uri) => uri !== imageUri));
-  };
+  const handleRemoveImage = async (uri: string) => {
+    if (activePostId && isRemoteImage(uri)) {
+      try {
+        let media = myPostQuery.data?.imageMedia.find((item) => item.url === uri);
+        if (!media) {
+          const refreshed = await myPostQuery.refetch();
+          media = refreshed.data?.imageMedia.find((item) => item.url === uri);
+        }
 
-  const handleSubmitPress = () => {
-    if (!canPublish) return;
-    setIsSubmitConfirmOpen(true);
-  };
+        if (!media) {
+          Alert.alert("تعذر حذف الصورة", "تعذر العثور على بيانات الصورة المرفوعة. حدّث المنشور وحاول مرة أخرى.");
+          return;
+        }
 
-  const buildPostInput = (saveAsDraft: boolean) => ({
-    type: POST_TYPE_TO_API_TYPE[postType],
-    title: title.trim() || undefined,
-    details: details.trim() || undefined,
-    city: city.trim() || undefined,
-    saveAsDraft,
-  });
-
-  const resetToBlankForm = () => {
-    setPostType("volunteer");
-    setTitle("");
-    setDetails("");
-    setCity("");
-    setSelectedImages([]);
-    setActivePostId("");
-    // Non-edit mode's initialSnapshot is always this exact blank state —
-    // reuse it so the reset doesn't itself trigger the unsaved-changes guard.
-    setBaselineSnapshot(initialSnapshot);
-  };
-
-  const handleConfirmSubmit = async () => {
-    setIsSubmittingPost(true);
-
-    try {
-      const payload = buildPostInput(false);
-
-      if (activePostId) {
-        await updatePostMutation.mutateAsync({ postId: activePostId, input: payload });
-        await submitPostMutation.mutateAsync(activePostId);
-      } else {
-        const created = await createPostMutation.mutateAsync(payload);
-        setActivePostId(created.id);
+        const updated = await deleteImageMutation.mutateAsync({ postId: activePostId, imageId: media.id });
+        setSelectedImages(updated.images);
+        return;
+      } catch (error) {
+        Alert.alert("تعذر حذف الصورة", error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE);
+        return;
       }
-
-      setIsSubmitConfirmOpen(false);
-
-      if (editMode) {
-        Alert.alert(
-          "تم إرسال التعديلات",
-          "تم إرسال منشورك للمراجعة، وسيظهر بعد اعتماده من فريق الإشراف.",
-          [{ text: "حسنًا", onPress: () => router.back() }],
-        );
-      } else {
-        resetToBlankForm();
-        Alert.alert(
-          "تم إرسال المنشور",
-          "تم إرسال منشورك للمراجعة، وسيظهر بعد اعتماده من فريق الإشراف. يمكنك الآن نشر منشور آخر.",
-        );
-      }
-    } catch (error) {
-      const message =
-        error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
-      Alert.alert("تعذر نشر المنشور", message);
-    } finally {
-      setIsSubmittingPost(false);
     }
+
+    setSelectedImages((current) => current.filter((item) => item !== uri));
   };
 
   const handleSaveDraft = async () => {
     setIsSavingDraft(true);
-
     try {
-      const payload = buildPostInput(true);
-
-      if (activePostId) {
-        await updatePostMutation.mutateAsync({ postId: activePostId, input: payload });
+      let postId = activePostId;
+      if (postId) {
+        await updateMutation.mutateAsync({ postId, input: buildUpdateInput() });
       } else {
-        const created = await createPostMutation.mutateAsync(payload);
-        setActivePostId(created.id);
+        const created = await createMutation.mutateAsync(buildCreateInput(true));
+        postId = created.id;
+        setActivePostId(postId);
       }
-
-      setBaselineSnapshot(currentSnapshot);
-      Alert.alert("تم حفظ المسودة", "تم حفظ بيانات المنشور كمسودة مؤقتة.");
+      await uploadLocalImages(postId);
+      Alert.alert("تم حفظ المسودة", "تم حفظ بيانات المنشور والصور المرفوعة كمسودة.");
     } catch (error) {
-      const message =
-        error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
-      Alert.alert("تعذر حفظ المسودة", message);
+      Alert.alert("تعذر حفظ المسودة", error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE);
     } finally {
       setIsSavingDraft(false);
     }
   };
 
+  const handlePublish = async () => {
+    if (!canPublish) return;
+    setIsPublishing(true);
+    try {
+      let postId = activePostId;
+      if (postId) {
+        await updateMutation.mutateAsync({ postId, input: buildUpdateInput() });
+      } else {
+        const created = await createMutation.mutateAsync(buildCreateInput(true));
+        postId = created.id;
+        setActivePostId(postId);
+      }
+      await uploadLocalImages(postId);
+      await submitMutation.mutateAsync(postId);
+      setIsSubmitConfirmOpen(false);
+      Alert.alert("تم إرسال المنشور", "تم إرسال المنشور للمراجعة بنجاح.", [
+        { text: "حسنًا", onPress: () => editMode ? router.back() : router.replace("/(tabs)/profile") },
+      ]);
+    } catch (error) {
+      Alert.alert("تعذر إرسال المنشور", error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  if (editMode && myPostQuery.isLoading) {
+    return <View className="flex-1 items-center justify-center bg-light-100 dark:bg-dark-300"><Text size="sm" className="text-gray-500 dark:text-gray-300">جارِ تحميل المنشور...</Text></View>;
+  }
+
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
-      {showPageHeader ? (
-        <MenuPageHeader title={pageTitle} onBackPress={handleHeaderBackPress} />
-      ) : null}
-
+      {showPageHeader ? <MenuPageHeader title={pageTitle} /> : null}
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: 28,
-          paddingTop: showPageHeader ? 0 : 12,
-        }}
+        contentContainerStyle={{ paddingBottom: 28, paddingTop: showPageHeader ? 0 : 12 }}
         onScroll={showPageHeader ? undefined : onScroll}
         scrollEventThrottle={showPageHeader ? undefined : 16}
       >
-        <Card
-          padding="md"
-          className="mb-3 border-gray-200 dark:border-dark-400"
-        >
-          <Text
-            weight="semibold"
-            size="sm"
-            className="text-dark-100 dark:text-light-50"
-          >
-            {editMode ? "تعديل منشور مرفوض" : "قبل النشر"}
-          </Text>
-          <Text
-            size="xs"
-            className="mt-2 leading-6 text-gray-500 dark:text-gray-300"
-          >
-            {editMode
-              ? `عدّل بيانات المنشور${editingPostId ? ` رقم ${editingPostId}` : ""} ثم أعد إرساله للمراجعة.`
-              : "اكتب عنوان واضح، وصف مختصر ومباشر، وأضف صور حقيقية لزيادة موثوقية المنشور."}
-          </Text>
-        </Card>
-
-        <Card
-          padding="md"
-          className="mb-3 border-gray-200 dark:border-dark-400"
-        >
-          <Text
-            weight="semibold"
-            size="sm"
-            className="mb-3 text-dark-100 dark:text-light-50"
-          >
-            نوع المنشور
-          </Text>
-
-          <View className="flex-row-reverse gap-2">
-            {postTypes.map((type) => {
-              const isActive = postType === type.key;
-              return (
-                <Pressable
-                  key={type.key}
-                  onPress={() => setPostType(type.key)}
-                  className={`flex-1 items-center justify-center rounded-xl border px-2 py-3 ${
-                    isActive
-                      ? "border-primary-400 bg-primary-400/10"
-                      : "border-gray-200 bg-white dark:border-dark-400 dark:bg-dark-500"
-                  }`}
-                >
-                  <Text
-                    weight="medium"
-                    size="2xs"
-                    className={`text-center ${isActive ? "text-primary-400" : "text-dark-100 dark:text-light-50"}`}
-                  >
-                    {type.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <Text size="2xs" className="mt-3 text-gray-500 dark:text-gray-300">
-            {typeHint}
-          </Text>
-        </Card>
-
-        <Card
-          padding="md"
-          className="mb-3 border-gray-200 dark:border-dark-400"
-        >
-          <Text
-            weight="semibold"
-            size="sm"
-            className="mb-3 text-dark-100 dark:text-light-50"
-          >
-            تفاصيل المنشور
-          </Text>
-
-          <View className="gap-2">
-            <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-              عنوان المنشور *
-            </Text>
-            <Input
-              fullWidth
-              showStatusIcon={false}
-              inputClassName="font-noto text-xs"
-              rightIcon={<TitleIcon size={16} strokeWidth={2.25} />}
-              value={title}
-              onChangeText={setTitle}
-              placeholder="مثال: حملة دعم طلاب المدارس"
-              placeholderTextColor="#9CA3AF"
-            />
-            {!isTitleValid && title.trim().length > 0 ? (
-              <Text size="2xs" className="text-error-300">
-                العنوان يجب أن يتكون من 4 أحرف على الأقل.
-              </Text>
-            ) : null}
-
-            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-              المدينة *
-            </Text>
-            <Pressable
-              onPress={() => setIsCityModalOpen(true)}
-              accessibilityRole="button"
-              accessibilityLabel="اختيار المدينة"
-            >
-              <View pointerEvents="none">
-                <Input
-                  fullWidth
-                  editable={false}
-                  showStatusIcon={false}
-                  inputClassName="font-noto text-xs"
-                  rightIcon={<MapPin size={16} strokeWidth={2.25} />}
-                  value={city}
-                  placeholder="اختر المدينة"
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
-            </Pressable>
-            {!isCityValid ? (
-              <Text size="2xs" className="text-error-300">
-                هذا الحقل عبارة عن قائمة اختيار — اضغط عليه لفتح نافذة اختيار المدينة، لا يمكن الكتابة فيه مباشرة.
-              </Text>
-            ) : null}
-
-            <View className="mt-1 flex-row-reverse items-center justify-between">
-              <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-                وصف المنشور *
-              </Text>
-              <Text size="2xs" className="text-gray-400 dark:text-gray-300">
-                {details.trim().length}/300
-              </Text>
+        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+          <Text weight="semibold" size="sm" className="mb-3 text-dark-100 dark:text-light-50">نوع المنشور</Text>
+          {postTypeOptions.length ? (
+            <View className="flex-row-reverse gap-2">
+              {postTypeOptions.map((item) => {
+                const active = item.key === postType;
+                return (
+                  <Pressable key={item.key} onPress={() => setPostType(item.key)} className={`flex-1 items-center rounded-xl border px-2 py-3 ${active ? "border-primary-400 bg-primary-400/10" : "border-gray-200 bg-white dark:border-dark-400 dark:bg-dark-500"}`}>
+                    <Text size="2xs" weight="medium" className={active ? "text-primary-400" : "text-dark-100 dark:text-light-50"}>{item.label}</Text>
+                  </Pressable>
+                );
+              })}
             </View>
-            <Input
-              fullWidth
-              showStatusIcon={false}
-              inputClassName="min-h-[96px] font-noto text-xs"
-              inputContainerClassName="min-h-[120px] items-start py-3"
-              rightIcon={<DescriptionIcon size={16} strokeWidth={2.25} />}
-              value={details}
-              onChangeText={setDetails}
-              placeholder="اشرح الهدف من المنشور، الفئة المستهدفة، وكيف يمكن المساعدة."
-              placeholderTextColor="#9CA3AF"
-              multiline
-              textAlignVertical="top"
-              maxLength={300}
-            />
-            {!isDetailsValid && details.trim().length > 0 ? (
-              <Text size="2xs" className="text-error-300">
-                الوصف يجب أن يتكون من 10 أحرف على الأقل ({details.trim().length}/10).
-              </Text>
-            ) : null}
-          </View>
+          ) : <Text size="xs" className="text-gray-500 dark:text-gray-300">جارِ تحميل أنواع المنشورات...</Text>}
+          {typeHint ? <Text size="2xs" className="mt-3 text-gray-500 dark:text-gray-300">{typeHint}</Text> : null}
         </Card>
 
-        <Card
-          padding="md"
-          className="mb-3 border-gray-200 dark:border-dark-400"
-        >
-          <View className="mb-3 flex-row-reverse items-center justify-between">
-            <Text
-              weight="semibold"
-              size="sm"
-              className="text-dark-100 dark:text-light-50"
-            >
-              صور المنشور
-            </Text>
-            <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-              {selectedImages.length} صور
-            </Text>
+        <Card padding="md" className="mb-3 gap-3 border-gray-200 dark:border-dark-400">
+          <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">تفاصيل المنشور</Text>
+          <Input fullWidth showStatusIcon={false} rightIcon={<TitleIcon size={16} strokeWidth={2.25} />} value={title} onChangeText={setTitle} placeholder="عنوان المنشور" placeholderTextColor="#9CA3AF" />
+
+          <Pressable onPress={() => setIsCityModalOpen(true)}><View pointerEvents="none"><Input fullWidth editable={false} showStatusIcon={false} rightIcon={<MapPin size={16} strokeWidth={2.25} />} value={city} placeholder="اختر المدينة" placeholderTextColor="#9CA3AF" /></View></Pressable>
+
+          <Pressable onPress={() => setIsCategoryModalOpen(true)}><View pointerEvents="none"><Input fullWidth editable={false} showStatusIcon={false} value={selectedCategoryLabel} placeholder="التصنيف - اختياري" placeholderTextColor="#9CA3AF" /></View></Pressable>
+
+          <Input fullWidth multiline showStatusIcon={false} rightIcon={<DescriptionIcon size={16} strokeWidth={2.25} />} value={details} onChangeText={setDetails} placeholder="اكتب تفاصيل المنشور" placeholderTextColor="#9CA3AF" inputClassName="min-h-[96px] font-noto text-xs" inputContainerClassName="min-h-[120px] items-start py-3" textAlignVertical="top" />
+          {!canPublish ? <Text size="2xs" className="text-error-300">للنشر: العنوان 4 أحرف على الأقل، التفاصيل 10 أحرف على الأقل، والمدينة مطلوبة.</Text> : null}
+        </Card>
+
+        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+          <View className="mb-2 flex-row-reverse items-center justify-between">
+            <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">صور المنشور</Text>
+            <Text size="2xs" className="text-gray-500 dark:text-gray-300">{selectedImages.length}/{MAX_POST_IMAGES}</Text>
           </View>
-          <Text size="2xs" className="mb-2 text-gray-500 dark:text-gray-300">
-            يمكنك إضافة أي عدد من الصور من المعرض. إضافة صورة واحدة على الأقل
-            ترفع فرصة التفاعل.
-          </Text>
-          <Text size="2xs" className="mb-2 text-gray-400 dark:text-gray-300">
-            رفع الصور غير مدعوم من الخادم حالياً — لن يتم إرسالها مع المنشور.
-          </Text>
+          <Text size="2xs" className="mb-3 text-gray-500 dark:text-gray-300">JPEG / PNG / WebP، وبحد أقصى 5MB للصورة. تُرفع الصور منفصلة عن بيانات المنشور.</Text>
           <View className="flex-row-reverse flex-wrap justify-between gap-y-2">
-            {selectedImages.map((imageUri, index) => (
-              <View
-                key={`${imageUri}-${index}`}
-                style={{ width: "48%" }}
-                className="h-24 overflow-hidden rounded-xl bg-gray-200 dark:bg-dark-350"
-              >
-                <Image
-                  source={{ uri: imageUri }}
-                  className="h-full w-full"
-                  resizeMode="cover"
-                />
-                <Pressable
-                  onPress={() => handleRemoveImage(imageUri)}
-                  className="absolute left-2 top-2 h-7 w-7 items-center justify-center rounded-full bg-gray-900/70"
-                  accessibilityRole="button"
-                  accessibilityLabel="حذف الصورة"
-                >
-                  <X size={14} color="#FFFFFF" strokeWidth={2.5} />
-                </Pressable>
+            {selectedImages.map((uri, index) => (
+              <View key={`${uri}-${index}`} style={{ width: "48%" }} className="h-24 overflow-hidden rounded-xl bg-gray-200 dark:bg-dark-350">
+                <Image source={{ uri }} className="h-full w-full" resizeMode="cover" />
+                <Pressable disabled={isBusy} onPress={() => void handleRemoveImage(uri)} className="absolute left-2 top-2 h-7 w-7 items-center justify-center rounded-full bg-gray-900/70"><X size={14} color="#FFFFFF" strokeWidth={2.5} /></Pressable>
               </View>
             ))}
-
-            <Pressable
-              onPress={handlePickImages}
-              style={{ width: "48%" }}
-              className="h-24 items-center justify-center rounded-xl border border-dashed border-primary-200 bg-primary-100/50 dark:border-dark-400 dark:bg-dark-500"
-              accessibilityRole="button"
-              accessibilityLabel="إضافة صور للمنشور"
-            >
-              <ImageIcon size={18} color="#405d72" strokeWidth={2.25} />
-              <Text
-                size="2xs"
-                className="mt-1 text-gray-500 dark:text-gray-300"
-              >
-                إضافة صور
-              </Text>
-            </Pressable>
+            {selectedImages.length < MAX_POST_IMAGES ? (
+              <Pressable disabled={isBusy} onPress={() => void handlePickImages()} style={{ width: "48%" }} className="h-24 items-center justify-center rounded-xl border border-dashed border-primary-200 bg-primary-100/50 dark:border-dark-400 dark:bg-dark-500">
+                <ImageIcon size={18} color="#405d72" strokeWidth={2.25} />
+                <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">إضافة صور</Text>
+              </Pressable>
+            ) : null}
           </View>
         </Card>
 
-        <Card
-          padding="sm"
-          className="mb-2 border-gray-200 dark:border-dark-400"
-        >
-          <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-            بالضغط على {submitLabel} أنت توافق على سياسات المحتوى في المنصة.
-          </Text>
-        </Card>
-
-        <View className="mb-2 flex-row-reverse items-stretch gap-2">
-          <View className="min-w-0 flex-1">
-            <Button
-              fullWidth
-              size="small"
-              disabled={!canPublish}
-              onPress={handleSubmitPress}
-            >
-              {submitLabel}
-            </Button>
-          </View>
-          <View className="min-w-0 flex-1">
-            <Button
-              fullWidth
-              size="small"
-              variant="tertiary"
-              disabled={isSavingDraft || isSubmittingPost}
-              loading={isSavingDraft}
-              onPress={() => void handleSaveDraft()}
-            >
-              حفظ كمسودة
-            </Button>
-          </View>
+        <View className="mb-2 flex-row-reverse gap-2">
+          <View className="flex-1"><Button fullWidth size="small" disabled={!canPublish || isBusy} loading={isPublishing} onPress={() => setIsSubmitConfirmOpen(true)}>{editMode ? "حفظ وإعادة الإرسال" : "إرسال المنشور"}</Button></View>
+          <View className="flex-1"><Button fullWidth size="small" variant="tertiary" disabled={isBusy} loading={isSavingDraft} onPress={() => void handleSaveDraft()}>حفظ كمسودة</Button></View>
         </View>
-
-        {!canPublish ? (
-          <Text
-            size="2xs"
-            className="text-center text-gray-500 dark:text-gray-300"
-          >
-            {!isTitleValid
-              ? "أكمل حقل العنوان لتفعيل النشر."
-              : !isCityValid
-                ? "اختر المدينة لتفعيل النشر."
-                : "أكمل حقل الوصف لتفعيل النشر."}
-          </Text>
-        ) : null}
       </Animated.ScrollView>
 
-      <SelectionModal
-        visible={isCityModalOpen}
-        title="اختيار المدينة"
-        description="اختر المدينة المرتبطة بالمنشور."
-        options={cityOptions}
-        selectedValue={city}
-        onSelect={(selectedCity) => {
-          setCity(selectedCity);
-          setIsCityModalOpen(false);
-        }}
-        onClose={() => setIsCityModalOpen(false)}
-      />
-
+      <SelectionModal visible={isCityModalOpen} title="اختر المدينة" options={cityOptions} selectedValue={city} onSelect={(value) => { setCity(value); setIsCityModalOpen(false); }} onClose={() => setIsCityModalOpen(false)} />
+      <SelectionModal visible={isCategoryModalOpen} title="تصنيف المنشور" options={categoryOptions} selectedValue={categoryId} onSelect={(value) => { setCategoryId(value); setIsCategoryModalOpen(false); }} onClose={() => setIsCategoryModalOpen(false)} />
       <Dialog
         visible={isSubmitConfirmOpen}
-        title={editMode ? "تأكيد التعديلات" : "تأكيد النشر"}
-        message={
-          editMode
-            ? "هل أنت متأكد أنك تريد اعتماد هذه التعديلات وإعادة إرسال المنشور للمراجعة؟"
-            : "هل أنت متأكد أنك تريد نشر هذا المنشور بالبيانات والصور الحالية؟"
-        }
+        title="تأكيد إرسال المنشور"
+        message="سيتم حفظ المنشور كمسودة أولاً، رفع الصور المرفقة، ثم إرساله للمراجعة."
         icon={<ImageIcon size={28} color="#405d72" strokeWidth={2.25} />}
-        onClose={() => {
-          if (!isSubmittingPost) {
-            setIsSubmitConfirmOpen(false);
-          }
-        }}
-        cancelable={!isSubmittingPost}
+        cancelable={!isPublishing}
+        onClose={() => { if (!isPublishing) setIsSubmitConfirmOpen(false); }}
         buttons={[
-          {
-            text: editMode ? "متابعة التعديل" : "تراجع",
-            variant: "tertiary",
-            onPress: () => setIsSubmitConfirmOpen(false),
-          },
-          {
-            text: editMode ? "تأكيد التعديلات" : "نشر الآن",
-            variant: "primary",
-            loading: isSubmittingPost,
-            onPress: () => void handleConfirmSubmit(),
-          },
-        ]}
-      />
-      <Dialog
-        visible={isDiscardConfirmOpen}
-        title="تغييرات غير محفوظة"
-        titleColor="error"
-        message="عندك تغييرات غير محفوظة. إذا خرجت الآن ستفقد التعديلات الحالية."
-        icon={<X size={28} color="#DC2626" strokeWidth={2.25} />}
-        onClose={handleCancelDiscardExit}
-        buttons={[
-          {
-            text: "كمل التعديلات",
-            variant: "tertiary",
-            onPress: handleCancelDiscardExit,
-          },
-          {
-            text: "الخروج بدون حفظ",
-            variant: "primary",
-            className: "bg-error-300 shadow-error-300/30",
-            onPress: handleConfirmDiscardExit,
-          },
+          { text: "إلغاء", variant: "tertiary", onPress: () => setIsSubmitConfirmOpen(false) },
+          { text: "إرسال", variant: "primary", onPress: () => void handlePublish() },
         ]}
       />
     </View>

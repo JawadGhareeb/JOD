@@ -1,71 +1,30 @@
-import { useMemo, useState } from "react";
-import { Animated, View } from "react-native";
+import { useMemo } from "react";
+import { Animated, ActivityIndicator, View } from "react-native";
 import Text from "@/src/components/ui/Text";
-import { mockBlogsPayload } from "@/src/data/mockBlogs";
+import { useArticles } from "@/src/features/articles/queries";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import { BlogPostCard } from "./BlogPostCard";
-import { BlogPostCardSkeleton } from "./BlogPostCardSkeleton";
-
-const PAGE_SIZE = 6;
 
 export function BlogsScreen() {
   const { onScroll } = useCollapsibleHeaderScreen();
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [loadingMore, setLoadingMore] = useState(false);
-
-  const visiblePosts = useMemo(
-    () => mockBlogsPayload.posts.slice(0, visibleCount),
-    [visibleCount],
-  );
-
-  const hasMore = visibleCount < mockBlogsPayload.posts.length;
-
-  const handleLoadMore = () => {
-    if (!hasMore || loadingMore) return;
-
-    setLoadingMore(true);
-    setTimeout(() => {
-      setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, mockBlogsPayload.posts.length));
-      setLoadingMore(false);
-    }, 500);
-  };
+  const query = useArticles({ perPage: 20 });
+  const posts = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data]);
 
   return (
-    <View className="flex-1 bg-light-100 dark:bg-dark-300">
-      <Animated.FlatList
-        className="flex-1 px-4 dark:bg-dark-300"
-        contentContainerStyle={{ paddingBottom: 24 }}
-        data={visiblePosts}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <BlogPostCard post={item} />}
-        showsVerticalScrollIndicator={false}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.3}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        ListEmptyComponent={
-          <View className="items-center py-8">
-            <Text size="sm" className="text-gray-500 dark:text-gray-300">
-              لا توجد مقالات لعرضها حاليًا
-            </Text>
-          </View>
-        }
-        ListFooterComponent={
-          loadingMore ? (
-            <View className="py-2">
-              <BlogPostCardSkeleton />
-            </View>
-          ) : hasMore ? (
-            <View className="py-2" />
-          ) : (
-            <View className="items-center py-4">
-              <Text size="xs" className="text-gray-500 dark:text-gray-300">
-                تم عرض جميع المقالات
-              </Text>
-            </View>
-          )
-        }
-        />
-    </View>
+    <Animated.FlatList
+      className="flex-1 bg-light-100 px-4 dark:bg-dark-300"
+      data={posts}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => <BlogPostCard post={item} />}
+      onScroll={onScroll}
+      scrollEventThrottle={16}
+      contentContainerStyle={{ paddingTop: 12, paddingBottom: 24 }}
+      onEndReached={() => { if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage(); }}
+      onEndReachedThreshold={0.4}
+      refreshing={query.isRefetching && !query.isFetchingNextPage}
+      onRefresh={() => void query.refetch()}
+      ListEmptyComponent={query.isLoading ? <View className="items-center py-10"><ActivityIndicator /><Text size="xs" className="mt-3 text-gray-500 dark:text-gray-300">جارِ تحميل المقالات...</Text></View> : <View className="items-center py-10"><Text size="sm" className="text-gray-500 dark:text-gray-300">لا توجد مقالات منشورة حالياً.</Text></View>}
+      ListFooterComponent={query.isFetchingNextPage ? <ActivityIndicator style={{ marginVertical: 16 }} /> : null}
+    />
   );
 }

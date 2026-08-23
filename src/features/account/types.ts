@@ -1,7 +1,9 @@
 export interface UpdateProfileInput {
   name: string;
   email: string;
-  phone?: string;
+  phone?: string | null;
+  city?: string | null;
+  bio?: string | null;
 }
 
 export interface ChangePasswordInput {

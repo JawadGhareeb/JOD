@@ -30,7 +30,7 @@ const registerSchema = z
       .trim()
       .min(1, "البريد الإلكتروني مطلوب")
       .email("صيغة البريد الإلكتروني غير صحيحة"),
-    phoneNumber: z.string().trim().optional(),
+    phoneNumber: z.string().trim().min(1, "رقم الهاتف مطلوب").max(20, "رقم الهاتف طويل جداً"),
     password: z
       .string()
       .trim()
@@ -84,7 +84,7 @@ export default function RegisterScreen() {
       await registerMutation.mutateAsync({
         name: values.name,
         email: values.email,
-        phone: values.phoneNumber?.trim() || undefined,
+        phone: values.phoneNumber?.trim() || "",
         password: values.password,
         password_confirmation: values.confirmPassword,
       });

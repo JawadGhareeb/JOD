@@ -8,12 +8,12 @@ import type { HomePost } from "@/src/features/posts/types";
 import { MenuPageHeader } from "./MenuPageHeader";
 
 export function SavedPostsScreen() {
-  const { data, isLoading, isError, refetch } = useSavedPosts();
+  const { data, isLoading, isError, isRefetching, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useSavedPosts();
 
   const [savedPosts, setSavedPosts] = useState<HomePost[]>([]);
 
   useEffect(() => {
-    if (data) setSavedPosts(data.items);
+    if (data) setSavedPosts(data.pages.flatMap((page) => page.items));
   }, [data]);
 
   const handleUnsavePost = (post: HomePost) => {
@@ -53,12 +53,25 @@ export function SavedPostsScreen() {
           )}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 24 }}
+          refreshing={isRefetching && !isFetchingNextPage}
+          onRefresh={() => void refetch()}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+          }}
+          onEndReachedThreshold={0.4}
           ListEmptyComponent={
             <View className="items-center py-8">
               <Text size="sm" className="text-gray-500 dark:text-gray-300">
                 لا توجد منشورات محفوظة حالياً.
               </Text>
             </View>
+          }
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <Text size="xs" className="py-4 text-center text-gray-500 dark:text-gray-300">
+                جارِ تحميل المزيد...
+              </Text>
+            ) : null
           }
         />
       )}

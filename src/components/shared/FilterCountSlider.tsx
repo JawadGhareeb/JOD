@@ -5,7 +5,7 @@ import { useRTL } from "@/src/providers/RTLProvider";
 export type FilterCountSliderItem<T extends string> = {
   key: T;
   label: string;
-  count: number;
+  count?: number;
 };
 
 type FilterCountSliderProps<T extends string> = {
@@ -50,19 +50,21 @@ export function FilterCountSlider<T extends string>({
             >
               {item.label}
             </Text>
-            <View
-              className={`size-6 items-center justify-center rounded-full ${
-                isActive ? "bg-primary-400" : "bg-gray-200 dark:bg-dark-350"
-              }`}
-            >
-              <Text
-                size="2xs"
-                weight="medium"
-                className={isActive ? "text-light-50" : "text-gray-600 dark:text-gray-200"}
+            {typeof item.count === "number" ? (
+              <View
+                className={`size-6 items-center justify-center rounded-full ${
+                  isActive ? "bg-primary-400" : "bg-gray-200 dark:bg-dark-350"
+                }`}
               >
-                {item.count}
-              </Text>
-            </View>
+                <Text
+                  size="2xs"
+                  weight="medium"
+                  className={isActive ? "text-light-50" : "text-gray-600 dark:text-gray-200"}
+                >
+                  {item.count}
+                </Text>
+              </View>
+            ) : null}
           </Pressable>
         );
       }}

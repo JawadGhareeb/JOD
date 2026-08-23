@@ -7,7 +7,7 @@ import { Avatar } from "@/src/components/shared/Avatar";
 import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
-import { usePostsByOrganization } from "@/src/features/posts/queries";
+import { usePublisher, usePublisherPosts } from "@/src/features/posts/queries";
 
 const BackIcon = appIcons.chevronRight;
 
@@ -18,13 +18,14 @@ export function AuthorProfileScreen() {
 
   const authorId = Array.isArray(id) ? id[0] : id;
 
-  const { data, isLoading } = usePostsByOrganization(authorId);
-
-  const posts = data?.items ?? [];
-
-  // No dedicated "get publisher profile" endpoint exists — the publisher
-  // object embedded in their own posts is the only source for this info.
-  const author = posts[0]?.publisher;
+  const publisherQuery = usePublisher(authorId);
+  const postsQuery = usePublisherPosts(authorId, { perPage: 20 });
+  const posts = useMemo(
+    () => postsQuery.data?.pages.flatMap((page) => page.items) ?? [],
+    [postsQuery.data],
+  );
+  const author = publisherQuery.data;
+  const isLoading = publisherQuery.isLoading || postsQuery.isLoading;
 
   const totalLikes = useMemo(
     () => posts.reduce((sum, post) => sum + post.stats.likes, 0),
@@ -98,6 +99,10 @@ export function AuthorProfileScreen() {
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => <HomePostCard post={item} />}
       showsVerticalScrollIndicator={false}
+      onEndReached={() => { if (postsQuery.hasNextPage && !postsQuery.isFetchingNextPage) void postsQuery.fetchNextPage(); }}
+      onEndReachedThreshold={0.4}
+      refreshing={publisherQuery.isRefetching || postsQuery.isRefetching}
+      onRefresh={() => { void publisherQuery.refetch(); void postsQuery.refetch(); }}
       ListHeaderComponent={
         <View>
           <View

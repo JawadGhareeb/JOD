@@ -4,46 +4,63 @@ export interface AuthUserStats {
   donationsCount: number;
 }
 
-/**
- * Shape returned by `GET /me` / auth session `user`.
- * OpenAPI lists the core fields; live responses also include username/city/bio/
- * verified/stats (seen on register/login) — keep those optional so both shapes type-check.
- */
+export interface AuthOrganization {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  city: string | null;
+  bio: string | null;
+  status: string | null;
+  verificationStatus: string | null;
+}
+
 export interface AuthUser {
   id: string;
   name: string;
+  username: string;
   email: string;
   phone: string | null;
+  city: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+  verified: boolean;
   userType: string | null;
   status: string | null;
   organizationId: string | null;
-  organization: unknown;
+  organization: AuthOrganization | null;
+  stats: AuthUserStats;
   createdAt: string | null;
   lastActiveAt: string | null;
-  username?: string | null;
-  city?: string | null;
-  bio?: string | null;
-  verified?: boolean;
-  stats?: AuthUserStats | null;
 }
 
-export interface AuthSession {
+export interface TokenPayload {
   token: string;
+  refreshToken: string;
   tokenType: string;
+  expiresIn: number;
+  refreshExpiresIn: number;
+  expiresAt: string;
+  refreshExpiresAt: string;
+}
+
+export interface AuthSession extends TokenPayload {
   user: AuthUser;
 }
+
+export type RefreshedTokenPayload = TokenPayload;
 
 export interface RegisterInput {
   name: string;
   email: string;
-  phone?: string;
+  phone: string;
   password: string;
   password_confirmation: string;
 }
 
 export interface LoginInput {
-  email?: string;
-  phone?: string;
+  email?: string | null;
+  phone?: string | null;
   password: string;
 }
 

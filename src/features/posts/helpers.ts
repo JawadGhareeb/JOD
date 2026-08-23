@@ -2,8 +2,8 @@ import { HomePostTypeEnum } from "@/src/constants/global";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
 import type { HomePost } from "./types";
 
-export function formatHomePostRelativeDate(isoDate: string): string {
-  return formatRelativeDateAr(isoDate);
+export function formatHomePostRelativeDate(isoDate: string | null | undefined): string {
+  return isoDate ? formatRelativeDateAr(isoDate) : "";
 }
 
 export const HOME_POST_TYPE_LABELS: Record<HomePostTypeEnum, string> = {

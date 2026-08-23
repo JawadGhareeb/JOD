@@ -1,38 +1,33 @@
 import { useMemo } from "react";
 import { FilterCountSlider } from "@/src/components/shared";
-import { BLOG_CATEGORY_LABELS } from "@/src/data/mockBlogs";
-import type { BlogCategory, BlogPost } from "@/src/types/blogs";
+import { useCategories } from "@/src/features/posts/queries";
 
 type BlogCategorySliderProps = {
-  selectedCategory: BlogCategory;
-  onSelectCategory: (category: BlogCategory) => void;
-  posts: BlogPost[];
+  selectedCategoryId: string;
+  onSelectCategory: (categoryId: string) => void;
 };
 
-const categories = Object.keys(BLOG_CATEGORY_LABELS) as BlogCategory[];
-
 export function BlogCategorySlider({
-  selectedCategory,
+  selectedCategoryId,
   onSelectCategory,
-  posts,
 }: BlogCategorySliderProps) {
+  const categoriesQuery = useCategories({ status: "active" });
+
   const items = useMemo(
-    () =>
-      categories.map((category) => ({
-        key: category,
-        label: BLOG_CATEGORY_LABELS[category],
-        count:
-          category === "all"
-            ? posts.length
-            : posts.filter((post) => post.category === category).length,
+    () => [
+      { key: "all", label: "الكل" },
+      ...(categoriesQuery.data?.items ?? []).map((category) => ({
+        key: category.id,
+        label: category.name,
       })),
-    [posts],
+    ],
+    [categoriesQuery.data?.items],
   );
 
   return (
     <FilterCountSlider
       items={items}
-      selectedKey={selectedCategory}
+      selectedKey={selectedCategoryId}
       onSelect={onSelectCategory}
     />
   );

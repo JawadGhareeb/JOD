@@ -1,16 +1,14 @@
-export function formatRelativeDateAr(isoDate: string): string {
+export function formatRelativeDateAr(isoDate: string | null | undefined): string {
+  if (!isoDate) return "";
   const now = Date.now();
   const created = new Date(isoDate).getTime();
+  if (!Number.isFinite(created)) return "";
   const diffMinutes = Math.max(1, Math.floor((now - created) / 60000));
-
   if (diffMinutes < 60) return `منذ ${diffMinutes} دقيقة`;
-
   const hours = Math.floor(diffMinutes / 60);
   if (hours < 24) return `منذ ${hours} ساعة`;
-
   const days = Math.floor(hours / 24);
   if (days < 30) return `منذ ${days} يوم`;
-
   const months = Math.floor(days / 30);
   return `منذ ${months} شهر`;
 }

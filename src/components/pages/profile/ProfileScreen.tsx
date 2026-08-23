@@ -51,11 +51,8 @@ export function ProfileScreen() {
 
   const summary = useMemo(() => {
     if (!user) return null;
-    return toProfileSummary(user, {
-      // Prefer the live list total when /me.stats is missing or stale.
-      postsCount: data?.meta?.total ?? user.stats?.postsCount,
-    });
-  }, [user, data?.meta?.total]);
+    return toProfileSummary(user);
+  }, [user]);
 
   const handleArchive = async (postId: string) => {
     try {

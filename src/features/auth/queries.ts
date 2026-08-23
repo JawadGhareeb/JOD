@@ -4,15 +4,8 @@ import { authKeys } from "./query-keys";
 import { endSession, getSessionState, storeSession } from "./session";
 import type { LoginInput, RegisterInput, ResetPasswordInput } from "./types";
 
-/** Session status for the whole app — who's logged in, or not. Backed by
- * react-query so every screen that calls this shares one cached check
- * instead of each running its own independent fetch. */
 export function useAuthStatus() {
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: authKeys.session(),
-    queryFn: getSessionState,
-  });
-
+  const { data, isLoading, refetch } = useQuery({ queryKey: authKeys.session(), queryFn: getSessionState });
   return {
     isLoading,
     isAuthenticated: data?.isAuthenticated ?? false,
@@ -26,12 +19,10 @@ export function useLogin() {
   return useMutation({
     mutationFn: async (input: LoginInput) => {
       const session = await authApi.login(input);
-      await storeSession(session.token);
+      await storeSession(session);
       return session;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: authKeys.session() });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.session() }),
   });
 }
 
@@ -40,12 +31,10 @@ export function useRegister() {
   return useMutation({
     mutationFn: async (input: RegisterInput) => {
       const session = await authApi.register(input);
-      await storeSession(session.token);
+      await storeSession(session);
       return session;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: authKeys.session() });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.session() }),
   });
 }
 
@@ -54,26 +43,18 @@ export function useLogout() {
   return useMutation({
     mutationFn: endSession,
     onSuccess: () => {
+      queryClient.clear();
       queryClient.invalidateQueries({ queryKey: authKeys.session() });
     },
   });
 }
 
 export function useForgotPassword() {
-  return useMutation({
-    mutationFn: (login: string) => authApi.forgotPassword(login),
-  });
+  return useMutation({ mutationFn: (login: string) => authApi.forgotPassword(login) });
 }
-
 export function useVerifyResetCode() {
-  return useMutation({
-    mutationFn: ({ login, code }: { login: string; code: string }) =>
-      authApi.verifyResetCode(login, code),
-  });
+  return useMutation({ mutationFn: ({ login, code }: { login: string; code: string }) => authApi.verifyResetCode(login, code) });
 }
-
 export function useResetPassword() {
-  return useMutation({
-    mutationFn: (input: ResetPasswordInput) => authApi.resetPassword(input),
-  });
+  return useMutation({ mutationFn: (input: ResetPasswordInput) => authApi.resetPassword(input) });
 }

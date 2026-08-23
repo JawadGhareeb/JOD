@@ -20,8 +20,6 @@ export function EditInformationScreen() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  // City and bio have no field in the real profile contract (name/email/phone
-  // only) — kept as local inputs for now, but not sent or persisted anywhere.
   const [city, setCity] = useState("");
   const [bio, setBio] = useState("");
 
@@ -30,6 +28,8 @@ export function EditInformationScreen() {
     setFullName(user.name);
     setEmail(user.email);
     setPhoneNumber(user.phone ?? "");
+    setCity(user.city ?? "");
+    setBio(user.bio ?? "");
   }, [user]);
 
   const isEmailValid = useMemo(() => /\S+@\S+\.\S+/.test(email.trim()), [email]);
@@ -44,7 +44,9 @@ export function EditInformationScreen() {
       await updateProfileMutation.mutateAsync({
         name: fullName.trim(),
         email: email.trim(),
-        phone: phoneNumber.trim() || undefined,
+        phone: phoneNumber.trim() || null,
+        city: city.trim() || null,
+        bio: bio.trim() || null,
       });
       Alert.alert("تم حفظ المعلومات", "تم تحديث بيانات الحساب بنجاح.");
     } catch (error) {
@@ -143,9 +145,6 @@ export function EditInformationScreen() {
             />
             <Text size="2xs" className="self-start text-gray-400 dark:text-gray-300">
               {bio.trim().length}/180
-            </Text>
-            <Text size="2xs" className="text-gray-400 dark:text-gray-300">
-              المدينة والنبذة غير مرتبطتين بالخادم بعد، ولا يتم حفظهما حالياً.
             </Text>
           </View>
         </Card>

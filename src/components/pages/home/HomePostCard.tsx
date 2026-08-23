@@ -26,7 +26,8 @@ import {
   formatHomePostRelativeDate,
 } from "@/src/features/posts/helpers";
 import { openPostContact } from "@/src/features/posts/contact";
-import { useLikePost, useSavePost } from "@/src/features/posts/queries";
+import { useLikePost, useReportPost, useSavePost } from "@/src/features/posts/queries";
+import { useReportReasons } from "@/src/features/lookups/queries";
 import type { CreatePostType, HomePost } from "@/src/features/posts/types";
 import { useRTL } from "@/src/providers/RTLProvider";
 import type { ProfilePostStatus } from "@/src/types/profile";
@@ -101,10 +102,17 @@ export function HomePostCard({
   const { isRTL } = useRTL();
   const likeMutation = useLikePost();
   const saveMutation = useSavePost();
+  const reportMutation = useReportPost();
+  const reportReasonsQuery = useReportReasons();
+  const liveReportTypeOptions: SelectionOption[] = (reportReasonsQuery.data ?? []).map((reason) => ({
+    label: reason.label,
+    value: reason.code,
+    hint: reason.hint,
+  }));
   const [expanded, setExpanded] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
-  const [isSaved, setIsSaved] = useState(Boolean(post.saved || mode === "saved"));
-  const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(Boolean(post.isSaved || post.saved || mode === "saved"));
+  const [isLiked, setIsLiked] = useState(Boolean(post.isLiked));
   const [likesCount, setLikesCount] = useState(post.stats.likes);
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -195,7 +203,7 @@ export function HomePostCard({
     if (post.cta.type === "donate") {
       router.push({
         pathname: "/donate/[id]",
-        params: { id: post.id },
+        params: { id: post.cta.targetId ?? post.campaignId ?? post.id },
       });
       return;
     }
@@ -203,7 +211,7 @@ export function HomePostCard({
     if (post.cta.type === "apply") {
       router.push({
         pathname: "/apply/[id]",
-        params: { id: post.id },
+        params: { id: post.cta.targetId ?? post.campaignId ?? post.id },
       });
       return;
     }
@@ -368,28 +376,40 @@ export function HomePostCard({
     setIsReportModalOpen(true);
   };
 
-  const handleSelectReportType = (reportTypeValue: string) => {
+  const handleSelectReportType = async (reportTypeValue: string) => {
     if (reportTypeValue === "other") {
       setIsReportModalOpen(false);
       setIsOtherReasonDialogOpen(true);
       return;
     }
 
+    try {
+      await reportMutation.mutateAsync({ postId: post.id, reason: reportTypeValue });
+    } catch {
+      Alert.alert("تعذر إرسال البلاغ", "لم نتمكن من إرسال البلاغ الآن. حاول مرة أخرى.");
+      return;
+    }
+
     const reportTypeLabel =
-      reportTypeOptions.find((item) => item.value === reportTypeValue)?.label || "";
+      (liveReportTypeOptions.length ? liveReportTypeOptions : reportTypeOptions).find((item) => item.value === reportTypeValue)?.label || "";
     setLastReportType(reportTypeLabel);
     setIsReportModalOpen(false);
     setIsReportSuccessOpen(true);
   };
 
-  const handleSubmitOtherReason = () => {
-    const reason = otherReportReason.trim();
-    if (reason.length < 3) return;
+  const handleSubmitOtherReason = async () => {
+    const details = otherReportReason.trim();
+    if (details.length < 3) return;
 
-    setLastReportType(`سبب آخر: ${reason}`);
-    setIsOtherReasonDialogOpen(false);
-    setOtherReportReason("");
-    setIsReportSuccessOpen(true);
+    try {
+      await reportMutation.mutateAsync({ postId: post.id, reason: "other", details });
+      setLastReportType(`سبب آخر: ${details}`);
+      setIsOtherReasonDialogOpen(false);
+      setOtherReportReason("");
+      setIsReportSuccessOpen(true);
+    } catch {
+      Alert.alert("تعذر إرسال البلاغ", "لم نتمكن من إرسال البلاغ الآن. حاول مرة أخرى.");
+    }
   };
 
   return (
@@ -680,7 +700,7 @@ export function HomePostCard({
         visible={isReportModalOpen}
         title="إبلاغ عن المنشور"
         description="اختر نوع البلاغ لمساعدة فريق الإشراف على المعالجة بشكل أسرع:"
-        options={reportTypeOptions}
+        options={liveReportTypeOptions.length ? liveReportTypeOptions : reportTypeOptions}
         onSelect={handleSelectReportType}
         onClose={() => setIsReportModalOpen(false)}
       />
@@ -715,8 +735,9 @@ export function HomePostCard({
           <Button
             fullWidth
             size="small"
-            disabled={otherReportReason.trim().length < 3}
-            onPress={handleSubmitOtherReason}
+            disabled={otherReportReason.trim().length < 3 || reportMutation.isPending}
+            loading={reportMutation.isPending}
+            onPress={() => void handleSubmitOtherReason()}
           >
             إرسال البلاغ
           </Button>

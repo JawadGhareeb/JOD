@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/src/components/shared/Avatar";
 import Text from "@/src/components/ui/Text";
 import { useAuthStatus } from "@/src/features/auth/queries";
+import { useUnreadNotificationCount } from "@/src/features/notifications/queries";
 import { useRTL } from "@/src/providers/RTLProvider";
 import { headerScrollY } from "@/src/providers/CollapsibleHeaderProvider";
 import { appIcons } from "./iconMap";
@@ -25,6 +26,7 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   const { isRTL } = useRTL();
   const { colorScheme } = useColorScheme();
   const { isAuthenticated, isLoading, user, refreshAuthStatus } = useAuthStatus();
+  const { data: unreadNotificationCount = 0 } = useUnreadNotificationCount(isAuthenticated);
   const [contentHeight, setContentHeight] = useState(MIN_HEADER_CONTENT_HEIGHT);
   const isDark = colorScheme === "dark";
   const actionBgClass = isDark ? "bg-dark-350" : "bg-primary-100";
@@ -152,12 +154,19 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
                 <SearchIcon size={20} color={iconColor} strokeWidth={2.25} />
               </Pressable>
               <Pressable
-                onPress={() => router.push("/notifications")}
-                className={`h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
+                onPress={() => router.push(isAuthenticated ? "/notifications" : "/(auth)/login")}
+                className={`relative h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
                 accessibilityRole="button"
-                accessibilityLabel="الإشعارات"
+                accessibilityLabel={unreadNotificationCount > 0 ? `الإشعارات، ${unreadNotificationCount} غير مقروءة` : "الإشعارات"}
               >
                 <NotificationIcon size={20} color={iconColor} strokeWidth={2.25} />
+                {isAuthenticated && unreadNotificationCount > 0 ? (
+                  <View className="absolute -right-1 -top-1 min-w-5 items-center justify-center rounded-full bg-error-300 px-1 py-0.5">
+                    <Text size="2xs" weight="semibold" className="text-light-50">
+                      {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                    </Text>
+                  </View>
+                ) : null}
               </Pressable>
             </View>
           </View>

@@ -2,60 +2,71 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
-const TOKEN_KEY = "jod_access_token";
-
-/**
- * Unlike the web app's in-memory-only access token (re-acquired from an
- * HttpOnly refresh cookie on reload), this contract has no refresh endpoint
- * and a mobile app has no cookie jar — the token has to be persisted, or the
- * user is logged out every time the app restarts.
- *
- * Native: SecureStore (Keychain / Keystore).
- * Web: AsyncStorage — SecureStore is iOS/Android only, so register/login was
- * succeeding on the API then throwing when persisting the token.
- */
-let cachedToken: string | null | undefined;
-
+const ACCESS_TOKEN_KEY = "jod_access_token";
+const REFRESH_TOKEN_KEY = "jod_refresh_token";
 const useSecureStore = Platform.OS !== "web";
 
-async function readToken(): Promise<string | null> {
-  if (useSecureStore) {
-    return SecureStore.getItemAsync(TOKEN_KEY);
-  }
-  return AsyncStorage.getItem(TOKEN_KEY);
+export interface StoredTokenPair {
+  token: string;
+  refreshToken: string;
 }
 
-async function writeToken(token: string): Promise<void> {
-  if (useSecureStore) {
-    await SecureStore.setItemAsync(TOKEN_KEY, token);
-    return;
-  }
-  await AsyncStorage.setItem(TOKEN_KEY, token);
+let cachedAccessToken: string | null | undefined;
+let cachedRefreshToken: string | null | undefined;
+
+async function readValue(key: string): Promise<string | null> {
+  return useSecureStore ? SecureStore.getItemAsync(key) : AsyncStorage.getItem(key);
 }
 
-async function clearToken(): Promise<void> {
+async function writeValue(key: string, value: string): Promise<void> {
   if (useSecureStore) {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    await SecureStore.setItemAsync(key, value);
     return;
   }
-  await AsyncStorage.removeItem(TOKEN_KEY);
+  await AsyncStorage.setItem(key, value);
+}
+
+async function removeValue(key: string): Promise<void> {
+  if (useSecureStore) {
+    await SecureStore.deleteItemAsync(key);
+    return;
+  }
+  await AsyncStorage.removeItem(key);
 }
 
 export async function getStoredToken(): Promise<string | null> {
-  if (cachedToken !== undefined) {
-    return cachedToken;
-  }
-
-  cachedToken = await readToken();
-  return cachedToken;
+  if (cachedAccessToken === undefined) cachedAccessToken = await readValue(ACCESS_TOKEN_KEY);
+  return cachedAccessToken;
 }
 
-export async function setStoredToken(token: string | null): Promise<void> {
-  cachedToken = token;
+export async function getStoredRefreshToken(): Promise<string | null> {
+  if (cachedRefreshToken === undefined) cachedRefreshToken = await readValue(REFRESH_TOKEN_KEY);
+  return cachedRefreshToken;
+}
 
-  if (token) {
-    await writeToken(token);
-  } else {
-    await clearToken();
-  }
+export async function getStoredTokens(): Promise<{ token: string | null; refreshToken: string | null }> {
+  const [token, refreshToken] = await Promise.all([getStoredToken(), getStoredRefreshToken()]);
+  return { token, refreshToken };
+}
+
+export async function setStoredTokens(pair: StoredTokenPair): Promise<void> {
+  cachedAccessToken = pair.token;
+  cachedRefreshToken = pair.refreshToken;
+  await Promise.all([
+    writeValue(ACCESS_TOKEN_KEY, pair.token),
+    writeValue(REFRESH_TOKEN_KEY, pair.refreshToken),
+  ]);
+}
+
+/** Kept for small call sites that only replace/clear the access token. */
+export async function setStoredToken(token: string | null): Promise<void> {
+  cachedAccessToken = token;
+  if (token) await writeValue(ACCESS_TOKEN_KEY, token);
+  else await removeValue(ACCESS_TOKEN_KEY);
+}
+
+export async function clearStoredTokens(): Promise<void> {
+  cachedAccessToken = null;
+  cachedRefreshToken = null;
+  await Promise.all([removeValue(ACCESS_TOKEN_KEY), removeValue(REFRESH_TOKEN_KEY)]);
 }
