@@ -31,6 +31,7 @@ type AppSidebarProps = {
 
 const menuItems = [
   { key: "create-post", label: "نشر بوست", route: "/create-post", Icon: CreatePostIcon },
+  { key: "help-offers", label: "عروض المساعدة", route: "/help-offers", Icon: HelpIcon },
   { key: "my-donations", label: "تبرعاتي", route: "/my-donations", Icon: DonationsIcon },
   { key: "saved-posts", label: "بوستات محفوظة", route: "/saved-posts", Icon: SavedPostsIcon },
   { key: "account-settings", label: "إعدادات الحساب", route: "/account-settings", Icon: SettingsIcon },
@@ -59,7 +60,7 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
   const visibleMenuItems = isAuthenticated
     ? menuItems
     : menuItems.filter(
-        (item) => !["my-donations", "saved-posts", "account-settings"].includes(item.key),
+        (item) => !["help-offers", "my-donations", "saved-posts", "account-settings"].includes(item.key),
       );
 
   const closeSidebar = () => {
@@ -143,7 +144,7 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
                 onPress={() => {
                   closeSidebar();
                   if (item.key === "create-post" && !requireAuth()) return;
-                  router.push(item.route);
+                  router.push(item.route as never);
                 }}
                 className={`flex-row-reverse items-center justify-start gap-2 rounded-xl px-3 py-3 ${menuItemClass}`}
                 accessibilityRole="button"

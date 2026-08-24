@@ -23,6 +23,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.jawad_ghareeb.jod",
+      "googleServicesFile": "./google-services.json",
       "enableProguardInReleaseBuilds": true,
       "enableShrinkResourcesInReleaseBuilds": true
     },
@@ -33,6 +34,14 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "@react-native-firebase/app",
+        {}
+      ],
+      [
+        "@react-native-firebase/messaging",
+        {}
+      ],
       [
         "expo-splash-screen",
         {

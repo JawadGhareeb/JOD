@@ -17,6 +17,11 @@ export interface Publisher {
   whatsappNumber?: string;
 }
 
+export interface ActiveHelpOfferSummary {
+  id: string;
+  status: "pending" | "accepted" | "contacting" | "agreed";
+}
+
 export type HomePostActionType = "apply" | "donate" | "contact" | "details" | "none";
 export type HomePostActionState = "open" | "submitted" | "closed";
 export interface HomePostAction { type: HomePostActionType; label: string; targetId?: string; state?: HomePostActionState }
@@ -41,6 +46,10 @@ export interface HomePost {
   status: string;
   campaignId: string | null;
   location: string | null;
+  helpStatus?: "open" | "in_progress" | "fulfilled" | null;
+  canOfferHelp?: boolean;
+  activeOffersCount?: number;
+  myOffer?: ActiveHelpOfferSummary | null;
   phoneNumber?: string;
   whatsappNumber?: string;
 }

@@ -1,9 +1,46 @@
-export type PaymentMethod = "credit_card" | "bank_transfer" | "cash" | "other";
-export interface DonationInput { amount: number; paymentMethod: PaymentMethod; phone?: string | null; city?: string | null }
-export interface Donation {
-  id: string; campaignId: string; campaignTitle: string; organizationName: string | null;
-  amount: number; paymentMethod: string | null; phone: string | null; city: string | null;
-  source: string | null; donatedAt: string | null; createdAt: string | null;
-  organization?: string | null; donatedAmount?: number; targetAmount?: number; date?: string | null; status?: string; flow?: "contributed" | "received";
+export type DonationStatus = "pending" | "contacting" | "agreed" | "completed" | "cancelled";
+export type ContactMethod = "phone" | "whatsapp" | "email" | "other";
+export type PaymentMethod = "bank_transfer" | "cash" | "other";
+
+export interface DonationInput {
+  amount: number;
+  contactMethod: ContactMethod;
+  paymentMethod?: PaymentMethod | null;
+  phone?: string | null;
+  city?: string | null;
+  notes?: string | null;
 }
-export interface DonationParams { page?: number; perPage?: number; campaignId?: string }
+
+export interface Donation {
+  id: string;
+  campaignId: string;
+  campaignTitle: string;
+  organizationName: string | null;
+  amount: number;
+  status: DonationStatus;
+  contactMethod: ContactMethod | string | null;
+  paymentMethod: PaymentMethod | string | null;
+  phone: string | null;
+  city: string | null;
+  notes: string | null;
+  cancelReason: string | null;
+  source: string | null;
+  createdAt: string | null;
+  contactedAt: string | null;
+  agreedAt: string | null;
+  completedAt: string | null;
+  cancelledAt: string | null;
+  organization?: string | null;
+  donatedAmount?: number;
+  targetAmount?: number;
+  date?: string | null;
+  flow?: "contributed" | "received";
+}
+
+export interface DonationParams {
+  page?: number;
+  perPage?: number;
+  campaignId?: string;
+  status?: DonationStatus;
+  flow?: "contributed" | "received";
+}

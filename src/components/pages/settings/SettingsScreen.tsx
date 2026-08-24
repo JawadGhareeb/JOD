@@ -53,6 +53,12 @@ const settingsGroups: SettingsGroup[] = [
         route: "/my-donations",
       },
       {
+        title: "طلبات المساعدة",
+        hint: "العروض التي أرسلتها أو استقبلتها",
+        Icon: appIcons.help,
+        route: "/help-offers" as Href,
+      },
+      {
         title: "بوستات محفوظة",
         hint: "المنشورات التي قمت بحفظها",
         Icon: appIcons.savedPosts,
