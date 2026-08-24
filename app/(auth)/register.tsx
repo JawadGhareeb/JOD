@@ -21,6 +21,7 @@ import Input from "@/src/components/ui/Input";
 import KeyboardAvoider from "@/src/components/ui/KeyboardAvoider";
 import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
+import { useToast } from "@/src/providers/ToastProvider";
 
 const registerSchema = z
   .object({
@@ -57,6 +58,7 @@ export default function RegisterScreen() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthStatus();
   const registerMutation = useRegister();
+  const toast = useToast();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
   const [formError, setFormError] = useState("");
@@ -75,7 +77,7 @@ export default function RegisterScreen() {
     if (!isLoading && isAuthenticated) {
       router.replace("/(tabs)/home");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, toast]);
 
   const onSubmit = handleSubmit(async (values) => {
     setFormError("");
@@ -89,12 +91,16 @@ export default function RegisterScreen() {
         password_confirmation: values.confirmPassword,
       });
 
+      toast.success("تم إنشاء حسابك ويمكنك الآن استخدام جميع ميزات جود.", "أهلاً بك في جود");
       router.replace("/(tabs)/home");
     } catch (error) {
       const message = applyApiFormErrors(error, setError, {
         password_confirmation: "confirmPassword",
       });
-      if (message) setFormError(message);
+      if (message) {
+        setFormError(message);
+        toast.error(message, "تعذر إنشاء الحساب");
+      }
     }
   });
 

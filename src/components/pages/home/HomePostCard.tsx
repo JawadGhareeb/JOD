@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import {
-  Alert,
   Image,
   Modal,
   Pressable,
@@ -30,6 +29,8 @@ import { useLikePost, useReportPost, useSavePost } from "@/src/features/posts/qu
 import { useReportReasons } from "@/src/features/lookups/queries";
 import type { CreatePostType, HomePost } from "@/src/features/posts/types";
 import { useRTL } from "@/src/providers/RTLProvider";
+import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
+import { useToast } from "@/src/providers/ToastProvider";
 import type { ProfilePostStatus } from "@/src/types/profile";
 
 type HomePostCardMode = "default" | "own" | "saved";
@@ -100,6 +101,8 @@ export function HomePostCard({
   const router = useRouter();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const { isRTL } = useRTL();
+  const { requireAuth } = useAuthGuard();
+  const toast = useToast();
   const likeMutation = useLikePost();
   const saveMutation = useSavePost();
   const reportMutation = useReportPost();
@@ -117,8 +120,8 @@ export function HomePostCard({
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isOtherReasonDialogOpen, setIsOtherReasonDialogOpen] = useState(false);
-  const [isReportSuccessOpen, setIsReportSuccessOpen] = useState(false);
-  const [lastReportType, setLastReportType] = useState("");
+
+
   const [otherReportReason, setOtherReportReason] = useState("");
   const optionsButtonRef = useRef<View>(null);
   const [optionsAnchor, setOptionsAnchor] = useState({ x: 0, y: 0, width: 0, height: 0 });
@@ -137,6 +140,7 @@ export function HomePostCard({
   const SharesIcon = appIcons.shares;
   const MoreIcon = appIcons.moreVertical;
   const ShieldIcon = appIcons.shield;
+
   const canOpenAuthorProfile = enableAuthorNavigation && Boolean(post.publisher.id);
   const hasCta = post.cta.type !== "none";
   const isSubmitted = post.cta.state === "submitted";
@@ -201,6 +205,7 @@ export function HomePostCard({
     closeOptionsMenu();
 
     if (post.cta.type === "donate") {
+      if (!requireAuth()) return;
       router.push({
         pathname: "/donate/[id]",
         params: { id: post.cta.targetId ?? post.campaignId ?? post.id },
@@ -209,6 +214,7 @@ export function HomePostCard({
     }
 
     if (post.cta.type === "apply") {
+      if (!requireAuth()) return;
       router.push({
         pathname: "/apply/[id]",
         params: { id: post.cta.targetId ?? post.campaignId ?? post.id },
@@ -257,13 +263,14 @@ export function HomePostCard({
         },
       );
     } catch {
-      Alert.alert("تعذر المشاركة", "حدث خطأ أثناء مشاركة الرابط. حاول مرة أخرى.");
+      toast.error("حدث خطأ أثناء مشاركة الرابط. حاول مرة أخرى.", "تعذر المشاركة");
     } finally {
       setIsSharing(false);
     }
   };
 
   const handleToggleLike = async () => {
+    if (!requireAuth()) return;
     const wasLiked = isLiked;
     const previousCount = likesCount;
     const nextLiked = !wasLiked;
@@ -278,11 +285,12 @@ export function HomePostCard({
     } catch {
       setIsLiked(wasLiked);
       setLikesCount(previousCount);
-      Alert.alert("تعذر تنفيذ الإجراء", "لم نتمكن من تحديث الإعجاب الآن. حاول مرة أخرى.");
+      toast.error("لم نتمكن من تحديث الإعجاب الآن. حاول مرة أخرى.");
     }
   };
 
   const handleTogglePostSaved = async () => {
+    if (!requireAuth()) return;
     const wasSaved = isSaved;
     const willSave = !wasSaved;
 
@@ -292,28 +300,29 @@ export function HomePostCard({
     try {
       const result = await saveMutation.mutateAsync({ postId: post.id, save: willSave });
       setIsSaved(result.isSaved);
-      Alert.alert(
-        result.isSaved ? "تم حفظ المنشور" : "تم إزالة الحفظ",
+      toast.success(
         result.isSaved
           ? "يمكنك العثور عليه لاحقًا في المنشورات المحفوظة."
           : "تمت إزالة المنشور من المحفوظات.",
+        result.isSaved ? "تم حفظ المنشور" : "تم إزالة الحفظ",
       );
     } catch {
       setIsSaved(wasSaved);
-      Alert.alert("تعذر تنفيذ الإجراء", "لم نتمكن من تحديث الحفظ الآن. حاول مرة أخرى.");
+      toast.error("لم نتمكن من تحديث الحفظ الآن. حاول مرة أخرى.");
     }
   };
 
   const handleUnsavePost = async () => {
+    if (!requireAuth()) return;
     closeOptionsMenu();
 
     try {
       await saveMutation.mutateAsync({ postId: post.id, save: false });
       setIsSaved(false);
       onUnsave?.(post);
-      Alert.alert("تم إلغاء الحفظ", "تمت إزالة المنشور من صفحة المنشورات المحفوظة.");
+      toast.success("تمت إزالة المنشور من صفحة المنشورات المحفوظة.", "تم إلغاء الحفظ");
     } catch {
-      Alert.alert("تعذر إلغاء الحفظ", "لم نتمكن من إزالة الحفظ الآن. حاول مرة أخرى.");
+      toast.error("لم نتمكن من إزالة الحفظ الآن. حاول مرة أخرى.", "تعذر إلغاء الحفظ");
     }
   };
 
@@ -373,6 +382,7 @@ export function HomePostCard({
 
   const handleReportPost = () => {
     closeOptionsMenu();
+    if (!requireAuth()) return;
     setIsReportModalOpen(true);
   };
 
@@ -386,15 +396,12 @@ export function HomePostCard({
     try {
       await reportMutation.mutateAsync({ postId: post.id, reason: reportTypeValue });
     } catch {
-      Alert.alert("تعذر إرسال البلاغ", "لم نتمكن من إرسال البلاغ الآن. حاول مرة أخرى.");
+      toast.error("لم نتمكن من إرسال البلاغ الآن. حاول مرة أخرى.", "تعذر إرسال البلاغ");
       return;
     }
 
-    const reportTypeLabel =
-      (liveReportTypeOptions.length ? liveReportTypeOptions : reportTypeOptions).find((item) => item.value === reportTypeValue)?.label || "";
-    setLastReportType(reportTypeLabel);
     setIsReportModalOpen(false);
-    setIsReportSuccessOpen(true);
+    toast.success("شكراً لك. سنقوم بمراجعة البلاغ قريبًا.", "تم إرسال البلاغ");
   };
 
   const handleSubmitOtherReason = async () => {
@@ -403,12 +410,11 @@ export function HomePostCard({
 
     try {
       await reportMutation.mutateAsync({ postId: post.id, reason: "other", details });
-      setLastReportType(`سبب آخر: ${details}`);
       setIsOtherReasonDialogOpen(false);
       setOtherReportReason("");
-      setIsReportSuccessOpen(true);
+      toast.success("شكراً لك. سنقوم بمراجعة البلاغ قريبًا.", "تم إرسال البلاغ");
     } catch {
-      Alert.alert("تعذر إرسال البلاغ", "لم نتمكن من إرسال البلاغ الآن. حاول مرة أخرى.");
+      toast.error("لم نتمكن من إرسال البلاغ الآن. حاول مرة أخرى.", "تعذر إرسال البلاغ");
     }
   };
 
@@ -424,7 +430,7 @@ export function HomePostCard({
             canOpenAuthorProfile ? `عرض الملف الشخصي للناشر ${post.publisher.name}` : undefined
           }
         >
-          <Avatar name={post.publisher.name} size={42} />
+          <Avatar name={post.publisher.name} imageUrl={post.publisher.avatarUrl} size={42} />
           <View>
             <View className="flex-row-reverse items-center gap-1">
               <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
@@ -744,20 +750,6 @@ export function HomePostCard({
         </View>
       </Dialog>
 
-      <Dialog
-        visible={isReportSuccessOpen}
-        title="تم إرسال البلاغ بنجاح"
-        message={`شكراً لك. سنقوم بمراجعة البلاغ قريبًا.${lastReportType ? `\nنوع البلاغ: ${lastReportType}` : ""}`}
-        icon={<ShieldIcon size={26} color="#405d72" strokeWidth={2.25} />}
-        onClose={() => setIsReportSuccessOpen(false)}
-        buttons={[
-          {
-            text: "حسنًا",
-            variant: "primary",
-            onPress: () => setIsReportSuccessOpen(false),
-          },
-        ]}
-      />
     </Card>
   );
 }

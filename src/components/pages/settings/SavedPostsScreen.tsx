@@ -3,6 +3,7 @@ import { FlatList, View } from "react-native";
 import Button from "@/src/components/ui/Button";
 import Text from "@/src/components/ui/Text";
 import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
+import { HomePostCardSkeleton } from "@/src/components/pages/home/HomePostCardSkeleton";
 import { useSavedPosts } from "@/src/features/posts/queries";
 import type { HomePost } from "@/src/features/posts/types";
 import { MenuPageHeader } from "./MenuPageHeader";
@@ -25,10 +26,8 @@ export function SavedPostsScreen() {
       <MenuPageHeader title="بوستات محفوظة" />
 
       {isLoading ? (
-        <View className="items-center py-8">
-          <Text size="sm" className="text-gray-500 dark:text-gray-300">
-            جارِ تحميل المنشورات المحفوظة...
-          </Text>
+        <View>
+          {[0, 1, 2].map((item) => <HomePostCardSkeleton key={item} />)}
         </View>
       ) : isError ? (
         <View className="items-center gap-3 py-8">
@@ -67,11 +66,7 @@ export function SavedPostsScreen() {
             </View>
           }
           ListFooterComponent={
-            isFetchingNextPage ? (
-              <Text size="xs" className="py-4 text-center text-gray-500 dark:text-gray-300">
-                جارِ تحميل المزيد...
-              </Text>
-            ) : null
+            isFetchingNextPage ? <HomePostCardSkeleton /> : null
           }
         />
       )}

@@ -4,6 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRTL } from "@/src/providers/RTLProvider";
 import { resetHeader } from "@/src/providers/CollapsibleHeaderProvider";
+import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { appIcons } from "./iconMap";
 
 type TabKey = "home" | "blogs" | "create-post" | "profile" | "settings";
@@ -28,6 +29,7 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
   const insets = useSafeAreaInsets();
   const { isRTL } = useRTL();
   const { colorScheme } = useColorScheme();
+  const { requireAuth } = useAuthGuard();
   const isDark = colorScheme === "dark";
   const rowClassName = isRTL ? "flex-row-reverse" : "flex-row";
   const floatingRoute = state.routes.find((route) => route.name === "create-post");
@@ -79,6 +81,10 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
               : "text-gray-400";
 
           const onPress = () => {
+            if (key === "profile" && !requireAuth()) {
+              return;
+            }
+
             if (!isFocused) {
               triggerTabPress(route.name, route.key, route.params);
             }
@@ -124,7 +130,10 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
           accessibilityState={state.routes[state.index].key === floatingRoute.key ? { selected: true } : {}}
           accessibilityLabel={descriptors[floatingRoute.key].options.tabBarAccessibilityLabel}
           testID={descriptors[floatingRoute.key].options.tabBarButtonTestID}
-          onPress={() => triggerTabPress(floatingRoute.name, floatingRoute.key, floatingRoute.params)}
+          onPress={() => {
+            if (!requireAuth()) return;
+            triggerTabPress(floatingRoute.name, floatingRoute.key, floatingRoute.params);
+          }}
           onLongPress={() => {
             navigation.emit({
               type: "tabLongPress",

@@ -1,15 +1,17 @@
 import { useMemo, useState } from "react";
 import { Animated, View } from "react-native";
 import { useRouter, type Href } from "expo-router";
+import { LogIn } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { appIcons } from "@/src/components/layout/iconMap";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Dialog from "@/src/components/ui/Dialog";
 import Text from "@/src/components/ui/Text";
-import { useLogout } from "@/src/features/auth/queries";
+import { useAuthStatus, useLogout } from "@/src/features/auth/queries";
 import { applyColorScheme } from "@/src/lib/theme";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
+import { useToast } from "@/src/providers/ToastProvider";
 
 type SettingsRow = {
   title: string;
@@ -91,6 +93,8 @@ const LogoutIcon = appIcons.logout;
 export function SettingsScreen() {
   const router = useRouter();
   const logoutMutation = useLogout();
+  const { isAuthenticated } = useAuthStatus();
+  const toast = useToast();
   const { colorScheme } = useColorScheme();
   const { onScroll } = useCollapsibleHeaderScreen();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
@@ -99,6 +103,13 @@ export function SettingsScreen() {
   const iconColor = isDark ? "#9cc4da" : "#405d72";
   const inactiveThemeIconColor = isDark ? "#E5E7EB" : "#405d72";
   const arrowIconColor = isDark ? "#D1D5DB" : "#9CA3AF";
+  const visibleGroups = useMemo(
+    () =>
+      isAuthenticated
+        ? settingsGroups
+        : settingsGroups.filter((group) => group.title === "الدعم والمعلومات"),
+    [isAuthenticated],
+  );
 
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
@@ -108,7 +119,7 @@ export function SettingsScreen() {
         onScroll={onScroll}
         scrollEventThrottle={16}
       >
-        {settingsGroups.map((group) => (
+        {visibleGroups.map((group) => (
           <View key={group.title} className="mb-3">
             <Text weight="semibold" size="xs" className="mb-2 px-1 text-gray-500 dark:text-gray-300">
               {group.title}
@@ -128,11 +139,7 @@ export function SettingsScreen() {
                       <row.Icon size={18} color={iconColor} strokeWidth={2.25} />
                     </View>
                     <View className="flex-1">
-                      <Text
-                        weight="semibold"
-                        size="sm"
-                        className="text-dark-100 dark:text-light-50"
-                      >
+                      <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
                         {row.title}
                       </Text>
                       <Text size="xs" className="text-gray-500 dark:text-gray-300">
@@ -193,19 +200,29 @@ export function SettingsScreen() {
           </View>
         </Card>
 
-        <Button
-          fullWidth
-          variant="tertiary"
-          className="border border-error-300/30 bg-error-300/5 dark:bg-error-300/10"
-          leftIcon={<LogoutIcon size={18} color="#DC2626" strokeWidth={2.25} />}
-          onPress={() => setIsLogoutDialogOpen(true)}
-        >
-          تسجيل الخروج
-        </Button>
+        {isAuthenticated ? (
+          <Button
+            fullWidth
+            variant="tertiary"
+            className="border border-error-300/30 bg-error-300/5 dark:bg-error-300/10"
+            leftIcon={<LogoutIcon size={18} color="#DC2626" strokeWidth={2.25} />}
+            onPress={() => setIsLogoutDialogOpen(true)}
+          >
+            تسجيل الخروج
+          </Button>
+        ) : (
+          <Button
+            fullWidth
+            leftIcon={<LogIn size={18} color="#FFFFFF" strokeWidth={2.25} />}
+            onPress={() => router.push("/(auth)/login")}
+          >
+            تسجيل الدخول
+          </Button>
+        )}
       </Animated.ScrollView>
 
       <Dialog
-        visible={isLogoutDialogOpen}
+        visible={isAuthenticated && isLogoutDialogOpen}
         title="تأكيد تسجيل الخروج"
         message="هل أنت متأكد أنك تريد تسجيل الخروج؟"
         icon={<LogoutIcon size={26} color="#DC2626" strokeWidth={2.25} />}
@@ -222,7 +239,8 @@ export function SettingsScreen() {
             onPress: async () => {
               setIsLogoutDialogOpen(false);
               await logoutMutation.mutateAsync();
-              router.replace("/(auth)/login");
+              toast.info("يمكنك الاستمرار في تصفح جود كزائر.", "تم تسجيل الخروج");
+              router.replace("/(tabs)/home");
             },
           },
         ]}

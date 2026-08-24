@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { Alert, Animated, Pressable, View } from "react-native";
+import { Animated, Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import Button from "@/src/components/ui/Button";
 import Text from "@/src/components/ui/Text";
+import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import { SectionHeader } from "@/src/components/shared/SectionHeader";
 import { toProfileSummary } from "@/src/features/account/helpers";
 import { useAuthStatus } from "@/src/features/auth/queries";
@@ -17,6 +18,7 @@ import type { MyPostStatus } from "@/src/features/posts/types";
 import { ProfileHeaderCard } from "./ProfileHeaderCard";
 import { MyPostCard } from "./MyPostCard";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
+import { useToast } from "@/src/providers/ToastProvider";
 
 const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
@@ -31,6 +33,7 @@ const STATUS_TABS: { key: MyPostStatus; label: string }[] = [
 export function ProfileScreen() {
   const router = useRouter();
   const { onScroll } = useCollapsibleHeaderScreen();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<MyPostStatus>("active");
 
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStatus();
@@ -57,42 +60,42 @@ export function ProfileScreen() {
   const handleArchive = async (postId: string) => {
     try {
       await archiveMutation.mutateAsync(postId);
-      Alert.alert("تمت الأرشفة", "تم نقل المنشور إلى تبويب المنشورات المؤرشفة.");
+      toast.success("تم نقل المنشور إلى تبويب المنشورات المؤرشفة.", "تمت الأرشفة");
     } catch (error) {
       const message =
         error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
-      Alert.alert("تعذر أرشفة المنشور", message);
+      toast.error(message, "تعذر أرشفة المنشور");
     }
   };
 
   const handleRepost = async (postId: string) => {
     try {
       await repostMutation.mutateAsync(postId);
-      Alert.alert("تمت إعادة الإرسال", "تم إرسال المنشور للمراجعة مجدداً.");
+      toast.success("تم إرسال المنشور للمراجعة مجدداً.", "تمت إعادة الإرسال");
     } catch (error) {
       const message =
         error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
-      Alert.alert("تعذر إعادة نشر المنشور", message);
+      toast.error(message, "تعذر إعادة نشر المنشور");
     }
   };
 
   const handleDelete = async (postId: string) => {
     try {
       await deleteMutation.mutateAsync(postId);
-      Alert.alert("تم الحذف", "تم حذف المنشور من منشوراتك.");
+      toast.success("تم حذف المنشور من منشوراتك.", "تم الحذف");
     } catch (error) {
       const message =
         error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
-      Alert.alert("تعذر حذف المنشور", message);
+      toast.error(message, "تعذر حذف المنشور");
     }
   };
 
   if (isAuthLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-light-100 dark:bg-dark-300">
-        <Text size="sm" className="text-gray-500 dark:text-gray-300">
-          جارِ تحميل الملف الشخصي...
-        </Text>
+      <View className="flex-1 gap-3 bg-light-100 px-4 pt-4 dark:bg-dark-300">
+        <CardSkeleton height={180} margin={0} />
+        <CardSkeleton height={54} margin={0} />
+        <CardSkeleton height={220} margin={0} />
       </View>
     );
   }
@@ -179,10 +182,9 @@ export function ProfileScreen() {
         }
         ListEmptyComponent={
           isLoading ? (
-            <View className="items-center py-8">
-              <Text size="sm" className="text-gray-500 dark:text-gray-300">
-                جارِ تحميل منشوراتك...
-              </Text>
+            <View className="gap-3 py-3">
+              <CardSkeleton height={220} margin={0} />
+              <CardSkeleton height={220} margin={0} />
             </View>
           ) : isError ? (
             <View className="items-center gap-3 py-8">

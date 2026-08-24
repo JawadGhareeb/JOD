@@ -25,6 +25,8 @@ import {
 import type { ApiPostType, CreatePostType, MobileImageFile } from "@/src/features/posts/types";
 import { ApiClientError } from "@/src/lib/api-client";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
+import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
+import { useToast } from "@/src/providers/ToastProvider";
 import { MenuPageHeader } from "../settings/MenuPageHeader";
 
 const ImageIcon = ImagePlus;
@@ -53,6 +55,8 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const editMode = readParam(params.mode) === "edit";
   const editingPostId = readParam(params.postId);
   const router = useRouter();
+  const { requireAuth } = useAuthGuard();
+  const toast = useToast();
   const { onScroll } = useCollapsibleHeaderScreen();
 
   const [postType, setPostType] = useState<CreatePostType>("volunteer");
@@ -219,9 +223,9 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         setActivePostId(postId);
       }
       await uploadLocalImages(postId);
-      Alert.alert("تم حفظ المسودة", "تم حفظ بيانات المنشور والصور المرفوعة كمسودة.");
+      toast.success("تم حفظ بيانات المنشور والصور المرفوعة كمسودة.", "تم حفظ المسودة");
     } catch (error) {
-      Alert.alert("تعذر حفظ المسودة", error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE);
+      toast.error(error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE, "تعذر حفظ المسودة");
     } finally {
       setIsSavingDraft(false);
     }
@@ -242,11 +246,11 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
       await uploadLocalImages(postId);
       await submitMutation.mutateAsync(postId);
       setIsSubmitConfirmOpen(false);
-      Alert.alert("تم إرسال المنشور", "تم إرسال المنشور للمراجعة بنجاح.", [
-        { text: "حسنًا", onPress: () => editMode ? router.back() : router.replace("/(tabs)/profile") },
-      ]);
+      toast.success("تم إرسال المنشور للمراجعة، وسيظهر بعد موافقة الإدارة.", "تم إرسال المنشور");
+      if (editMode) router.back();
+      else router.replace("/(tabs)/profile");
     } catch (error) {
-      Alert.alert("تعذر إرسال المنشور", error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE);
+      toast.error(error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE, "تعذر إرسال المنشور");
     } finally {
       setIsPublishing(false);
     }
@@ -317,8 +321,8 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         </Card>
 
         <View className="mb-2 flex-row-reverse gap-2">
-          <View className="flex-1"><Button fullWidth size="small" disabled={!canPublish || isBusy} loading={isPublishing} onPress={() => setIsSubmitConfirmOpen(true)}>{editMode ? "حفظ وإعادة الإرسال" : "إرسال المنشور"}</Button></View>
-          <View className="flex-1"><Button fullWidth size="small" variant="tertiary" disabled={isBusy} loading={isSavingDraft} onPress={() => void handleSaveDraft()}>حفظ كمسودة</Button></View>
+          <View className="flex-1"><Button fullWidth size="small" disabled={!canPublish || isBusy} loading={isPublishing} onPress={() => { if (requireAuth()) setIsSubmitConfirmOpen(true); }}>{editMode ? "حفظ وإعادة الإرسال" : "إرسال المنشور"}</Button></View>
+          <View className="flex-1"><Button fullWidth size="small" variant="tertiary" disabled={isBusy} loading={isSavingDraft} onPress={() => { if (requireAuth()) void handleSaveDraft(); }}>حفظ كمسودة</Button></View>
         </View>
       </Animated.ScrollView>
 

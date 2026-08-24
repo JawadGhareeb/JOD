@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { Lock } from "lucide-react-native";
-import { Alert, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Input from "@/src/components/ui/Input";
 import Text from "@/src/components/ui/Text";
+import { useToast } from "@/src/providers/ToastProvider";
 import { useChangePassword } from "@/src/features/account/queries";
 import { ApiClientError } from "@/src/lib/api-client";
 import { MenuPageHeader } from "./MenuPageHeader";
@@ -14,6 +15,7 @@ const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة 
 
 export function ChangePasswordScreen() {
   const changePasswordMutation = useChangePassword();
+  const toast = useToast();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -40,14 +42,14 @@ export function ChangePasswordScreen() {
         password: newPassword,
         password_confirmation: confirmPassword,
       });
-      Alert.alert("تم تغيير كلمة المرور", "تم تحديث كلمة المرور بنجاح.");
+      toast.success("تم تحديث كلمة المرور بنجاح.", "تم تغيير كلمة المرور");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (error) {
       const message =
         error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
-      Alert.alert("تعذر تغيير كلمة المرور", message);
+      toast.error(message, "تعذر تغيير كلمة المرور");
     }
   };
 

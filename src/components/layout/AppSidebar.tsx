@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { LogIn } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Button from "@/src/components/ui/Button";
 import Dialog from "@/src/components/ui/Dialog";
+import { useAuthStatus, useLogout } from "@/src/features/auth/queries";
 import { applyColorScheme } from "@/src/lib/theme";
+import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
+import { useToast } from "@/src/providers/ToastProvider";
 import { appIcons } from "./iconMap";
 
 const CloseIcon = appIcons.close;
@@ -39,19 +43,24 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
+  const { isAuthenticated } = useAuthStatus();
+  const logoutMutation = useLogout();
+  const { requireAuth } = useAuthGuard();
+  const toast = useToast();
   const [shouldRender, setShouldRender] = useState(visible);
   const progress = useRef(new Animated.Value(visible ? 1 : 0)).current;
   const isDark = colorScheme === "dark";
   const themeMode = isDark ? "dark" : "light";
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
-  const panelClass = isDark
-    ? "border-dark-400 bg-dark-500"
-    : "border-gray-200 bg-white";
-  const menuItemClass = isDark
-    ? "bg-dark-350"
-    : "bg-white";
+  const panelClass = isDark ? "border-dark-400 bg-dark-500" : "border-gray-200 bg-white";
+  const menuItemClass = isDark ? "bg-dark-350" : "bg-white";
   const iconColor = isDark ? "#F9FAFB" : "#405d72";
   const textColorClass = isDark ? "text-light-50" : "text-dark-100";
+  const visibleMenuItems = isAuthenticated
+    ? menuItems
+    : menuItems.filter(
+        (item) => !["my-donations", "saved-posts", "account-settings"].includes(item.key),
+      );
 
   const closeSidebar = () => {
     setIsLogoutDialogOpen(false);
@@ -98,10 +107,7 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
 
   return (
     <View className="absolute inset-0 z-50">
-      <Animated.View
-        className="absolute inset-0 bg-black"
-        style={{ opacity: overlayOpacity }}
-      />
+      <Animated.View className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }} />
       <Pressable
         className="absolute inset-0"
         onPress={closeSidebar}
@@ -131,11 +137,12 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
           </View>
 
           <View className="mt-3 gap-2">
-            {menuItems.map((item) => (
+            {visibleMenuItems.map((item) => (
               <Pressable
                 key={item.key}
                 onPress={() => {
                   closeSidebar();
+                  if (item.key === "create-post" && !requireAuth()) return;
                   router.push(item.route);
                 }}
                 className={`flex-row-reverse items-center justify-start gap-2 rounded-xl px-3 py-3 ${menuItemClass}`}
@@ -185,20 +192,34 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
                 </Button>
               </View>
             </View>
-            <Button
-              fullWidth
-              variant="outline"
-              leftIcon={<LogoutIcon size={18} color={iconColor} strokeWidth={2.25} />}
-              onPress={() => setIsLogoutDialogOpen(true)}
-            >
-              تسجيل الخروج
-            </Button>
+
+            {isAuthenticated ? (
+              <Button
+                fullWidth
+                variant="outline"
+                leftIcon={<LogoutIcon size={18} color={iconColor} strokeWidth={2.25} />}
+                onPress={() => setIsLogoutDialogOpen(true)}
+              >
+                تسجيل الخروج
+              </Button>
+            ) : (
+              <Button
+                fullWidth
+                leftIcon={<LogIn size={18} color="#FFFFFF" strokeWidth={2.25} />}
+                onPress={() => {
+                  closeSidebar();
+                  router.push("/(auth)/login");
+                }}
+              >
+                تسجيل الدخول
+              </Button>
+            )}
           </View>
         </View>
       </Animated.View>
 
       <Dialog
-        visible={isLogoutDialogOpen}
+        visible={isAuthenticated && isLogoutDialogOpen}
         title="تأكيد تسجيل الخروج"
         message="هل أنت متأكد أنك تريد تسجيل الخروج؟"
         icon={<LogoutIcon size={26} color="#DC2626" strokeWidth={2.25} />}
@@ -212,7 +233,13 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
           {
             text: "تسجيل الخروج",
             variant: "primary",
-            onPress: closeSidebar,
+            onPress: async () => {
+              setIsLogoutDialogOpen(false);
+              await logoutMutation.mutateAsync();
+              closeSidebar();
+              toast.info("يمكنك الاستمرار في تصفح جود كزائر.", "تم تسجيل الخروج");
+              router.replace("/(tabs)/home");
+            },
           },
         ]}
       />

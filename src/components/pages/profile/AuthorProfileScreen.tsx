@@ -5,6 +5,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
+import { HomePostCardSkeleton } from "@/src/components/pages/home/HomePostCardSkeleton";
+import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import { usePublisher, usePublisherPosts } from "@/src/features/posts/queries";
@@ -38,10 +40,10 @@ export function AuthorProfileScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-light-100 px-4 dark:bg-dark-300">
-        <Text size="sm" className="text-gray-500 dark:text-gray-300">
-          جارِ تحميل ملف الناشر...
-        </Text>
+      <View className="flex-1 gap-3 bg-light-100 px-4 pt-4 dark:bg-dark-300">
+        <CardSkeleton height={170} margin={0} />
+        <HomePostCardSkeleton />
+        <HomePostCardSkeleton />
       </View>
     );
   }
@@ -127,7 +129,7 @@ export function AuthorProfileScreen() {
 
           <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
             <View className="flex-row-reverse items-start gap-3">
-              <Avatar name={author.name} size={56} />
+              <Avatar name={author.name} imageUrl={author.avatarUrl} size={56} />
 
               <View className="flex-1">
                 <View className="flex-row-reverse items-center gap-1">

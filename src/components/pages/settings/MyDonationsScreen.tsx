@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import { ActivityIndicator, FlatList, View } from "react-native";
+import { FlatList, View } from "react-native";
 import Card from "@/src/components/ui/Card";
+import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Text from "@/src/components/ui/Text";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { useDonations } from "@/src/features/donations/queries";
@@ -37,8 +38,8 @@ export function MyDonationsScreen() {
             <View className="mt-3 flex-row-reverse items-center justify-between"><Text size="sm" weight="semibold" className="text-primary-400">{formatAmount(item.amount)}</Text><Text size="2xs" className="text-gray-500 dark:text-gray-300">{item.paymentMethod || "طريقة غير محددة"}</Text></View>
           </Card>
         )}
-        ListEmptyComponent={query.isLoading ? <View className="items-center py-8"><ActivityIndicator /></View> : <View className="items-center py-8"><Text size="sm" className="text-gray-500 dark:text-gray-300">لا توجد مساهمات مسجلة حالياً.</Text></View>}
-        ListFooterComponent={query.isFetchingNextPage ? <ActivityIndicator style={{ marginVertical: 12 }} /> : null}
+        ListEmptyComponent={query.isLoading ? <View className="gap-3 py-2">{[0, 1, 2].map((item) => <CardSkeleton key={item} height={120} margin={0} />)}</View> : <View className="items-center py-8"><Text size="sm" className="text-gray-500 dark:text-gray-300">لا توجد مساهمات مسجلة حالياً.</Text></View>}
+        ListFooterComponent={query.isFetchingNextPage ? <CardSkeleton height={96} margin={0} /> : null}
       />
     </View>
   );

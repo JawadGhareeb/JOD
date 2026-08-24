@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { FileText, Mail, MapPin, Phone } from "lucide-react-native";
-import { Alert, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Input from "@/src/components/ui/Input";
 import Text from "@/src/components/ui/Text";
+import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
+import { useToast } from "@/src/providers/ToastProvider";
 import { useAuthStatus } from "@/src/features/auth/queries";
 import { useUpdateProfile } from "@/src/features/account/queries";
 import { ApiClientError } from "@/src/lib/api-client";
@@ -15,7 +17,8 @@ const UserIcon = appIcons.profile;
 const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
 export function EditInformationScreen() {
-  const { user } = useAuthStatus();
+  const { user, isLoading } = useAuthStatus();
+  const toast = useToast();
   const updateProfileMutation = useUpdateProfile();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -48,13 +51,22 @@ export function EditInformationScreen() {
         city: city.trim() || null,
         bio: bio.trim() || null,
       });
-      Alert.alert("تم حفظ المعلومات", "تم تحديث بيانات الحساب بنجاح.");
+      toast.success("تم تحديث بيانات الحساب بنجاح.", "تم حفظ المعلومات");
     } catch (error) {
       const message =
         error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
-      Alert.alert("تعذر حفظ المعلومات", message);
+      toast.error(message, "تعذر حفظ المعلومات");
     }
   };
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
+        <MenuPageHeader title="تعديل المعلومات الشخصية" />
+        <CardSkeleton height={360} margin={0} />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">

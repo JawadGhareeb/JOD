@@ -4,6 +4,7 @@ import { Image, View } from "react-native";
 import { mainImage } from "@/src/constants/images";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
+import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Container from "@/src/components/ui/Container";
 import { EmptyState } from "@/src/components/ui/EmptyState";
 import Logo from "@/src/components/ui/Logo";
@@ -12,9 +13,11 @@ import { Avatar } from "@/src/components/shared/Avatar";
 import { getPostActionLabel, getPostDisplayTitle, openPostContact } from "@/src/features/posts/contact";
 import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
 import { useCampaign, usePost } from "@/src/features/posts/queries";
+import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 
 export default function PostDetailsPage() {
   const router = useRouter();
+  const { requireAuth } = useAuthGuard();
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
   const postId = Array.isArray(id) ? id[0] : id;
 
@@ -25,11 +28,13 @@ export default function PostDetailsPage() {
     if (!post) return;
 
     if (post.cta.type === "donate") {
+      if (!requireAuth()) return;
       router.push({ pathname: "/donate/[id]", params: { id: post.id } });
       return;
     }
 
     if (post.cta.type === "apply") {
+      if (!requireAuth()) return;
       router.push({ pathname: "/apply/[id]", params: { id: post.id } });
       return;
     }
@@ -42,10 +47,9 @@ export default function PostDetailsPage() {
   if (isLoading) {
     return (
       <Container className="bg-light-100 px-4 pt-4 dark:bg-dark-300">
-        <View className="items-center py-8">
-          <Text size="sm" className="text-gray-500 dark:text-gray-300">
-            جارِ تحميل تفاصيل المنشور...
-          </Text>
+        <View className="gap-3">
+          <CardSkeleton height={190} margin={0} />
+          <CardSkeleton height={260} margin={0} />
         </View>
       </Container>
     );
@@ -123,7 +127,7 @@ export default function PostDetailsPage() {
               ) : null}
             </View>
           </View>
-          <Avatar name={post.publisher.name} size={48} />
+          <Avatar name={post.publisher.name} imageUrl={post.publisher.avatarUrl} size={48} />
         </View>
 
         <View className="flex-row-reverse items-center justify-between">

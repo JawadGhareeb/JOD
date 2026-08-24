@@ -14,6 +14,7 @@ import Input from "@/src/components/ui/Input";
 import KeyboardAvoider from "@/src/components/ui/KeyboardAvoider";
 import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
+import { useToast } from "@/src/providers/ToastProvider";
 
 const loginSchema = z.object({
   email: z
@@ -39,6 +40,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthStatus();
   const loginMutation = useLogin();
+  const toast = useToast();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [formError, setFormError] = useState("");
 
@@ -56,7 +58,7 @@ export default function LoginScreen() {
     if (!isLoading && isAuthenticated) {
       router.replace("/(tabs)/home");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, toast]);
 
   const onSubmit = handleSubmit(async (values) => {
     setFormError("");
@@ -67,10 +69,14 @@ export default function LoginScreen() {
         password: values.password,
       });
 
+      toast.success("أهلاً بعودتك إلى جود.", "تم تسجيل الدخول");
       router.replace("/(tabs)/home");
     } catch (error) {
       const message = applyApiFormErrors(error, setError);
-      if (message) setFormError(message);
+      if (message) {
+        setFormError(message);
+        toast.error(message, "تعذر تسجيل الدخول");
+      }
     }
   });
 

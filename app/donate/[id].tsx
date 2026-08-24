@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { HeartHandshake } from "lucide-react-native";
 import { useState } from "react";
-import { Alert, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
@@ -9,6 +9,8 @@ import Input from "@/src/components/ui/Input";
 import KeyboardAvoider from "@/src/components/ui/KeyboardAvoider";
 import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
+import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
+import { useToast } from "@/src/providers/ToastProvider";
 import { useDonateToCampaign } from "@/src/features/donations/queries";
 import type { PaymentMethod } from "@/src/features/donations/types";
 import { useCampaign } from "@/src/features/posts/queries";
@@ -24,6 +26,8 @@ const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
 
 export default function DonatePage() {
   const router = useRouter();
+  const { requireAuth } = useAuthGuard();
+  const toast = useToast();
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
   const campaignId = Array.isArray(id) ? id[0] : id;
   const campaignQuery = useCampaign(campaignId);
@@ -38,12 +42,14 @@ export default function DonatePage() {
   const validAmount = Number.isFinite(amountNumber) && amountNumber >= 0.01 && amountNumber <= 999999999.99;
 
   const submit = async () => {
+    if (!requireAuth()) return;
     if (!campaignId || !validAmount) return;
     try {
       await donateMutation.mutateAsync({ campaignId, input: { amount: amountNumber, paymentMethod, phone: phone.trim() || null, city: city.trim() || null } });
-      Alert.alert("تم تسجيل المساهمة", "تم تسجيل مساهمتك في جود. هذه العملية لا تمثل خصماً فعلياً من وسيلة الدفع.", [{ text: "حسنًا", onPress: () => router.back() }]);
+      toast.success("تم تسجيل مساهمتك في جود. هذه العملية لا تمثل خصماً فعلياً من وسيلة الدفع.", "تم تسجيل المساهمة");
+      router.back();
     } catch (error) {
-      Alert.alert("تعذر تسجيل المساهمة", error instanceof ApiClientError ? error.message : "حدث خطأ غير متوقع.");
+      toast.error(error instanceof ApiClientError ? error.message : "حدث خطأ غير متوقع.", "تعذر تسجيل المساهمة");
     }
   };
 

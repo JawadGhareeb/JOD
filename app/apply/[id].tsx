@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { BriefcaseBusiness } from "lucide-react-native";
 import { useState } from "react";
-import { Alert, View } from "react-native";
+import { View } from "react-native";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
@@ -9,6 +9,8 @@ import Input from "@/src/components/ui/Input";
 import KeyboardAvoider from "@/src/components/ui/KeyboardAvoider";
 import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
+import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
+import { useToast } from "@/src/providers/ToastProvider";
 import { useApplyToCampaign } from "@/src/features/applications/queries";
 import { useCampaign } from "@/src/features/posts/queries";
 import { useAuthStatus } from "@/src/features/auth/queries";
@@ -16,6 +18,8 @@ import { ApiClientError } from "@/src/lib/api-client";
 
 export default function ApplyPage() {
   const router = useRouter();
+  const { requireAuth } = useAuthGuard();
+  const toast = useToast();
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
   const campaignId = Array.isArray(id) ? id[0] : id;
   const campaignQuery = useCampaign(campaignId);
@@ -26,12 +30,14 @@ export default function ApplyPage() {
   const campaign = campaignQuery.data;
 
   const submit = async () => {
+    if (!requireAuth()) return;
     if (!campaignId) return;
     try {
       await applyMutation.mutateAsync({ campaignId, input: { phone: phone.trim() || null, city: city.trim() || null } });
-      Alert.alert("تم إرسال الطلب", "تم تسجيل طلبك على الحملة بنجاح.", [{ text: "حسنًا", onPress: () => router.back() }]);
+      toast.success("تم تسجيل طلبك على الحملة بنجاح.", "تم إرسال الطلب");
+      router.back();
     } catch (error) {
-      Alert.alert("تعذر إرسال الطلب", error instanceof ApiClientError ? error.message : "حدث خطأ غير متوقع.");
+      toast.error(error instanceof ApiClientError ? error.message : "حدث خطأ غير متوقع.", "تعذر إرسال الطلب");
     }
   };
 
