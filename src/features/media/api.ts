@@ -1,6 +1,15 @@
 import { apiClient } from "@/src/lib/api-client";
+import { buildQuery } from "@/src/lib/build-query";
 import { getApiRootUrl } from "@/src/lib/env";
-import type { MediaItem, MediaModel, MediaProp, MediaUploadFile } from "./types";
+import type { ApiEnvelope, PaginationMeta } from "@/src/types/api";
+import type {
+  MediaItem,
+  MediaModel,
+  MediaProp,
+  MediaUploadFile,
+  PublicMediaItem,
+  PublicMediaParams,
+} from "./types";
 
 type MediaResponse = { data: MediaItem };
 
@@ -14,6 +23,28 @@ const toFormData = (file: MediaUploadFile) => {
 };
 
 export const mediaApi = {
+  listPublic: async (params: PublicMediaParams = {}) => {
+    const response = await apiClient.get<ApiEnvelope<PublicMediaItem[], PaginationMeta>>(
+      `/discovery/media${buildQuery(params)}`,
+    );
+    return { items: response.data.data, meta: response.data.meta };
+  },
+
+  getPublic: async (id: string) => {
+    const response = await apiClient.get<ApiEnvelope<PublicMediaItem>>(`/discovery/media/${id}`);
+    return response.data.data;
+  },
+
+  listOrganizationVideos: async (
+    organizationId: string,
+    params: Omit<PublicMediaParams, "search"> = {},
+  ) => {
+    const response = await apiClient.get<ApiEnvelope<PublicMediaItem[], PaginationMeta>>(
+      `/discovery/organizations/${organizationId}/videos${buildQuery(params)}`,
+    );
+    return { items: response.data.data, meta: response.data.meta };
+  },
+
   upload: async (model: MediaModel, modelId: string, prop: MediaProp, file: MediaUploadFile) => {
     const response = await apiClient.post<MediaResponse>(target(model, modelId, prop), toFormData(file));
     return response.data.data;

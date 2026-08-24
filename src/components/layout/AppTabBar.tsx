@@ -7,7 +7,7 @@ import { resetHeader } from "@/src/providers/CollapsibleHeaderProvider";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { appIcons } from "./iconMap";
 
-type TabKey = "home" | "blogs" | "create-post" | "profile" | "settings";
+type TabKey = "home" | "reels" | "create-post" | "profile" | "settings";
 
 const tabConfig: Record<
   TabKey,
@@ -17,7 +17,7 @@ const tabConfig: Record<
   }
 > = {
   home: { label: "الرئيسية", Icon: appIcons.home },
-  blogs: { label: "المدونات", Icon: appIcons.blogs },
+  reels: { label: "ريلز", Icon: appIcons.reels },
   "create-post": { label: "نشر بوست", Icon: appIcons.createPost },
   profile: { label: "الملف الشخصي", Icon: appIcons.profile },
   settings: { label: "الإعدادات", Icon: appIcons.settings },

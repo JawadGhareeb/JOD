@@ -3,7 +3,7 @@ import { postsApi } from "./api";
 import { postKeys } from "./query-keys";
 import { authKeys } from "@/src/features/auth/query-keys";
 import { mediaApi } from "@/src/features/media/api";
-import type { CreatePostInput, GetDiscoveryPostsParams, GetMyPostsParams, MobileImageFile, UpdatePostInput } from "./types";
+import type { CreatePostInput, GetDiscoveryCampaignsParams, GetDiscoveryPostsParams, GetMyPostsParams, MobileImageFile, UpdatePostInput } from "./types";
 
 const invalidatePostLifecycle = (qc: ReturnType<typeof useQueryClient>, postId?: string) => {
   qc.invalidateQueries({ queryKey: postKeys.mineLists() });
@@ -21,6 +21,7 @@ export function usePostsByOrganization(organizationId?: string) { return useQuer
 export function usePublisher(id?: string) { return useQuery({ queryKey: postKeys.publisher(id), queryFn: () => postsApi.getPublisher(id!), enabled: Boolean(id) }); }
 export function usePublisherPosts(id?: string, filters: Omit<GetDiscoveryPostsParams, "page"> = {}) { return useInfiniteQuery({ queryKey: postKeys.publisherPosts(id, filters), queryFn: ({ pageParam }) => postsApi.getPublisherPosts(id!, { ...filters, page: pageParam, perPage: filters.perPage ?? 20 }), initialPageParam: 1, enabled: Boolean(id), getNextPageParam: (last) => last.meta.currentPage < last.meta.lastPage ? last.meta.currentPage + 1 : undefined }); }
 export function usePost(id?: string) { return useQuery({ queryKey: postKeys.detail(id), queryFn: () => postsApi.getPost(id!), enabled: Boolean(id) }); }
+export function useCampaigns(filters: Omit<GetDiscoveryCampaignsParams, "page"> = {}, enabled = true) { return useInfiniteQuery({ queryKey: postKeys.campaignList(filters), queryFn: ({ pageParam }) => postsApi.getCampaigns({ ...filters, page: pageParam, perPage: filters.perPage ?? 20 }), initialPageParam: 1, enabled, getNextPageParam: (last) => last.meta.currentPage < last.meta.lastPage ? last.meta.currentPage + 1 : undefined }); }
 export function useCampaign(id?: string | null) { return useQuery({ queryKey: postKeys.campaign(id), queryFn: () => postsApi.getCampaign(id!), enabled: Boolean(id) }); }
 export function useCategories(params = {}) { return useQuery({ queryKey: postKeys.categories(params), queryFn: () => postsApi.getCategories({ perPage: 100, ...(params as object) }) }); }
 export function useMyPosts(options?: { enabled?: boolean; params?: GetMyPostsParams }) { const params = options?.params ?? { perPage: 100 }; return useQuery({ queryKey: postKeys.mine(params), queryFn: () => postsApi.getMyPosts(params), enabled: options?.enabled ?? true }); }

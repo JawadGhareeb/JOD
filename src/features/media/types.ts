@@ -20,3 +20,24 @@ export interface MediaItem {
   createdAt: string | null;
   updatedAt: string | null;
 }
+
+export interface PublicMediaItem {
+  id: string;
+  model: "organization";
+  modelId: string;
+  prop: "videos";
+  url: string;
+  originalName: string;
+  description: string | null;
+  mimeType: string | null;
+  size: number;
+  position: number;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface PublicMediaParams {
+  page?: number;
+  perPage?: number;
+  search?: string;
+}

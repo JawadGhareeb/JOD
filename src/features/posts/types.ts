@@ -6,6 +6,7 @@ export type HomePostType = HomePostTypeEnum;
 
 export interface Publisher {
   id: string;
+  publisherType?: "organization" | "user";
   name: string;
   username: string;
   avatarUrl?: string | null;

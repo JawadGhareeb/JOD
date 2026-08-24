@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { FlatList, Pressable, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
@@ -8,26 +8,64 @@ import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
 import { HomePostCardSkeleton } from "@/src/components/pages/home/HomePostCardSkeleton";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Card from "@/src/components/ui/Card";
+import Tabs from "@/src/components/ui/Tabs";
 import Text from "@/src/components/ui/Text";
-import { usePublisher, usePublisherPosts } from "@/src/features/posts/queries";
+import { useOrganizationVideos } from "@/src/features/media/queries";
+import type { PublicMediaItem } from "@/src/features/media/types";
+import { useCampaigns, usePublisher, usePublisherPosts } from "@/src/features/posts/queries";
+import type { Campaign, HomePost } from "@/src/features/posts/types";
+import { OrganizationCampaignCard } from "./OrganizationCampaignCard";
+import { OrganizationVideoCard } from "./OrganizationVideoCard";
 
 const BackIcon = appIcons.chevronRight;
+
+type OrganizationProfileTab = "posts" | "campaigns" | "videos";
+type ProfileListItem =
+  | { kind: "post"; value: HomePost }
+  | { kind: "campaign"; value: Campaign }
+  | { kind: "video"; value: PublicMediaItem };
+
+const ORGANIZATION_TABS = [
+  { id: "posts", label: "المنشورات" },
+  { id: "campaigns", label: "الحملات" },
+  { id: "videos", label: "الفيديوهات" },
+];
 
 export function AuthorProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
-
   const authorId = Array.isArray(id) ? id[0] : id;
+  const [activeTab, setActiveTab] = useState<OrganizationProfileTab>("posts");
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
 
   const publisherQuery = usePublisher(authorId);
+  const author = publisherQuery.data;
+  const isOrganization = author?.publisherType === "organization";
+
   const postsQuery = usePublisherPosts(authorId, { perPage: 20 });
+  const campaignsQuery = useCampaigns(
+    { organizationId: authorId, perPage: 20 },
+    Boolean(authorId) && isOrganization && activeTab === "campaigns",
+  );
+  const videosQuery = useOrganizationVideos(
+    authorId,
+    { perPage: 20 },
+    Boolean(authorId) && isOrganization && activeTab === "videos",
+  );
+
   const posts = useMemo(
     () => postsQuery.data?.pages.flatMap((page) => page.items) ?? [],
     [postsQuery.data],
   );
-  const author = publisherQuery.data;
-  const isLoading = publisherQuery.isLoading || postsQuery.isLoading;
+  const campaigns = useMemo(
+    () => campaignsQuery.data?.pages.flatMap((page) => page.items) ?? [],
+    [campaignsQuery.data],
+  );
+  const videos = useMemo(
+    () => videosQuery.data?.pages.flatMap((page) => page.items) ?? [],
+    [videosQuery.data],
+  );
 
   const totalLikes = useMemo(
     () => posts.reduce((sum, post) => sum + post.stats.likes, 0),
@@ -37,6 +75,62 @@ export function AuthorProfileScreen() {
     () => posts.reduce((sum, post) => sum + post.stats.shares, 0),
     [posts],
   );
+
+  const listItems = useMemo<ProfileListItem[]>(() => {
+    if (!isOrganization || activeTab === "posts") {
+      return posts.map((value) => ({ kind: "post" as const, value }));
+    }
+    if (activeTab === "campaigns") {
+      return campaigns.map((value) => ({ kind: "campaign" as const, value }));
+    }
+    return videos.map((value) => ({ kind: "video" as const, value }));
+  }, [activeTab, campaigns, isOrganization, posts, videos]);
+
+  const tabIsLoading = !isOrganization || activeTab === "posts"
+    ? postsQuery.isLoading
+    : activeTab === "campaigns"
+      ? campaignsQuery.isLoading
+      : videosQuery.isLoading;
+  const tabIsError = !isOrganization || activeTab === "posts"
+    ? postsQuery.isError
+    : activeTab === "campaigns"
+      ? campaignsQuery.isError
+      : videosQuery.isError;
+  const tabIsRefetching = !isOrganization || activeTab === "posts"
+    ? postsQuery.isRefetching
+    : activeTab === "campaigns"
+      ? campaignsQuery.isRefetching
+      : videosQuery.isRefetching;
+  const tabIsFetchingNext = !isOrganization || activeTab === "posts"
+    ? postsQuery.isFetchingNextPage
+    : activeTab === "campaigns"
+      ? campaignsQuery.isFetchingNextPage
+      : videosQuery.isFetchingNextPage;
+
+  const fetchNextActiveTab = () => {
+    if (!isOrganization || activeTab === "posts") {
+      if (postsQuery.hasNextPage && !postsQuery.isFetchingNextPage) void postsQuery.fetchNextPage();
+      return;
+    }
+    if (activeTab === "campaigns") {
+      if (campaignsQuery.hasNextPage && !campaignsQuery.isFetchingNextPage) void campaignsQuery.fetchNextPage();
+      return;
+    }
+    if (videosQuery.hasNextPage && !videosQuery.isFetchingNextPage) void videosQuery.fetchNextPage();
+  };
+
+  const refreshActiveTab = () => {
+    void publisherQuery.refetch();
+    if (!isOrganization || activeTab === "posts") {
+      void postsQuery.refetch();
+    } else if (activeTab === "campaigns") {
+      void campaignsQuery.refetch();
+    } else {
+      void videosQuery.refetch();
+    }
+  };
+
+  const isLoading = publisherQuery.isLoading || postsQuery.isLoading;
 
   if (isLoading) {
     return (
@@ -63,11 +157,9 @@ export function AuthorProfileScreen() {
           >
             <BackIcon size={20} color="#405d72" strokeWidth={2.25} />
           </Pressable>
-
           <Text weight="semibold" size="lg" className="text-dark-100 dark:text-light-50">
             ملف الناشر
           </Text>
-
           <View className="h-10 w-10" />
         </View>
 
@@ -97,14 +189,24 @@ export function AuthorProfileScreen() {
     <FlatList
       className="flex-1 bg-light-100 px-4 dark:bg-dark-300"
       contentContainerStyle={{ paddingBottom: 24 }}
-      data={posts}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <HomePostCard post={item} />}
+      data={listItems}
+      keyExtractor={(item) => `${item.kind}-${item.value.id}`}
+      renderItem={({ item }) => {
+        if (item.kind === "post") return <HomePostCard post={item.value} />;
+        if (item.kind === "campaign") return <OrganizationCampaignCard campaign={item.value} />;
+        return (
+          <OrganizationVideoCard
+            video={item.value}
+            active={activeVideoId === item.value.id}
+            onPlay={() => setActiveVideoId(item.value.id)}
+          />
+        );
+      }}
       showsVerticalScrollIndicator={false}
-      onEndReached={() => { if (postsQuery.hasNextPage && !postsQuery.isFetchingNextPage) void postsQuery.fetchNextPage(); }}
+      onEndReached={fetchNextActiveTab}
       onEndReachedThreshold={0.4}
-      refreshing={publisherQuery.isRefetching || postsQuery.isRefetching}
-      onRefresh={() => { void publisherQuery.refetch(); void postsQuery.refetch(); }}
+      refreshing={publisherQuery.isRefetching || tabIsRefetching}
+      onRefresh={refreshActiveTab}
       ListHeaderComponent={
         <View>
           <View
@@ -119,35 +221,27 @@ export function AuthorProfileScreen() {
             >
               <BackIcon size={20} color="#405d72" strokeWidth={2.25} />
             </Pressable>
-
             <Text weight="semibold" size="lg" className="text-dark-100 dark:text-light-50">
-              ملف الناشر
+              {isOrganization ? "ملف المنظمة" : "ملف الناشر"}
             </Text>
-
             <View className="h-10 w-10" />
           </View>
 
           <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
             <View className="flex-row-reverse items-start gap-3">
               <Avatar name={author.name} imageUrl={author.avatarUrl} size={56} />
-
               <View className="flex-1">
                 <View className="flex-row-reverse items-center gap-1">
                   <Text weight="semibold" size="base" className="text-dark-100 dark:text-light-50">
                     {author.name}
                   </Text>
                   {author.verified ? (
-                    <Text size="2xs" className="text-primary-400">
-                      موثق
-                    </Text>
+                    <Text size="2xs" className="text-primary-400">موثق</Text>
                   ) : null}
                 </View>
-
                 <Text size="xs" className="mt-1 text-gray-500 dark:text-gray-300">
-                  @{author.username}
-                  {author.city ? ` • ${author.city}` : ""}
+                  @{author.username}{author.city ? ` • ${author.city}` : ""}
                 </Text>
-
                 <Text size="xs" className="mt-2 leading-6 text-gray-600 dark:text-gray-200">
                   {author.bio || "ينشر هذا الحساب محتوى إنساني وتحديثات عن الحملات المجتمعية."}
                 </Text>
@@ -156,43 +250,68 @@ export function AuthorProfileScreen() {
 
             <View className="mt-4 flex-row-reverse justify-between gap-2 border-t border-gray-100 pt-3 dark:border-dark-400">
               <View className="flex-1 items-center rounded-xl bg-primary-100/70 py-2 dark:bg-dark-350">
-                <Text weight="semibold" size="sm" className="text-primary-400">
-                  {posts.length}
-                </Text>
-                <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-                  المنشورات
-                </Text>
+                <Text weight="semibold" size="sm" className="text-primary-400">{posts.length}</Text>
+                <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">المنشورات</Text>
               </View>
               <View className="flex-1 items-center rounded-xl bg-primary-100/70 py-2 dark:bg-dark-350">
-                <Text weight="semibold" size="sm" className="text-primary-400">
-                  {totalLikes}
-                </Text>
-                <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-                  الإعجابات
-                </Text>
+                <Text weight="semibold" size="sm" className="text-primary-400">{totalLikes}</Text>
+                <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">الإعجابات</Text>
               </View>
               <View className="flex-1 items-center rounded-xl bg-primary-100/70 py-2 dark:bg-dark-350">
-                <Text weight="semibold" size="sm" className="text-primary-400">
-                  {totalShares}
-                </Text>
-                <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-                  المشاركات
-                </Text>
+                <Text weight="semibold" size="sm" className="text-primary-400">{totalShares}</Text>
+                <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">المشاركات</Text>
               </View>
             </View>
           </Card>
 
-          <Text weight="semibold" size="sm" className="mb-3 text-dark-100 dark:text-light-50">
-            منشورات الناشر
-          </Text>
+          {isOrganization ? (
+            <View className="mb-3">
+              <Tabs
+                tabs={ORGANIZATION_TABS}
+                activeTab={activeTab}
+                onTabChange={(tabId) => {
+                  setActiveVideoId(null);
+                  setActiveTab(tabId as OrganizationProfileTab);
+                }}
+              />
+            </View>
+          ) : (
+            <Text weight="semibold" size="sm" className="mb-3 text-dark-100 dark:text-light-50">
+              منشورات الناشر
+            </Text>
+          )}
         </View>
       }
       ListEmptyComponent={
-        <View className="items-center py-8">
-          <Text size="sm" className="text-gray-500 dark:text-gray-300">
-            لا توجد منشورات لهذا الناشر حالياً.
-          </Text>
-        </View>
+        tabIsLoading ? (
+          <View className="gap-3 pb-6">
+            <CardSkeleton height={180} margin={0} />
+            <CardSkeleton height={180} margin={0} />
+          </View>
+        ) : tabIsError ? (
+          <View className="items-center py-8">
+            <Text size="sm" rtlAlign="center" className="text-gray-500 dark:text-gray-300">
+              تعذر تحميل هذا القسم حالياً. حاول مرة أخرى.
+            </Text>
+          </View>
+        ) : (
+          <View className="items-center py-8">
+            <Text size="sm" rtlAlign="center" className="text-gray-500 dark:text-gray-300">
+              {!isOrganization || activeTab === "posts"
+                ? "لا توجد منشورات لهذا الناشر حالياً."
+                : activeTab === "campaigns"
+                  ? "لا توجد حملات لهذه المنظمة حالياً."
+                  : "لا توجد فيديوهات لهذه المنظمة حالياً."}
+            </Text>
+          </View>
+        )
+      }
+      ListFooterComponent={
+        tabIsFetchingNext ? (
+          <View className="items-center py-4">
+            <ActivityIndicator color="#405d72" />
+          </View>
+        ) : null
       }
     />
   );
