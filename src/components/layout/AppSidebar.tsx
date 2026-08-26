@@ -179,7 +179,7 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
       >
         <View className="flex-1">
           <View className="flex-row-reverse items-center justify-between pb-4">
-            <Text className={`font-noto-semibold text-lg ${textColorClass}`}>
+            <Text className={`font-noto-semibold text-base ${textColorClass}`}>
               القائمة
             </Text>
             <Pressable
@@ -206,7 +206,7 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
                 accessibilityLabel={item.label}
               >
                 <item.Icon size={18} color={iconColor} strokeWidth={2.25} />
-                <Text className={`font-noto-medium text-sm ${textColorClass}`}>
+                <Text className={`font-noto-medium text-xs ${textColorClass}`}>
                   {item.label}
                 </Text>
               </Pressable>
