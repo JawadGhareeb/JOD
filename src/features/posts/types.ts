@@ -4,6 +4,19 @@ export type CreatePostType = "volunteer" | "donation" | "help";
 export type ApiPostType = "volunteer_opportunity" | "donation_campaign" | "help_request";
 export type HomePostType = HomePostTypeEnum;
 
+// Classifies *who the content is for* (general vs. student) — independent of
+// Category, which classifies *what kind of need* it is. A post can be
+// audience=student + category=health, audience=student + category=shelter,
+// etc. Never treat "student" as a category.
+export type ContentAudience = "general" | "student";
+export const CONTENT_AUDIENCE_OPTIONS: { value: ContentAudience; label: string }[] = [
+  { value: "general", label: "عام" },
+  { value: "student", label: "طلاب" },
+];
+export function audienceLabel(value: ContentAudience | undefined | null): string {
+  return value === "student" ? "طلاب" : "عام";
+}
+
 export interface Publisher {
   id: string;
   publisherType?: "organization" | "user";
@@ -52,20 +65,21 @@ export interface HomePost {
   myOffer?: ActiveHelpOfferSummary | null;
   phoneNumber?: string;
   whatsappNumber?: string;
+  audience?: ContentAudience;
 }
 export type HomeFeedPayload = { posts: HomePost[] };
 
 export interface GetDiscoveryPostsParams {
   page?: number; perPage?: number; search?: string; status?: "published";
   actionState?: "open" | "submitted" | "closed"; type?: string; location?: string;
-  categoryId?: string; category?: string; organizationId?: string;
+  categoryId?: string; category?: string; organizationId?: string; audience?: ContentAudience;
   sort?: "title" | "-title" | "updatedAt" | "-updatedAt" | "newest" | "oldest" | "most_engaged";
   sortBy?: "title_asc" | "title_desc" | "updated_oldest" | "newest" | "oldest" | "most_engaged";
 }
 
 export interface GetDiscoveryCampaignsParams {
   page?: number; perPage?: number; search?: string; status?: "active"; category?: string;
-  location?: string; organizationId?: string;
+  location?: string; organizationId?: string; audience?: ContentAudience;
   sort?: "updatedAt" | "-updatedAt" | "newest" | "oldest" | "progress" | "-progress";
   sortBy?: "updated_oldest" | "newest" | "oldest" | "progress_highest" | "progress_lowest";
 }
@@ -81,15 +95,18 @@ export interface Campaign {
   startDate: string | null; endDate: string | null; submittedAt: string | null; createdAt: string | null; updatedAt: string | null;
   closedAt: string | null; closedReason: string | null; reviewedBy?: string | null; rejectionReason: string | null;
   organizationName: string | null; managerName: string | null; phoneNumber?: string; whatsappNumber?: string;
+  audience?: ContentAudience;
 }
 
 export interface Category { id: string; name: string; target: "post" | "campaign"; description: string | null; usageCount: number; status: string; createdAt: string | null; updatedAt: string | null }
 
 export interface CreatePostInput {
   type: ApiPostType; title?: string | null; details?: string | null; city?: string | null; categoryId?: string | null; saveAsDraft?: boolean;
+  audience?: ContentAudience;
 }
 export interface UpdatePostInput {
   type?: ApiPostType; title?: string | null; details?: string | null; city?: string | null; categoryId?: string | null;
+  audience?: ContentAudience;
 }
 export type PostInput = CreatePostInput;
 
@@ -100,6 +117,7 @@ export interface MyPost {
   images: string[]; imageMedia: PostImageMedia[]; viewsCount: number; reactionsCount: number; commentsCount: number; sharesCount: number;
   stats: { likes: number; comments: number; shares: number }; status: MyPostStatus; rejectionReason: string | null;
   submittedAt: string | null; reviewedAt: string | null; createdAt: string | null; updatedAt: string | null; publishedAt: string | null;
+  audience?: ContentAudience;
 }
 export interface GetMyPostsParams { page?: number; perPage?: number; status?: MyPostStatus; sort?: "createdAt" | "-createdAt" | "updatedAt" | "-updatedAt" | "title" | "-title" }
 

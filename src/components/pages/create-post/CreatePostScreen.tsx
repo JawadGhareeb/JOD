@@ -22,7 +22,8 @@ import {
   useUpdatePost,
   useUploadPostImage,
 } from "@/src/features/posts/queries";
-import type { ApiPostType, CreatePostType, MobileImageFile } from "@/src/features/posts/types";
+import { CONTENT_AUDIENCE_OPTIONS } from "@/src/features/posts/types";
+import type { ApiPostType, ContentAudience, CreatePostType, MobileImageFile } from "@/src/features/posts/types";
 import { ApiClientError } from "@/src/lib/api-client";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
@@ -64,6 +65,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const [details, setDetails] = useState("");
   const [city, setCity] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [audience, setAudience] = useState<ContentAudience>("general");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [activePostId, setActivePostId] = useState(editingPostId);
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
@@ -91,6 +93,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     setDetails(post.details ?? "");
     setCity(post.city ?? "");
     setCategoryId(post.categoryId ?? "");
+    setAudience(post.audience ?? "general");
     setSelectedImages(post.images ?? []);
     setActivePostId(post.id);
     setInitializedPostId(post.id);
@@ -123,6 +126,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     details: details.trim() || null,
     city: city.trim() || null,
     categoryId: categoryId || null,
+    audience,
     saveAsDraft,
   });
   const buildUpdateInput = () => ({
@@ -131,6 +135,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     details: details.trim() || null,
     city: city.trim() || null,
     categoryId: categoryId || null,
+    audience,
   });
 
   const uploadLocalImages = async (postId: string) => {
@@ -284,6 +289,27 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
             </View>
           ) : <Text size="xs" className="text-gray-500 dark:text-gray-300">جارِ تحميل أنواع المنشورات...</Text>}
           {typeHint ? <Text size="2xs" className="mt-3 text-gray-500 dark:text-gray-300">{typeHint}</Text> : null}
+        </Card>
+
+        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+          <Text weight="semibold" size="sm" className="mb-3 text-dark-100 dark:text-light-50">الجمهور المستهدف</Text>
+          <View className="flex-row-reverse gap-2">
+            {CONTENT_AUDIENCE_OPTIONS.map((option) => {
+              const active = option.value === audience;
+              return (
+                <Pressable
+                  key={option.value}
+                  onPress={() => setAudience(option.value)}
+                  className={`flex-1 items-center rounded-xl border px-2 py-3 ${active ? "border-primary-400 bg-primary-400/10" : "border-gray-200 bg-white dark:border-dark-400 dark:bg-dark-500"}`}
+                >
+                  <Text size="2xs" weight="medium" className={active ? "text-primary-400" : "text-dark-100 dark:text-light-50"}>{option.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text size="2xs" className="mt-3 text-gray-500 dark:text-gray-300">
+            اختر "طلاب" إذا كان هذا المنشور موجهاً لدعم الطلاب تحديداً — سيظهر في قسم دعم الطلاب بالإضافة إلى الرئيسية.
+          </Text>
         </Card>
 
         <Card padding="md" className="mb-3 gap-3 border-gray-200 dark:border-dark-400">
