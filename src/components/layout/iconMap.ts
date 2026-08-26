@@ -42,6 +42,11 @@ export const appIcons = {
   play: Play,
   createPost: Plus,
   myDonations: Heart,
+  // Distinct from `help` (CircleHelp, used for the generic help-center "?"
+  // icon) — CircleHelp's "?" mark sits inside the filled circle, so it
+  // disappears when solid-filled for an active nav tab. Heart is a single
+  // closed path, already used with `fill` on the post-card like button.
+  helpOffers: Heart,
   savedPosts: Bookmark,
   comments: MessageCircle,
   shares: Share2,
