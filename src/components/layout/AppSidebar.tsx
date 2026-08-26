@@ -16,6 +16,7 @@ import { appIcons } from "./iconMap";
 const CloseIcon = appIcons.close;
 const CreatePostIcon = appIcons.createPost;
 const DonationsIcon = appIcons.myDonations;
+const ApplicationsIcon = appIcons.campaign;
 const SavedPostsIcon = appIcons.savedPosts;
 const SettingsIcon = appIcons.settings;
 const HelpIcon = appIcons.help;
@@ -48,6 +49,12 @@ const menuItems = [
     label: "تبرعاتي",
     route: "/my-donations",
     Icon: DonationsIcon,
+  },
+  {
+    key: "my-applications",
+    label: "طلباتي على الحملات",
+    route: "/my-applications",
+    Icon: ApplicationsIcon,
   },
   {
     key: "saved-posts",
@@ -103,6 +110,7 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
           ![
             "help-offers",
             "my-donations",
+            "my-applications",
             "saved-posts",
             "account-settings",
           ].includes(item.key),

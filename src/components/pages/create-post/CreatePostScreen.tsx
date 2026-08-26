@@ -1,6 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ImagePlus, MapPin, X } from "lucide-react-native";
+import { ChevronLeft, ChevronRight, ImagePlus, MapPin, X } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Animated, Image, Pressable, View } from "react-native";
@@ -19,6 +19,7 @@ import {
   useCreatePost,
   useDeletePostImage,
   useMyPost,
+  useReorderPostImages,
   useSubmitPost,
   useUpdatePost,
   useUploadPostImage,
@@ -87,6 +88,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const updateMutation = useUpdatePost();
   const submitMutation = useSubmitPost();
   const uploadImageMutation = useUploadPostImage();
+  const reorderImageMutation = useReorderPostImages();
   const deleteImageMutation = useDeletePostImage();
 
   useEffect(() => {
@@ -121,7 +123,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const typeHint = postTypeOptions.find((item) => item.key === postType)?.hint;
   const selectedCategoryLabel = categoryOptions.find((item) => item.value === categoryId)?.label ?? "";
   const canPublish = title.trim().length >= 4 && details.trim().length >= 10 && city.trim().length >= 2;
-  const isBusy = isSavingDraft || isPublishing || uploadImageMutation.isPending || deleteImageMutation.isPending;
+  const isBusy = isSavingDraft || isPublishing || uploadImageMutation.isPending || reorderImageMutation.isPending || deleteImageMutation.isPending;
   const pageTitle = editMode ? "تعديل المنشور" : "إنشاء منشور";
 
   const buildCreateInput = (saveAsDraft: boolean) => ({
@@ -142,18 +144,43 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     audience,
   });
 
-  const uploadLocalImages = async (postId: string) => {
-    const local = selectedImages.filter((uri) => !isRemoteImage(uri));
-    if (local.length === 0) return false;
+  const syncPostImages = async (postId: string) => {
+    const desiredUris = [...selectedImages];
+    const existingMedia = myPostQuery.data?.id === postId ? myPostQuery.data.imageMedia : [];
+    const existingIds = new Set(existingMedia.map((item) => item.id));
+    const localUris = desiredUris.filter((uri) => !isRemoteImage(uri));
+    let updated = myPostQuery.data?.id === postId ? myPostQuery.data : undefined;
 
-    const updated = await uploadImageMutation.mutateAsync({
-      postId,
-      images: local.map(toUploadFile),
+    if (localUris.length > 0) {
+      updated = await uploadImageMutation.mutateAsync({ postId, images: localUris.map(toUploadFile) });
+    } else if (!updated) {
+      const refreshed = await myPostQuery.refetch();
+      updated = refreshed.data;
+    }
+
+    if (!updated) return;
+    const newMedia = updated.imageMedia.filter((item) => !existingIds.has(item.id)).sort((a, b) => a.position - b.position);
+    const idByUri = new Map<string, string>();
+    updated.imageMedia.forEach((item) => idByUri.set(item.url, item.id));
+    localUris.forEach((uri, index) => { const media = newMedia[index]; if (media) idByUri.set(uri, media.id); });
+    const orderedIds = desiredUris.map((uri) => idByUri.get(uri)).filter((id): id is string => Boolean(id));
+
+    if (orderedIds.length === updated.imageMedia.length && orderedIds.length > 1) {
+      const reordered = await reorderImageMutation.mutateAsync({ postId, imageIds: orderedIds });
+      setSelectedImages(reordered.images);
+    } else {
+      setSelectedImages(updated.images);
+    }
+  };
+
+  const moveImage = (from: number, to: number) => {
+    if (to < 0 || to >= selectedImages.length || from === to) return;
+    setSelectedImages((current) => {
+      const next = [...current];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
     });
-    setSelectedImages(updated.images);
-
-
-    return true;
   };
 
   const handlePickImages = async () => {
@@ -228,7 +255,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         postId = created.id;
         setActivePostId(postId);
       }
-      await uploadLocalImages(postId);
+      await syncPostImages(postId);
       toast.success("تم حفظ بيانات المنشور والصور المرفوعة كمسودة.", "تم حفظ المسودة");
     } catch (error) {
       toast.error(error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE, "تعذر حفظ المسودة");
@@ -249,7 +276,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         postId = created.id;
         setActivePostId(postId);
       }
-      await uploadLocalImages(postId);
+      await syncPostImages(postId);
       await submitMutation.mutateAsync(postId);
       setIsSubmitConfirmOpen(false);
       toast.success("تم إرسال المنشور للمراجعة، وسيظهر بعد موافقة الإدارة.", "تم إرسال المنشور");
@@ -344,6 +371,11 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
               <View key={`${uri}-${index}`} style={{ width: "48%" }} className="h-24 overflow-hidden rounded-xl bg-gray-200 dark:bg-dark-350">
                 <Image source={{ uri }} className="h-full w-full" resizeMode="cover" />
                 <Pressable disabled={isBusy} onPress={() => void handleRemoveImage(uri)} className="absolute left-2 top-2 h-7 w-7 items-center justify-center rounded-full bg-gray-900/70"><X size={14} color="#FFFFFF" strokeWidth={2.5} /></Pressable>
+                <View className="absolute bottom-2 left-2 right-2 flex-row items-center justify-between">
+                  <Pressable disabled={isBusy || index === 0} onPress={() => moveImage(index, index - 1)} className="h-7 w-7 items-center justify-center rounded-full bg-gray-900/70 disabled:opacity-30" accessibilityLabel="تحريك الصورة للأمام"><ChevronRight size={14} color="#FFFFFF" strokeWidth={2.5} /></Pressable>
+                  <Text size="2xs" className="rounded-full bg-gray-900/70 px-2 py-1 text-white">{index + 1}</Text>
+                  <Pressable disabled={isBusy || index === selectedImages.length - 1} onPress={() => moveImage(index, index + 1)} className="h-7 w-7 items-center justify-center rounded-full bg-gray-900/70 disabled:opacity-30" accessibilityLabel="تحريك الصورة للخلف"><ChevronLeft size={14} color="#FFFFFF" strokeWidth={2.5} /></Pressable>
+                </View>
               </View>
             ))}
             {selectedImages.length < MAX_POST_IMAGES ? (

@@ -1,4 +1,5 @@
 export { MyDonationsScreen } from "./MyDonationsScreen";
+export { MyApplicationsScreen } from "./MyApplicationsScreen";
 export { SavedPostsScreen } from "./SavedPostsScreen";
 export { AccountSettingsScreen } from "./AccountSettingsScreen";
 export { EditInformationScreen } from "./EditInformationScreen";

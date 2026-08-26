@@ -40,6 +40,9 @@ export function normalizeJodReferencePath(
   const campaign = idRoute(path, /^\/campaigns\/([^/]+)$/, "/campaigns/[id]");
   if (campaign) return campaign;
 
+  const application = idRoute(path, /^\/(?:applications|me\/applications)\/([^/]+)$/, "/applications/[id]");
+  if (application) return application;
+
   const donation =
     idRoute(path, /^\/donations\/([^/]+)$/, "/donations/[id]") ??
     idRoute(path, /^\/me\/donations\/([^/]+)$/, "/donations/[id]");
@@ -52,6 +55,7 @@ export function normalizeJodReferencePath(
 
   if (path === "/help-offers") return "/help-offers" as Href;
   if (path === "/my-donations" || path === "/me/donations") return "/my-donations";
+  if (path === "/my-applications" || path === "/applications" || path === "/me/applications") return "/my-applications";
   if (path === "/notifications" || path === "/me/notifications") return "/notifications";
 
   return null;
@@ -79,6 +83,11 @@ export function notificationTargetFromPayload(
   );
   if (offerId) {
     return { pathname: "/help-offers/[id]", params: { id: offerId } };
+  }
+
+  const applicationId = readString(payload, "applicationId", "application_id", "applicantId", "applicant_id");
+  if (applicationId) {
+    return { pathname: "/applications/[id]", params: { id: applicationId } };
   }
 
   const donationId = readString(payload, "donationId", "donation_id");
