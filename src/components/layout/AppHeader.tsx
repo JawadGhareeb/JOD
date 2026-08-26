@@ -1,19 +1,19 @@
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, usePathname, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useCallback, useMemo, useState } from "react";
 import { Animated, Pressable, View, type LayoutChangeEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Avatar } from "@/src/components/shared/Avatar";
 import Text from "@/src/components/ui/Text";
 import { useAuthStatus } from "@/src/features/auth/queries";
-import { useUnreadNotificationCount } from "@/src/features/notifications/queries";
 import { useRTL } from "@/src/providers/RTLProvider";
 import { headerScrollY } from "@/src/providers/CollapsibleHeaderProvider";
+import { AppSidebar } from "./AppSidebar";
+import { AppTopNav, getActiveTabTitle } from "./AppTopNav";
 import { appIcons } from "./iconMap";
 
-const NotificationIcon = appIcons.notification;
 const SearchIcon = appIcons.search;
-const UserIcon = appIcons.profile;
+const MenuIcon = appIcons.menu;
+const MoreIcon = appIcons.more;
 const MIN_HEADER_CONTENT_HEIGHT = 64;
 
 type AppHeaderProps = {
@@ -22,12 +22,13 @@ type AppHeaderProps = {
 
 export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { isRTL } = useRTL();
   const { colorScheme } = useColorScheme();
-  const { isAuthenticated, isLoading, user, refreshAuthStatus } = useAuthStatus();
-  const { data: unreadNotificationCount = 0 } = useUnreadNotificationCount(isAuthenticated);
+  const { refreshAuthStatus } = useAuthStatus();
   const [contentHeight, setContentHeight] = useState(MIN_HEADER_CONTENT_HEIGHT);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isDark = colorScheme === "dark";
   const actionBgClass = isDark ? "bg-dark-350" : "bg-primary-100";
   const iconColor = isDark ? "#F9FAFB" : "#405d72";
@@ -35,9 +36,9 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   // changes — drive the surface color via style so light/dark always sync.
   const surfaceColor = isDark ? "#1f222b" : "#FFFFFF";
   const rowClassName = isRTL ? "flex-row-reverse" : "flex-row";
-  const justifyClassName = isRTL ? "items-end" : "items-start";
 
-  const displayName = useMemo(() => user?.name?.trim() ?? "", [user?.name]);
+  const activeTabTitle = useMemo(() => getActiveTabTitle(pathname), [pathname]);
+  const isReelsTab = pathname === "/reels" || pathname.startsWith("/reels/");
 
   const topInsetHeight = includeTopInset ? insets.top : 0;
   const resolvedContentHeight = Math.max(contentHeight, MIN_HEADER_CONTENT_HEIGHT);
@@ -61,15 +62,6 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
     }, [refreshAuthStatus]),
   );
 
-  const handleUserPress = () => {
-    if (isAuthenticated) {
-      router.push("/(tabs)/profile");
-      return;
-    }
-
-    router.push("/(auth)/login");
-  };
-
   const handleHeaderLayout = (event: LayoutChangeEvent) => {
     const measuredHeight = Math.ceil(event.nativeEvent.layout.height);
     if (measuredHeight > 0 && measuredHeight !== contentHeight) {
@@ -78,6 +70,7 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   };
 
   return (
+    <>
     <Animated.View
       style={{
         height: wrapperHeight,
@@ -98,53 +91,30 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
         {topInsetHeight > 0 ? (
           <View style={{ height: topInsetHeight, backgroundColor: surfaceColor }} />
         ) : null}
-        <View onLayout={handleHeaderLayout} className="px-5 py-3">
+        <View onLayout={handleHeaderLayout}>
+        <View className="px-4 py-3">
           <View className={`${rowClassName} items-center justify-between`}>
-            <View className={`w-[124px] min-h-[40px] ${justifyClassName} justify-center`}>
+            <View className={`${rowClassName} min-w-0 flex-1 items-center gap-2`}>
               <Pressable
-                onPress={handleUserPress}
-                disabled={isLoading}
-                className={`${rowClassName} max-w-full items-center gap-2 rounded-xl px-2 py-1 ${
-                  isLoading ? "opacity-60" : "opacity-100"
-                }`}
+                onPress={() => setIsSidebarOpen(true)}
+                className={`h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
                 accessibilityRole="button"
-                accessibilityLabel={isAuthenticated ? "الملف الشخصي" : "تسجيل الدخول"}
+                accessibilityLabel="القائمة"
               >
-                {isAuthenticated && displayName ? (
-                  <>
-                    <Avatar name={displayName} size={34} />
-                    <Text
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                      size="xs"
-                      weight="semibold"
-                      className="max-w-[78px] text-dark-100 dark:text-light-50"
-                    >
-                      {displayName}
-                    </Text>
-                  </>
-                ) : (
-                  <View className="rounded-xl bg-primary-400 px-3 py-2">
-                    <Text size="xs" weight="semibold" className="text-light-50">
-                      Log in
-                    </Text>
-                  </View>
-                )}
-                {isAuthenticated && !displayName ? (
-                  <View className="h-9 w-9 items-center justify-center rounded-full bg-primary-100 dark:bg-dark-350">
-                    <UserIcon size={18} color={iconColor} strokeWidth={2.25} />
-                  </View>
-                ) : null}
+                <MenuIcon size={20} color={iconColor} strokeWidth={2.25} />
               </Pressable>
-            </View>
-
-            <View className="flex-1 items-center px-3">
-              <Text size="lg" weight="semibold" className="text-dark-100 dark:text-light-50">
-                جود
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                size="base"
+                weight="bold"
+                className="shrink text-dark-100 dark:text-light-50"
+              >
+                {activeTabTitle ?? "جود"}
               </Text>
             </View>
 
-            <View className={`w-[124px] ${rowClassName} items-center justify-end gap-2`}>
+            <View className={`${rowClassName} items-center gap-2`}>
               <Pressable
                 onPress={() => router.push("/search")}
                 className={`h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
@@ -153,25 +123,26 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
               >
                 <SearchIcon size={20} color={iconColor} strokeWidth={2.25} />
               </Pressable>
-              <Pressable
-                onPress={() => router.push(isAuthenticated ? "/notifications" : "/(auth)/login")}
-                className={`relative h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
-                accessibilityRole="button"
-                accessibilityLabel={unreadNotificationCount > 0 ? `الإشعارات، ${unreadNotificationCount} غير مقروءة` : "الإشعارات"}
-              >
-                <NotificationIcon size={20} color={iconColor} strokeWidth={2.25} />
-                {isAuthenticated && unreadNotificationCount > 0 ? (
-                  <View className="absolute -right-1 -top-1 min-w-5 items-center justify-center rounded-full bg-error-300 px-1 py-0.5">
-                    <Text size="2xs" weight="semibold" className="text-light-50">
-                      {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
-                    </Text>
-                  </View>
-                ) : null}
-              </Pressable>
+              {isReelsTab ? (
+                <Pressable
+                  onPress={() => setIsSidebarOpen(true)}
+                  className={`h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
+                  accessibilityRole="button"
+                  accessibilityLabel="خيارات إضافية"
+                >
+                  <MoreIcon size={20} color={iconColor} strokeWidth={2.25} />
+                </Pressable>
+              ) : null}
             </View>
           </View>
         </View>
+
+        <AppTopNav />
+        </View>
       </Animated.View>
     </Animated.View>
+
+    <AppSidebar visible={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+    </>
   );
 }

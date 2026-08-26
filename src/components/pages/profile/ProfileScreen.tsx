@@ -120,7 +120,7 @@ export function ProfileScreen() {
     <View className="flex-1 bg-light-100 dark:bg-dark-300">
       <Animated.FlatList
         className="flex-1 px-4 dark:bg-dark-300"
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
         data={filteredPosts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (

@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Pressable, Text, View } from "react-native";
-import { useRouter } from "expo-router";
-import { LogIn } from "lucide-react-native";
-import { useColorScheme } from "nativewind";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Button from "@/src/components/ui/Button";
 import Dialog from "@/src/components/ui/Dialog";
 import { useAuthStatus, useLogout } from "@/src/features/auth/queries";
 import { applyColorScheme } from "@/src/lib/theme";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
+import { useRouter } from "expo-router";
+import { LogIn } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Easing, Pressable, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appIcons } from "./iconMap";
 
 const CloseIcon = appIcons.close;
@@ -30,13 +30,48 @@ type AppSidebarProps = {
 };
 
 const menuItems = [
-  { key: "create-post", label: "نشر بوست", route: "/create-post", Icon: CreatePostIcon },
-  { key: "help-offers", label: "عروض المساعدة", route: "/help-offers", Icon: HelpIcon },
-  { key: "my-donations", label: "تبرعاتي", route: "/my-donations", Icon: DonationsIcon },
-  { key: "saved-posts", label: "بوستات محفوظة", route: "/saved-posts", Icon: SavedPostsIcon },
-  { key: "account-settings", label: "إعدادات الحساب", route: "/account-settings", Icon: SettingsIcon },
-  { key: "help-center", label: "مركز المساعدة", route: "/help-center", Icon: HelpIcon },
-  { key: "terms-privacy", label: "الشروط والخصوصية", route: "/terms-privacy", Icon: ShieldIcon },
+  {
+    key: "create-post",
+    label: "نشر بوست",
+    route: "/create-post",
+    Icon: CreatePostIcon,
+  },
+  {
+    key: "help-offers",
+    label: "عروض المساعدة",
+    route: "/help-offers",
+    Icon: HelpIcon,
+  },
+  {
+    key: "my-donations",
+    label: "تبرعاتي",
+    route: "/my-donations",
+    Icon: DonationsIcon,
+  },
+  {
+    key: "saved-posts",
+    label: "بوستات محفوظة",
+    route: "/saved-posts",
+    Icon: SavedPostsIcon,
+  },
+  {
+    key: "account-settings",
+    label: "إعدادات الحساب",
+    route: "/account-settings",
+    Icon: SettingsIcon,
+  },
+  {
+    key: "help-center",
+    label: "مركز المساعدة",
+    route: "/help-center",
+    Icon: HelpIcon,
+  },
+  {
+    key: "terms-privacy",
+    label: "الشروط والخصوصية",
+    route: "/terms-privacy",
+    Icon: ShieldIcon,
+  },
   { key: "about", label: "من نحن", route: "/about", Icon: AboutIcon },
 ] as const;
 
@@ -53,14 +88,23 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
   const isDark = colorScheme === "dark";
   const themeMode = isDark ? "dark" : "light";
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
-  const panelClass = isDark ? "border-dark-400 bg-dark-500" : "border-gray-200 bg-white";
-  const menuItemClass = isDark ? "bg-dark-350" : "bg-white";
+  const panelClass = isDark
+    ? "border-dark-400 bg-dark-500"
+    : "border-gray-200 bg-white";
+  const menuItemClass = isDark ? "bg-dark-350" : "bg-light-300";
+  const actionBgClass = isDark ? "bg-dark-350" : "bg-primary-100";
   const iconColor = isDark ? "#F9FAFB" : "#405d72";
   const textColorClass = isDark ? "text-light-50" : "text-dark-100";
   const visibleMenuItems = isAuthenticated
     ? menuItems
     : menuItems.filter(
-        (item) => !["help-offers", "my-donations", "saved-posts", "account-settings"].includes(item.key),
+        (item) =>
+          ![
+            "help-offers",
+            "my-donations",
+            "saved-posts",
+            "account-settings",
+          ].includes(item.key),
       );
 
   const closeSidebar = () => {
@@ -99,7 +143,7 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
 
   const overlayOpacity = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 0.25],
+    outputRange: [0, 0.55],
   });
   const panelTranslateX = progress.interpolate({
     inputRange: [0, 1],
@@ -108,7 +152,10 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
 
   return (
     <View className="absolute inset-0 z-50">
-      <Animated.View className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }} />
+      <Animated.View
+        className="absolute inset-0 bg-black"
+        style={{ opacity: overlayOpacity }}
+      />
       <Pressable
         className="absolute inset-0"
         onPress={closeSidebar}
@@ -121,19 +168,26 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
           paddingTop: Math.max(insets.top, 12),
           paddingBottom: Math.max(insets.bottom, 12),
           transform: [{ translateX: panelTranslateX }],
+          shadowColor: "#000000",
+          shadowOffset: { width: -4, height: 0 },
+          shadowOpacity: 0.2,
+          shadowRadius: 16,
+          elevation: 16,
         }}
         className={`absolute right-0 top-0 h-full w-[78%] max-w-[320px] border-l px-4 ${panelClass}`}
       >
         <View className="flex-1">
           <View className="flex-row-reverse items-center justify-between pb-4">
-            <Text className={`font-noto-semibold text-lg ${textColorClass}`}>القائمة</Text>
+            <Text className={`font-noto-semibold text-lg ${textColorClass}`}>
+              القائمة
+            </Text>
             <Pressable
               onPress={closeSidebar}
-              className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100"
+              className={`h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
               accessibilityRole="button"
               accessibilityLabel="إغلاق"
             >
-              <CloseIcon size={20} color="#405d72" strokeWidth={2.25} />
+              <CloseIcon size={20} color={iconColor} strokeWidth={2.25} />
             </Pressable>
           </View>
 
@@ -151,7 +205,9 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
                 accessibilityLabel={item.label}
               >
                 <item.Icon size={18} color={iconColor} strokeWidth={2.25} />
-                <Text className={`font-noto-medium text-sm ${textColorClass}`}>{item.label}</Text>
+                <Text className={`font-noto-medium text-sm ${textColorClass}`}>
+                  {item.label}
+                </Text>
               </Pressable>
             ))}
           </View>
@@ -198,7 +254,9 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
               <Button
                 fullWidth
                 variant="outline"
-                leftIcon={<LogoutIcon size={18} color={iconColor} strokeWidth={2.25} />}
+                leftIcon={
+                  <LogoutIcon size={18} color={iconColor} strokeWidth={2.25} />
+                }
                 onPress={() => setIsLogoutDialogOpen(true)}
               >
                 تسجيل الخروج
@@ -206,7 +264,9 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
             ) : (
               <Button
                 fullWidth
-                leftIcon={<LogIn size={18} color="#FFFFFF" strokeWidth={2.25} />}
+                leftIcon={
+                  <LogIn size={18} color="#FFFFFF" strokeWidth={2.25} />
+                }
                 onPress={() => {
                   closeSidebar();
                   router.push("/(auth)/login");
@@ -238,7 +298,10 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
               setIsLogoutDialogOpen(false);
               await logoutMutation.mutateAsync();
               closeSidebar();
-              toast.info("يمكنك الاستمرار في تصفح جود كزائر.", "تم تسجيل الخروج");
+              toast.info(
+                "يمكنك الاستمرار في تصفح جود كزائر.",
+                "تم تسجيل الخروج",
+              );
               router.replace("/(tabs)/home");
             },
           },

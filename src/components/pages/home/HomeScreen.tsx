@@ -8,6 +8,7 @@ import { usePostsFeed } from "@/src/features/posts/queries";
 import type { HomePost } from "@/src/features/posts/types";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import { HomeBlogsSection } from "./HomeBlogsSection";
+import { HomeComposerBar } from "./HomeComposerBar";
 import { HomePostCard } from "./HomePostCard";
 import { HomePostCardSkeleton } from "./HomePostCardSkeleton";
 import { HomeReelsSection } from "./HomeReelsSection";
@@ -132,7 +133,7 @@ export function HomeScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
+      <View className="flex-1 bg-light-100 px-4 pt-4 dark:bg-dark-300">
         <HomePostCardSkeleton />
         <HomePostCardSkeleton />
         <HomePostCardSkeleton />
@@ -194,7 +195,8 @@ export function HomeScreen() {
             tintColor="#405d72"
           />
         }
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+        ListHeaderComponent={<HomeComposerBar />}
         ListEmptyComponent={
           <View className="items-center py-8">
             <Text size="sm" className="text-gray-500 dark:text-gray-300">

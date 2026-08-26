@@ -1,5 +1,5 @@
 import { NotificationsScreen } from "@/src/components/pages/notifications";
 
-export default function NotificationsPage() {
+export default function NotificationsTabPage() {
   return <NotificationsScreen />;
 }
