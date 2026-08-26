@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import {
   Image,
   Modal,
@@ -31,6 +32,7 @@ import type { CreatePostType, HomePost } from "@/src/features/posts/types";
 import { useRTL } from "@/src/providers/RTLProvider";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
+import { getPrimaryColor } from "@/src/theme";
 import type { ProfilePostStatus } from "@/src/types/profile";
 
 type HomePostCardMode = "default" | "own" | "saved";
@@ -100,6 +102,8 @@ export function HomePostCard({
 }: HomePostCardProps) {
   const router = useRouter();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
   const { isRTL } = useRTL();
   const { requireAuth } = useAuthGuard();
   const toast = useToast();
@@ -537,7 +541,7 @@ export function HomePostCard({
           >
             <MoreIcon
               size={18}
-              color={isOptionsOpen ? "#405d72" : "#9CA3AF"}
+              color={isOptionsOpen ? primaryColor : "#9CA3AF"}
               strokeWidth={2.25}
             />
           </Pressable>
@@ -569,7 +573,7 @@ export function HomePostCard({
                         <Text size="xs" className="text-dark-100 dark:text-light-50">
                           تعديل المنشور
                         </Text>
-                        <Pencil size={15} color="#405d72" strokeWidth={2.25} />
+                        <Pencil size={15} color={primaryColor} strokeWidth={2.25} />
                       </Pressable>
                     ) : null}
 
@@ -583,7 +587,7 @@ export function HomePostCard({
                         <Text size="xs" className="text-dark-100 dark:text-light-50">
                           أرشفة المنشور
                         </Text>
-                        <Archive size={15} color="#405d72" strokeWidth={2.25} />
+                        <Archive size={15} color={primaryColor} strokeWidth={2.25} />
                       </Pressable>
                     ) : null}
 
@@ -614,8 +618,8 @@ export function HomePostCard({
                       </Text>
                       <BookmarkIcon
                         size={15}
-                        color={isSaved ? "#405d72" : "#9CA3AF"}
-                        fill={isSaved ? "#405d72" : "transparent"}
+                        color={isSaved ? primaryColor : "#9CA3AF"}
+                        fill={isSaved ? primaryColor : "transparent"}
                         strokeWidth={2.25}
                       />
                     </Pressable>
@@ -676,9 +680,9 @@ export function HomePostCard({
           pendingOwnPostAction === "delete" ? (
             <Trash2 size={28} color="#DC2626" strokeWidth={2.25} />
           ) : pendingOwnPostAction === "archive" ? (
-            <Archive size={28} color="#405d72" strokeWidth={2.25} />
+            <Archive size={28} color={primaryColor} strokeWidth={2.25} />
           ) : (
-            <Pencil size={28} color="#405d72" strokeWidth={2.25} />
+            <Pencil size={28} color={primaryColor} strokeWidth={2.25} />
           )
         }
         onClose={() => setPendingOwnPostAction(null)}

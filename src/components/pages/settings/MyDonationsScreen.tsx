@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useColorScheme } from "nativewind";
 import { FlatList, Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import Card from "@/src/components/ui/Card";
@@ -8,6 +9,7 @@ import { appIcons } from "@/src/components/layout/iconMap";
 import { useDonations } from "@/src/features/donations/queries";
 import type { DonationStatus } from "@/src/features/donations/types";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
+import { getPrimaryColor } from "@/src/theme";
 import { MenuPageHeader } from "./MenuPageHeader";
 
 const HeartIcon = appIcons.myDonations;
@@ -31,6 +33,8 @@ const filters: { value: "all" | DonationStatus; label: string }[] = [
 
 export function MyDonationsScreen() {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
   const [status, setStatus] = useState<"all" | DonationStatus>("all");
   const query = useDonations({ status: status === "all" ? undefined : status });
   const donations = useMemo(
@@ -55,7 +59,7 @@ export function MyDonationsScreen() {
             </Text>
           </View>
           <View className="h-12 w-12 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350">
-            <HeartIcon size={20} color="#405d72" strokeWidth={2.25} />
+            <HeartIcon size={20} color={primaryColor} strokeWidth={2.25} />
           </View>
         </View>
       </Card>

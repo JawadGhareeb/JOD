@@ -4,6 +4,7 @@ import { useAuthStatus, useLogout } from "@/src/features/auth/queries";
 import { applyColorScheme } from "@/src/lib/theme";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
+import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
 import { useRouter } from "expo-router";
 import { LogIn } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
@@ -93,7 +94,7 @@ export function AppSidebar({ visible, onClose }: AppSidebarProps) {
     : "border-gray-200 bg-white";
   const menuItemClass = isDark ? "bg-dark-350" : "bg-light-300";
   const actionBgClass = isDark ? "bg-dark-350" : "bg-primary-100";
-  const iconColor = isDark ? "#F9FAFB" : "#405d72";
+  const iconColor = isDark ? "#F9FAFB" : PRIMARY_COLOR_LIGHT;
   const textColorClass = isDark ? "text-light-50" : "text-dark-100";
   const visibleMenuItems = isAuthenticated
     ? menuItems

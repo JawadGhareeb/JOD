@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appIcons } from "@/src/components/layout/iconMap";
@@ -13,6 +14,7 @@ import Input from "@/src/components/ui/Input";
 import Text from "@/src/components/ui/Text";
 import { useGlobalSearch } from "@/src/features/search/queries";
 import type { GlobalSearchType, SearchAccount } from "@/src/features/search/types";
+import { getPrimaryColor } from "@/src/theme";
 
 const BackIcon = appIcons.chevronRight;
 const SearchIcon = appIcons.search;
@@ -55,6 +57,8 @@ function OrganizationCard({ account, onPress }: { account: SearchAccount; onPres
 export function SearchScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [type, setType] = useState<GlobalSearchType>("all");
@@ -102,7 +106,7 @@ export function SearchScreen() {
           accessibilityRole="button"
           accessibilityLabel="رجوع"
         >
-          <BackIcon size={20} color="#405d72" strokeWidth={2.25} />
+          <BackIcon size={20} color={primaryColor} strokeWidth={2.25} />
         </Pressable>
         <Text weight="semibold" size="lg" className="text-dark-100 dark:text-light-50">
           البحث
@@ -113,7 +117,7 @@ export function SearchScreen() {
       <Input
         fullWidth
         showStatusIcon={false}
-        rightIcon={<SearchIcon size={18} color="#405d72" />}
+        rightIcon={<SearchIcon size={18} color={primaryColor} />}
         value={search}
         onChangeText={setSearch}
         placeholder="ابحث عن حساب أو منشور أو حملة"

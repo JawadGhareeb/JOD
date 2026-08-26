@@ -1,16 +1,20 @@
 import { useRouter } from "expo-router";
 import { ImagePlus } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { useAuthStatus } from "@/src/features/auth/queries";
+import { getPrimaryColor } from "@/src/theme";
 
 // Facebook-style composer prompt — tapping it (or the image icon) just opens
 // the full create-post screen, same as tapping FB's own composer bar does.
 export function HomeComposerBar() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStatus();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
 
   if (!isAuthenticated) return null;
 
@@ -36,7 +40,7 @@ export function HomeComposerBar() {
           accessibilityRole="button"
           accessibilityLabel="إضافة صورة للمنشور"
         >
-          <ImagePlus size={20} color="#405d72" strokeWidth={2.25} />
+          <ImagePlus size={20} color={primaryColor} strokeWidth={2.25} />
         </Pressable>
       </View>
     </Card>

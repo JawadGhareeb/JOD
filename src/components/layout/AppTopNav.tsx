@@ -5,6 +5,7 @@ import Text from "@/src/components/ui/Text";
 import { useUnreadNotificationCount } from "@/src/features/notifications/queries";
 import { useAuthStatus } from "@/src/features/auth/queries";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
+import { getPrimaryColor } from "@/src/theme";
 import { appIcons } from "./iconMap";
 
 type TopNavKey = "home" | "reels" | "notifications" | "profile" | "help-offers";
@@ -39,7 +40,7 @@ export function AppTopNav() {
   const { requireAuth } = useAuthGuard();
   const { data: unreadNotificationCount = 0 } = useUnreadNotificationCount(isAuthenticated);
   const isDark = colorScheme === "dark";
-  const activeColor = "#405d72";
+  const activeColor = getPrimaryColor(isDark);
   const inactiveColor = isDark ? "#9CA3AF" : "#9CA3AF";
 
   return (

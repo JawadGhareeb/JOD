@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
@@ -6,6 +7,7 @@ import { appIcons } from "@/src/components/layout/iconMap";
 import { notificationTarget } from "@/src/features/notifications/navigation";
 import type { MobileNotification } from "@/src/features/notifications/types";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
+import { getPrimaryColor } from "@/src/theme";
 
 type Props = {
   item: MobileNotification;
@@ -14,6 +16,8 @@ type Props = {
 
 export function NotificationItemCard({ item, onPress }: Props) {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
   const Icon =
     item.category === "campaign"
       ? appIcons.campaign
@@ -46,7 +50,7 @@ export function NotificationItemCard({ item, onPress }: Props) {
     >
       <View className="flex-row-reverse items-start gap-3">
         <View className="mt-1 h-10 w-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350">
-          <Icon size={18} color="#405d72" strokeWidth={2.25} />
+          <Icon size={18} color={primaryColor} strokeWidth={2.25} />
         </View>
         <View className="flex-1">
           <View className="flex-row-reverse items-start justify-between gap-2">

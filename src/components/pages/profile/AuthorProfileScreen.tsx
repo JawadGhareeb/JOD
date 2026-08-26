@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appIcons } from "@/src/components/layout/iconMap";
@@ -14,6 +15,7 @@ import { useOrganizationVideos } from "@/src/features/media/queries";
 import type { PublicMediaItem } from "@/src/features/media/types";
 import { useCampaigns, usePublisher, usePublisherPosts } from "@/src/features/posts/queries";
 import type { Campaign, HomePost } from "@/src/features/posts/types";
+import { getPrimaryColor } from "@/src/theme";
 import { OrganizationCampaignCard } from "./OrganizationCampaignCard";
 import { OrganizationVideoCard } from "./OrganizationVideoCard";
 
@@ -36,6 +38,8 @@ export function AuthorProfileScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
   const authorId = Array.isArray(id) ? id[0] : id;
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
   const [activeTab, setActiveTab] = useState<OrganizationProfileTab>("posts");
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
 
@@ -155,7 +159,7 @@ export function AuthorProfileScreen() {
             accessibilityRole="button"
             accessibilityLabel="رجوع"
           >
-            <BackIcon size={20} color="#405d72" strokeWidth={2.25} />
+            <BackIcon size={20} color={primaryColor} strokeWidth={2.25} />
           </Pressable>
           <Text weight="semibold" size="lg" className="text-dark-100 dark:text-light-50">
             ملف الناشر
@@ -219,7 +223,7 @@ export function AuthorProfileScreen() {
               accessibilityRole="button"
               accessibilityLabel="رجوع"
             >
-              <BackIcon size={20} color="#405d72" strokeWidth={2.25} />
+              <BackIcon size={20} color={primaryColor} strokeWidth={2.25} />
             </Pressable>
             <Text weight="semibold" size="lg" className="text-dark-100 dark:text-light-50">
               {isOrganization ? "ملف المنظمة" : "ملف الناشر"}
@@ -309,7 +313,7 @@ export function AuthorProfileScreen() {
       ListFooterComponent={
         tabIsFetchingNext ? (
           <View className="items-center py-4">
-            <ActivityIndicator color="#405d72" />
+            <ActivityIndicator color={primaryColor} />
           </View>
         ) : null
       }

@@ -7,6 +7,7 @@ import Text from "@/src/components/ui/Text";
 import { useAuthStatus } from "@/src/features/auth/queries";
 import { useRTL } from "@/src/providers/RTLProvider";
 import { headerScrollY } from "@/src/providers/CollapsibleHeaderProvider";
+import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
 import { AppSidebar } from "./AppSidebar";
 import { AppTopNav, getActiveTabTitle } from "./AppTopNav";
 import { appIcons } from "./iconMap";
@@ -31,7 +32,7 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isDark = colorScheme === "dark";
   const actionBgClass = isDark ? "bg-dark-350" : "bg-primary-100";
-  const iconColor = isDark ? "#F9FAFB" : "#405d72";
+  const iconColor = isDark ? "#F9FAFB" : PRIMARY_COLOR_LIGHT;
   // Animated.View often doesn't re-apply NativeWind className when the scheme
   // changes — drive the surface color via style so light/dark always sync.
   const surfaceColor = isDark ? "#1f222b" : "#FFFFFF";

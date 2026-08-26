@@ -12,6 +12,7 @@ import React, {
 import { Animated, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Text from "@/src/components/ui/Text";
+import { getPrimaryColor } from "@/src/theme";
 
 export type ToastType = "success" | "error" | "info";
 
@@ -38,10 +39,9 @@ const DEFAULT_TITLES: Record<ToastType, string> = {
   info: "للعلم",
 };
 
-const ACCENTS: Record<ToastType, string> = {
+const ACCENTS: Record<Exclude<ToastType, "info">, string> = {
   success: "#16A34A",
   error: "#DC2626",
-  info: "#405d72",
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -106,7 +106,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   );
 
   const Icon = toast?.type === "success" ? CircleCheck : toast?.type === "error" ? CircleX : Info;
-  const accent = toast ? ACCENTS[toast.type] : ACCENTS.info;
+  const accent = !toast || toast.type === "info" ? getPrimaryColor(isDark) : ACCENTS[toast.type];
 
   return (
     <ToastContext.Provider value={value}>

@@ -1,6 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ImagePlus, MapPin, X } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Animated, Image, Pressable, View } from "react-native";
 
@@ -25,6 +26,7 @@ import {
 import { CONTENT_AUDIENCE_OPTIONS } from "@/src/features/posts/types";
 import type { ApiPostType, ContentAudience, CreatePostType, MobileImageFile } from "@/src/features/posts/types";
 import { ApiClientError } from "@/src/lib/api-client";
+import { getPrimaryColor } from "@/src/theme";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
@@ -59,6 +61,8 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const { requireAuth } = useAuthGuard();
   const toast = useToast();
   const { onScroll } = useCollapsibleHeaderScreen();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
 
   const [postType, setPostType] = useState<CreatePostType>("volunteer");
   const [title, setTitle] = useState("");
@@ -339,7 +343,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
             ))}
             {selectedImages.length < MAX_POST_IMAGES ? (
               <Pressable disabled={isBusy} onPress={() => void handlePickImages()} style={{ width: "48%" }} className="h-24 items-center justify-center rounded-xl border border-dashed border-primary-200 bg-primary-100/50 dark:border-dark-400 dark:bg-dark-500">
-                <ImageIcon size={18} color="#405d72" strokeWidth={2.25} />
+                <ImageIcon size={18} color={primaryColor} strokeWidth={2.25} />
                 <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">إضافة صور</Text>
               </Pressable>
             ) : null}
@@ -358,7 +362,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         visible={isSubmitConfirmOpen}
         title="تأكيد إرسال المنشور"
         message="سيتم حفظ المنشور كمسودة أولاً، رفع الصور المرفقة، ثم إرساله للمراجعة."
-        icon={<ImageIcon size={28} color="#405d72" strokeWidth={2.25} />}
+        icon={<ImageIcon size={28} color={primaryColor} strokeWidth={2.25} />}
         cancelable={!isPublishing}
         onClose={() => { if (!isPublishing) setIsSubmitConfirmOpen(false); }}
         buttons={[

@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* System/brand color — one source of truth so every bg-primary-400 /
+ * text-primary-400 / border-primary-400 usage swaps automatically with the
+ * theme instead of needing a dark: variant added at every call site. */
+:root {
+  --color-primary: 74 151 130; /* #4A9782 */
+}
+
+.dark {
+  --color-primary: 101 181 160; /* #65B5A0 */
+}
+
 @layer components {
   .card {
     @apply rounded-2xl border bg-background dark:bg-background-dark border-border dark:border-border-dark shadow-sm;

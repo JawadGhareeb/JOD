@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import Text from "./Text";
+import { getPrimaryColor } from "@/src/theme";
 
 interface ButtonProps extends TouchableOpacityProps {
   children: React.ReactNode;
@@ -147,8 +148,8 @@ const Button: React.FC<ButtonProps> = ({
     const spinnerColors = {
       primary: "#FFFFFF",
       tertiary: isDark ? "#FFFFFF" : "#212121",
-      secondary: "#405d72",
-      outline: "#405d72",
+      secondary: getPrimaryColor(isDark),
+      outline: getPrimaryColor(isDark),
     } as const;
     return spinnerColors[variant];
   };

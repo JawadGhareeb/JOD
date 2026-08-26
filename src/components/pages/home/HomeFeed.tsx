@@ -1,3 +1,4 @@
+import { useColorScheme } from "nativewind";
 import { useEffect, useMemo, useState } from "react";
 import { Animated, RefreshControl, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import Button from "@/src/components/ui/Button";
@@ -6,6 +7,7 @@ import { useArticles } from "@/src/features/articles/queries";
 import { usePublicMedia } from "@/src/features/media/queries";
 import { usePostsFeed } from "@/src/features/posts/queries";
 import type { ContentAudience, HomePost } from "@/src/features/posts/types";
+import { getPrimaryColor } from "@/src/theme";
 import { HomeBlogsSection } from "./HomeBlogsSection";
 import { HomePostCard } from "./HomePostCard";
 import { HomePostCardSkeleton } from "./HomePostCardSkeleton";
@@ -82,6 +84,8 @@ interface HomeFeedProps {
 }
 
 export function HomeFeed({ audience, listHeaderComponent, onScroll, onRefresh }: HomeFeedProps) {
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
   const [compositionSeed, setCompositionSeed] = useState(() => Math.floor(Math.random() * 2_000_000_000));
 
   const {
@@ -202,7 +206,7 @@ export function HomeFeed({ audience, listHeaderComponent, onScroll, onRefresh }:
           <RefreshControl
             refreshing={isRefetching || articlesQuery.isRefetching || mediaQuery.isRefetching}
             onRefresh={handleRefresh}
-            tintColor="#405d72"
+            tintColor={primaryColor}
           />
         }
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
