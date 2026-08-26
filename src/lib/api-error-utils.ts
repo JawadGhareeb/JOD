@@ -23,6 +23,14 @@ export function applyApiFormErrors<TFieldValues extends FieldValues>(
     return GENERIC_ERROR_MESSAGE;
   }
 
+  if (error.code === "account_inactive") {
+    return "هذا الحساب غير مفعّل. تواصل مع الإدارة.";
+  }
+
+  if (error.code === "organization_inactive") {
+    return "حساب المنظمة غير مفعّل أو غير موثّق بعد.";
+  }
+
   if (error.details) {
     let mappedAny = false;
 
