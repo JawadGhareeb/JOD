@@ -15,6 +15,7 @@ const filterOptions: FilterOption[] = [
   { key: HomePostTypeEnum.DonationCampaign, label: "الحملات" },
   { key: HomePostTypeEnum.VolunteerOpportunity, label: "التطوع" },
   { key: HomePostTypeEnum.HelpRequest, label: "طلبات المساعدة" },
+  { key: HomePostTypeEnum.ServiceOffer, label: "تقديم مساعدة" },
   { key: HomePostTypeEnum.CampaignUpdate, label: "تحديثات الحملات" },
   { key: HomePostTypeEnum.Awareness, label: "منشورات توعوية" },
 ];

@@ -1,7 +1,7 @@
 import { HomePostTypeEnum } from "@/src/constants/global";
 
-export type CreatePostType = "volunteer" | "donation" | "help";
-export type ApiPostType = "volunteer_opportunity" | "donation_campaign" | "help_request";
+export type CreatePostType = "volunteer" | "donation" | "help" | "service";
+export type ApiPostType = "volunteer_opportunity" | "donation_campaign" | "help_request" | "service_offer";
 export type HomePostType = HomePostTypeEnum;
 
 // Classifies *who the content is for* (general vs. student) — independent of

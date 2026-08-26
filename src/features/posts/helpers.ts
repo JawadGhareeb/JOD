@@ -10,6 +10,7 @@ export const HOME_POST_TYPE_LABELS: Record<HomePostTypeEnum, string> = {
   [HomePostTypeEnum.VolunteerOpportunity]: "فرصة تطوع",
   [HomePostTypeEnum.DonationCampaign]: "حملة تبرع",
   [HomePostTypeEnum.HelpRequest]: "طلب مساعدة",
+  [HomePostTypeEnum.ServiceOffer]: "تقديم مساعدة",
   [HomePostTypeEnum.CampaignUpdate]: "تحديث حملة",
   [HomePostTypeEnum.Awareness]: "توعوي",
 };

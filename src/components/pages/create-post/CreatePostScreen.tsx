@@ -42,7 +42,7 @@ const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة 
 const readParam = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] || "" : value || "";
 const isRemoteImage = (uri: string) => /^https?:\/\//i.test(uri);
 const isCreateType = (value: string): value is ApiPostType =>
-  value === "volunteer_opportunity" || value === "donation_campaign" || value === "help_request";
+  value === "volunteer_opportunity" || value === "donation_campaign" || value === "help_request" || value === "service_offer";
 
 function toUploadFile(uri: string, index: number): MobileImageFile {
   const filename = uri.split("?")[0].split("/").pop() || `image-${index + 1}.jpg`;

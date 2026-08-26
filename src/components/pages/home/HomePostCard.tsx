@@ -86,6 +86,7 @@ const reportTypeOptions: SelectionOption[] = [
 const mapPostTypeToCreateType = (postType: HomePost["postType"]): CreatePostType => {
   if (postType === HomePostTypeEnum.DonationCampaign) return "donation";
   if (postType === HomePostTypeEnum.HelpRequest) return "help";
+  if (postType === HomePostTypeEnum.ServiceOffer) return "service";
   return "volunteer";
 };
 

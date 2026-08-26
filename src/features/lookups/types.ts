@@ -18,7 +18,7 @@ export interface ReportReasonLookupItem {
   sortOrder: number;
 }
 
-export type CreatablePostTypeCode = "volunteer_opportunity" | "donation_campaign" | "help_request";
+export type CreatablePostTypeCode = "volunteer_opportunity" | "donation_campaign" | "help_request" | "service_offer";
 export type PostTypeCode = CreatablePostTypeCode | "campaign_update" | "awareness";
 export interface PostTypeLookupItem {
   isActive: boolean;

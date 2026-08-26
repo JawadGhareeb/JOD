@@ -9,10 +9,10 @@ import type {
 } from "./types";
 
 export const POST_TYPE_TO_API_TYPE: Record<CreatePostType, ApiPostType> = {
-  volunteer: "volunteer_opportunity", donation: "donation_campaign", help: "help_request",
+  volunteer: "volunteer_opportunity", donation: "donation_campaign", help: "help_request", service: "service_offer",
 };
 export const API_TYPE_TO_POST_TYPE: Record<ApiPostType, CreatePostType> = {
-  volunteer_opportunity: "volunteer", donation_campaign: "donation", help_request: "help",
+  volunteer_opportunity: "volunteer", donation_campaign: "donation", help_request: "help", service_offer: "service",
 };
 
 const ENDPOINTS = {
