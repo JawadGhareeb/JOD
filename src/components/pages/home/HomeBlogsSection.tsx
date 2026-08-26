@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import { ScrollView, View } from "react-native";
 import { SectionHeader } from "@/src/components/shared/SectionHeader";
 import Card from "@/src/components/ui/Card";
@@ -7,6 +8,7 @@ import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import { appIcons } from "@/src/components/layout/iconMap";
 import type { MobileArticle } from "@/src/features/articles/types";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
+import { getPrimaryColor } from "@/src/theme";
 
 const BlogsIcon = appIcons.blogs;
 const ArrowIcon = appIcons.chevronLeft;
@@ -18,6 +20,8 @@ type Props = {
 
 export function HomeBlogsSection({ items, loading = false }: Props) {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
 
   if (!loading && items.length === 0) return null;
 
@@ -42,7 +46,7 @@ export function HomeBlogsSection({ items, loading = false }: Props) {
                 onPress={() => router.push({ pathname: "/blogs/[id]", params: { id: article.id } })}
               >
                 <View className="mb-3 h-10 w-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-primary-400/15">
-                  <BlogsIcon size={18} color="#405d72" />
+                  <BlogsIcon size={18} color={primaryColor} />
                 </View>
                 <Text numberOfLines={2} weight="semibold" size="xs" className="leading-6 text-dark-100 dark:text-light-50">
                   {article.title}
@@ -65,7 +69,7 @@ export function HomeBlogsSection({ items, loading = false }: Props) {
             onPress={() => router.push("/blogs")}
           >
             <View className="h-12 w-12 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-400/15">
-              <ArrowIcon size={20} color="#405d72" />
+              <ArrowIcon size={20} color={primaryColor} />
             </View>
             <Text size="xs" weight="medium" rtlAlign="center" className="mt-3 text-primary-400">
               مشاهدة الكل

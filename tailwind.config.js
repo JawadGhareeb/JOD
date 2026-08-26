@@ -30,7 +30,7 @@ module.exports = {
         primary: {
           100: "#eaedef",
           200: "#9faeb8",
-          400: "#405d72",
+          400: "rgb(var(--color-primary) / <alpha-value>)",
         },
 
         secondary: {

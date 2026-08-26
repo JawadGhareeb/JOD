@@ -1,6 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ImagePlus, MapPin, X } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Animated, Image, Pressable, View } from "react-native";
 
@@ -22,8 +23,10 @@ import {
   useUpdatePost,
   useUploadPostImage,
 } from "@/src/features/posts/queries";
-import type { ApiPostType, CreatePostType, MobileImageFile } from "@/src/features/posts/types";
+import { CONTENT_AUDIENCE_OPTIONS } from "@/src/features/posts/types";
+import type { ApiPostType, ContentAudience, CreatePostType, MobileImageFile } from "@/src/features/posts/types";
 import { ApiClientError } from "@/src/lib/api-client";
+import { getPrimaryColor } from "@/src/theme";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
@@ -58,12 +61,15 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const { requireAuth } = useAuthGuard();
   const toast = useToast();
   const { onScroll } = useCollapsibleHeaderScreen();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
 
   const [postType, setPostType] = useState<CreatePostType>("volunteer");
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   const [city, setCity] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [audience, setAudience] = useState<ContentAudience>("general");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [activePostId, setActivePostId] = useState(editingPostId);
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
@@ -91,6 +97,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     setDetails(post.details ?? "");
     setCity(post.city ?? "");
     setCategoryId(post.categoryId ?? "");
+    setAudience(post.audience ?? "general");
     setSelectedImages(post.images ?? []);
     setActivePostId(post.id);
     setInitializedPostId(post.id);
@@ -123,6 +130,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     details: details.trim() || null,
     city: city.trim() || null,
     categoryId: categoryId || null,
+    audience,
     saveAsDraft,
   });
   const buildUpdateInput = () => ({
@@ -131,6 +139,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     details: details.trim() || null,
     city: city.trim() || null,
     categoryId: categoryId || null,
+    audience,
   });
 
   const uploadLocalImages = async (postId: string) => {
@@ -286,6 +295,27 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
           {typeHint ? <Text size="2xs" className="mt-3 text-gray-500 dark:text-gray-300">{typeHint}</Text> : null}
         </Card>
 
+        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+          <Text weight="semibold" size="sm" className="mb-3 text-dark-100 dark:text-light-50">الجمهور المستهدف</Text>
+          <View className="flex-row-reverse gap-2">
+            {CONTENT_AUDIENCE_OPTIONS.map((option) => {
+              const active = option.value === audience;
+              return (
+                <Pressable
+                  key={option.value}
+                  onPress={() => setAudience(option.value)}
+                  className={`flex-1 items-center rounded-xl border px-2 py-3 ${active ? "border-primary-400 bg-primary-400/10" : "border-gray-200 bg-white dark:border-dark-400 dark:bg-dark-500"}`}
+                >
+                  <Text size="2xs" weight="medium" className={active ? "text-primary-400" : "text-dark-100 dark:text-light-50"}>{option.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text size="2xs" className="mt-3 text-gray-500 dark:text-gray-300">
+            اختر "طلاب" إذا كان هذا المنشور موجهاً لدعم الطلاب تحديداً — سيظهر في قسم دعم الطلاب بالإضافة إلى الرئيسية.
+          </Text>
+        </Card>
+
         <Card padding="md" className="mb-3 gap-3 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">تفاصيل المنشور</Text>
           <Input fullWidth showStatusIcon={false} rightIcon={<TitleIcon size={16} strokeWidth={2.25} />} value={title} onChangeText={setTitle} placeholder="عنوان المنشور" placeholderTextColor="#9CA3AF" />
@@ -313,7 +343,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
             ))}
             {selectedImages.length < MAX_POST_IMAGES ? (
               <Pressable disabled={isBusy} onPress={() => void handlePickImages()} style={{ width: "48%" }} className="h-24 items-center justify-center rounded-xl border border-dashed border-primary-200 bg-primary-100/50 dark:border-dark-400 dark:bg-dark-500">
-                <ImageIcon size={18} color="#405d72" strokeWidth={2.25} />
+                <ImageIcon size={18} color={primaryColor} strokeWidth={2.25} />
                 <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">إضافة صور</Text>
               </Pressable>
             ) : null}
@@ -332,7 +362,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         visible={isSubmitConfirmOpen}
         title="تأكيد إرسال المنشور"
         message="سيتم حفظ المنشور كمسودة أولاً، رفع الصور المرفقة، ثم إرساله للمراجعة."
-        icon={<ImageIcon size={28} color="#405d72" strokeWidth={2.25} />}
+        icon={<ImageIcon size={28} color={primaryColor} strokeWidth={2.25} />}
         cancelable={!isPublishing}
         onClose={() => { if (!isPublishing) setIsSubmitConfirmOpen(false); }}
         buttons={[

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Image, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Archive, RotateCcw, Trash2 } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Dialog from "@/src/components/ui/Dialog";
@@ -9,6 +10,7 @@ import Text from "@/src/components/ui/Text";
 import { API_TYPE_TO_POST_TYPE } from "@/src/features/posts/api";
 import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
 import type { ApiPostType, HomePostType, MyPost, MyPostStatus } from "@/src/features/posts/types";
+import { getPrimaryColor } from "@/src/theme";
 
 const MAX_DETAILS = 120;
 
@@ -47,6 +49,8 @@ interface MyPostCardProps {
 
 export function MyPostCard({ post, onArchive, onDelete, onRepost }: MyPostCardProps) {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -192,9 +196,9 @@ export function MyPostCard({ post, onArchive, onDelete, onRepost }: MyPostCardPr
           pendingAction === "delete" ? (
             <Trash2 size={28} color="#DC2626" strokeWidth={2.25} />
           ) : pendingAction === "archive" ? (
-            <Archive size={28} color="#405d72" strokeWidth={2.25} />
+            <Archive size={28} color={primaryColor} strokeWidth={2.25} />
           ) : (
-            <RotateCcw size={28} color="#405d72" strokeWidth={2.25} />
+            <RotateCcw size={28} color={primaryColor} strokeWidth={2.25} />
           )
         }
         onClose={() => {

@@ -1,10 +1,12 @@
 import { ScrollView, View } from "react-native";
 import { useRouter, type Href } from "expo-router";
+import { useColorScheme } from "nativewind";
 import { appIcons } from "@/src/components/layout/iconMap";
 import Card from "@/src/components/ui/Card";
 import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
 import Button from "@/src/components/ui/Button";
+import { getPrimaryColor } from "@/src/theme";
 import { MenuPageHeader } from "./MenuPageHeader";
 
 type FaqItem = {
@@ -45,6 +47,8 @@ const ArrowIcon = appIcons.chevronLeft;
 
 export function HelpCenterScreen() {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
 
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
@@ -72,7 +76,7 @@ export function HelpCenterScreen() {
                 <View className="flex-row-reverse items-center justify-between">
                   <View className="flex-1 flex-row-reverse items-center gap-3">
                     <View className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350">
-                      <item.Icon size={18} color="#405d72" strokeWidth={2.25} />
+                      <item.Icon size={18} color={primaryColor} strokeWidth={2.25} />
                     </View>
                     <View className="flex-1">
                       <Text

@@ -2,6 +2,7 @@ import Text from "@/src/components/ui/Text";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import { Animated, Pressable, View } from "react-native";
+import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
 
 interface TabProps {
   focused: boolean;
@@ -107,7 +108,7 @@ const Tab = ({ focused, iconName, title, onPress }: TabProps) => {
     onPress();
   };
 
-  const iconColor = focused ? "#405d72" : "#9faeb8";
+  const iconColor = focused ? PRIMARY_COLOR_LIGHT : "#9faeb8";
   const textColor = focused ? "text-primary-400" : "text-gray-500";
 
   const backgroundColor = backgroundColorAnim.interpolate({

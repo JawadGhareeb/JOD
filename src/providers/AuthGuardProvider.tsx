@@ -1,8 +1,10 @@
 import { useRouter } from "expo-router";
 import { LogIn } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import Dialog from "@/src/components/ui/Dialog";
 import { useAuthStatus } from "@/src/features/auth/queries";
+import { getPrimaryColor } from "@/src/theme";
 
 type AuthGuardContextValue = {
   isAuthenticated: boolean;
@@ -15,6 +17,8 @@ const AuthGuardContext = createContext<AuthGuardContextValue | null>(null);
 export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthStatus();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -39,7 +43,7 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
         visible={visible}
         title="تسجيل الدخول مطلوب"
         message="يمكنك متابعة تصفح جود كزائر، لكن هذا الإجراء يحتاج إلى تسجيل الدخول أولاً."
-        icon={<LogIn size={28} color="#405d72" strokeWidth={2.25} />}
+        icon={<LogIn size={28} color={primaryColor} strokeWidth={2.25} />}
         onClose={() => setVisible(false)}
         buttons={[
           {

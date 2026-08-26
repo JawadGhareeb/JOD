@@ -4,6 +4,7 @@ import { useRouter, type Href } from "expo-router";
 import { appIcons } from "@/src/components/layout/iconMap";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
+import { getPrimaryColor } from "@/src/theme";
 import { MenuPageHeader } from "./MenuPageHeader";
 
 type SettingsRow = {
@@ -32,7 +33,7 @@ const ArrowIcon = appIcons.chevronLeft;
 export function AccountSettingsScreen() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
-  const iconColor = colorScheme === "dark" ? "#9cc4da" : "#405d72";
+  const iconColor = getPrimaryColor(colorScheme === "dark");
   const arrowIconColor = colorScheme === "dark" ? "#D1D5DB" : "#9CA3AF";
 
   return (

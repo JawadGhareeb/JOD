@@ -94,32 +94,32 @@ export default function Text({
     switch (variant) {
       case "heading":
         return {
-          fontSize: 24,
+          fontSize: 20,
           fontFamily: getFamily("bold"),
         };
       case "subheading":
         return {
-          fontSize: 20,
+          fontSize: 17,
           fontFamily: getFamily("semibold"),
         };
       case "body":
         return {
-          fontSize: 16,
+          fontSize: 14,
           fontFamily: getFamily("regular"),
         };
       case "caption":
         return {
-          fontSize: 12,
+          fontSize: 11,
           fontFamily: getFamily("regular"),
         };
       case "label":
         return {
-          fontSize: 14,
+          fontSize: 12,
           fontFamily: getFamily("medium"),
         };
       default:
         return {
-          fontSize: 16,
+          fontSize: 14,
           fontFamily: getFamily("regular"),
         };
     }
@@ -140,21 +140,21 @@ export default function Text({
       case "2xs":
         return { fontSize: 10 };
       case "xs":
-        return { fontSize: 12 };
+        return { fontSize: 11 };
       case "sm":
-        return { fontSize: 14 };
+        return { fontSize: 12 };
       case "base":
-        return { fontSize: 16 };
-      case "lg":
-        return { fontSize: 18 };
-      case "xl":
-        return { fontSize: 20 };
-      case "2xl":
-        return { fontSize: 24 };
-      case "3xl":
-        return { fontSize: 30 };
-      default:
         return { fontSize: 14 };
+      case "lg":
+        return { fontSize: 16 };
+      case "xl":
+        return { fontSize: 18 };
+      case "2xl":
+        return { fontSize: 20 };
+      case "3xl":
+        return { fontSize: 24 };
+      default:
+        return { fontSize: 12 };
     }
   };
 

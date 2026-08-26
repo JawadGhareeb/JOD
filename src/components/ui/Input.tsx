@@ -16,10 +16,10 @@ import {
   View,
 } from "react-native";
 import { FONTS } from "../../constants/fonts";
+import { getPrimaryColor } from "@/src/theme";
 import { StatusIcon } from "./InputIcons";
 import Text from "./Text";
 
-const APP_PRIMARY_COLOR = "#405d72";
 const APP_PRIMARY_BORDER = "#9faeb8";
 
 interface InputProps extends TextInputProps {
@@ -159,7 +159,7 @@ const Input: React.FC<InputProps> = ({
 
   const getIconColor = useCallback(() => {
     const defaultColor = isDark ? "#9CA3AF" : "#6B7280";
-    const focusedColor = APP_PRIMARY_COLOR;
+    const focusedColor = getPrimaryColor(isDark);
     return isFocused ? focusedColor : defaultColor;
   }, [isDark, isFocused]);
 
@@ -223,7 +223,7 @@ const Input: React.FC<InputProps> = ({
       inputRange: [0, 1],
       outputRange: [
         error ? "#EF4444" : isDark ? "#374151" : APP_PRIMARY_BORDER,
-        error ? "#EF4444" : APP_PRIMARY_COLOR,
+        error ? "#EF4444" : getPrimaryColor(isDark),
       ],
     });
 
@@ -239,7 +239,7 @@ const Input: React.FC<InputProps> = ({
 
     return {
       borderColor,
-      shadowColor: APP_PRIMARY_COLOR,
+      shadowColor: getPrimaryColor(isDark),
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity,
       shadowRadius: 10,

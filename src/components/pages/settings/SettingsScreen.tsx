@@ -10,6 +10,7 @@ import Dialog from "@/src/components/ui/Dialog";
 import Text from "@/src/components/ui/Text";
 import { useAuthStatus, useLogout } from "@/src/features/auth/queries";
 import { applyColorScheme } from "@/src/lib/theme";
+import { getPrimaryColor, PRIMARY_COLOR_LIGHT } from "@/src/theme";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import { useToast } from "@/src/providers/ToastProvider";
 
@@ -106,8 +107,8 @@ export function SettingsScreen() {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const isDark = colorScheme === "dark";
   const themeMode = useMemo(() => (isDark ? "dark" : "light"), [isDark]);
-  const iconColor = isDark ? "#9cc4da" : "#405d72";
-  const inactiveThemeIconColor = isDark ? "#E5E7EB" : "#405d72";
+  const iconColor = getPrimaryColor(isDark);
+  const inactiveThemeIconColor = isDark ? "#E5E7EB" : PRIMARY_COLOR_LIGHT;
   const arrowIconColor = isDark ? "#D1D5DB" : "#9CA3AF";
   const visibleGroups = useMemo(
     () =>

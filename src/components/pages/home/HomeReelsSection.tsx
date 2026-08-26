@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import { Pressable, ScrollView, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { SectionHeader } from "@/src/components/shared/SectionHeader";
@@ -6,6 +7,7 @@ import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import type { PublicMediaItem } from "@/src/features/media/types";
+import { getPrimaryColor } from "@/src/theme";
 
 const ReelsIcon = appIcons.reels;
 const PlayIcon = appIcons.play;
@@ -18,6 +20,8 @@ type Props = {
 
 export function HomeReelsSection({ items, loading = false }: Props) {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
 
   if (!loading && items.length === 0) return null;
 
@@ -69,7 +73,7 @@ export function HomeReelsSection({ items, loading = false }: Props) {
             onPress={() => router.push("/(tabs)/reels")}
           >
             <View className="h-12 w-12 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-400/15">
-              <ArrowIcon size={20} color="#405d72" />
+              <ArrowIcon size={20} color={primaryColor} />
             </View>
             <Text size="xs" weight="medium" rtlAlign="center" className="mt-3 text-primary-400">
               مشاهدة الكل
