@@ -132,10 +132,13 @@ export function MyPostCard({ post, onArchive, onDelete, onRepost }: MyPostCardPr
       {post.status === "rejected" && post.rejectionReason ? (
         <View className="mt-3 rounded-xl bg-error-300/10 p-3">
           <Text size="xs" weight="semibold" className="text-error-300">
-            سبب الرفض
+            سبب رفض المنشور
           </Text>
           <Text size="xs" className="mt-1 text-error-300">
             {post.rejectionReason}
+          </Text>
+          <Text size="2xs" className="mt-2 text-error-300">
+            عدّل المنشور حسب الملاحظة ثم أعد إرساله للمراجعة.
           </Text>
         </View>
       ) : null}
@@ -190,7 +193,7 @@ export function MyPostCard({ post, onArchive, onDelete, onRepost }: MyPostCardPr
             ? "هل أنت متأكد أنك تريد حذف هذا المنشور؟ لا يمكن التراجع عن هذه العملية."
             : pendingAction === "archive"
               ? "سيتم نقل هذا المنشور إلى الأرشيف ولن يظهر ضمن المنشورات النشطة."
-              : "سيتم إعادة إرسال هذا المنشور للمراجعة قبل ظهوره مجدداً."
+              : "سيتم إعادة نشر هذا المنشور وسيظهر مجدداً على المنصة مباشرة."
         }
         icon={
           pendingAction === "delete" ? (

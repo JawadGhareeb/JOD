@@ -29,6 +29,14 @@ export function normalizeJodReferencePath(
   const post = idRoute(path, /^\/posts\/([^/]+)$/, "/posts/[id]");
   if (post) return post;
 
+  const ownPostMatch = path.match(/^\/(?:my-posts|me\/posts)\/([^/]+)$/);
+  if (ownPostMatch?.[1]) {
+    return {
+      pathname: "/(tabs)/create-post",
+      params: { mode: "edit", postId: decodeURIComponent(ownPostMatch[1]) },
+    } as Href;
+  }
+
   const campaign = idRoute(path, /^\/campaigns\/([^/]+)$/, "/campaigns/[id]");
   if (campaign) return campaign;
 
