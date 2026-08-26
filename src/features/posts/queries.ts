@@ -2,7 +2,6 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { postsApi } from "./api";
 import { postKeys } from "./query-keys";
 import { authKeys } from "@/src/features/auth/query-keys";
-import { mediaApi } from "@/src/features/media/api";
 import type { CreatePostInput, GetDiscoveryCampaignsParams, GetDiscoveryPostsParams, GetMyPostsParams, MobileImageFile, UpdatePostInput } from "./types";
 
 const invalidatePostLifecycle = (qc: ReturnType<typeof useQueryClient>, postId?: string) => {
@@ -34,9 +33,8 @@ export function useSubmitPost() { const qc = useQueryClient(); return useMutatio
 export function useArchivePost() { const qc = useQueryClient(); return useMutation({ mutationFn: postsApi.archive, onSuccess: (data) => invalidatePostLifecycle(qc, data.id) }); }
 export function useRepostPost() { const qc = useQueryClient(); return useMutation({ mutationFn: postsApi.repost, onSuccess: (data) => invalidatePostLifecycle(qc, data.id) }); }
 export function useDeletePost() { const qc = useQueryClient(); return useMutation({ mutationFn: postsApi.delete, onSuccess: (_data, id) => { invalidatePostLifecycle(qc, id); qc.invalidateQueries({ queryKey: authKeys.session() }); } }); }
-export function useUploadPostImage() { const qc = useQueryClient(); return useMutation({ mutationFn: ({ postId, image }: { postId: string; image: MobileImageFile }) => mediaApi.upload("post", postId, "images", image), onSuccess: (_data, variables) => invalidatePostLifecycle(qc, variables.postId) }); }
-export function useReplacePostImage() { const qc = useQueryClient(); return useMutation({ mutationFn: async ({ postId, imageId, image }: { postId: string; imageId: string; image: MobileImageFile }) => { await mediaApi.replace("post", postId, "images", imageId, image); return postsApi.getMyPost(postId); }, onSuccess: (data) => invalidatePostLifecycle(qc, data.id) }); }
-export function useDeletePostImage() { const qc = useQueryClient(); return useMutation({ mutationFn: async ({ postId, imageId }: { postId: string; imageId: string }) => { await mediaApi.remove("post", postId, "images", imageId); return postsApi.getMyPost(postId); }, onSuccess: (data) => invalidatePostLifecycle(qc, data.id) }); }
+export function useUploadPostImage() { const qc = useQueryClient(); return useMutation({ mutationFn: ({ postId, images }: { postId: string; images: MobileImageFile[] }) => postsApi.uploadImages(postId, images), onSuccess: (data) => invalidatePostLifecycle(qc, data.id) }); }
+export function useDeletePostImage() { const qc = useQueryClient(); return useMutation({ mutationFn: ({ postId, imageId }: { postId: string; imageId: string }) => postsApi.deleteImage(postId, imageId), onSuccess: (data) => invalidatePostLifecycle(qc, data.id) }); }
 export function useLikePost() { const qc = useQueryClient(); return useMutation({ mutationFn: ({ postId, like }: { postId: string; like: boolean }) => like ? postsApi.like(postId) : postsApi.unlike(postId), onSettled: (_data, _error, variables) => { qc.invalidateQueries({ queryKey: postKeys.feeds() }); qc.invalidateQueries({ queryKey: postKeys.detail(variables.postId) }); } }); }
 export function useSavePost() { const qc = useQueryClient(); return useMutation({ mutationFn: ({ postId, save }: { postId: string; save: boolean }) => save ? postsApi.save(postId) : postsApi.unsave(postId), onSettled: (_data, _error, variables) => { qc.invalidateQueries({ queryKey: postKeys.feeds() }); qc.invalidateQueries({ queryKey: postKeys.detail(variables.postId) }); qc.invalidateQueries({ queryKey: postKeys.savedLists() }); qc.invalidateQueries({ queryKey: authKeys.session() }); } }); }
 export function useReportPost() { return useMutation({ mutationFn: ({ postId, reason, details }: { postId: string; reason: string; details?: string }) => postsApi.report(postId, reason, details) }); }

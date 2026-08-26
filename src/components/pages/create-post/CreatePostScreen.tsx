@@ -146,15 +146,12 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     const local = selectedImages.filter((uri) => !isRemoteImage(uri));
     if (local.length === 0) return false;
 
-    for (const [index, uri] of local.entries()) {
-      const media = await uploadImageMutation.mutateAsync({
-        postId,
-        image: toUploadFile(uri, index),
-      });
-      setSelectedImages((current) =>
-        current.map((item) => (item === uri ? media.url : item)),
-      );
-    }
+    const updated = await uploadImageMutation.mutateAsync({
+      postId,
+      images: local.map(toUploadFile),
+    });
+    setSelectedImages(updated.images);
+
 
     return true;
   };
@@ -312,7 +309,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
             })}
           </View>
           <Text size="2xs" className="mt-3 text-gray-500 dark:text-gray-300">
-            اختر "طلاب" إذا كان هذا المنشور موجهاً لدعم الطلاب تحديداً — سيظهر في قسم دعم الطلاب بالإضافة إلى الرئيسية.
+            اختر «طلاب» إذا كان هذا المنشور موجهاً لدعم الطلاب تحديداً — سيظهر في قسم دعم الطلاب بالإضافة إلى الرئيسية.
           </Text>
         </Card>
 

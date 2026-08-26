@@ -4,7 +4,7 @@ import type { ApiEnvelope, PaginationMeta } from "@/src/types/api";
 import type {
   ApiPostType, Campaign, Category, CreatePostInput, CreatePostType, GetCategoriesParams,
   GetDiscoveryCampaignsParams, GetDiscoveryPostsParams, GetMyPostsParams, GetSavedPostsParams,
-  HomePost, LikeToggleResult, MyPost, Publisher, ReportPostResult, SavedPost,
+  HomePost, LikeToggleResult, MobileImageFile, MyPost, Publisher, ReportPostResult, SavedPost,
   SaveToggleResult, UpdatePostInput,
 } from "./types";
 
@@ -16,12 +16,19 @@ export const API_TYPE_TO_POST_TYPE: Record<ApiPostType, CreatePostType> = {
 };
 
 const ENDPOINTS = {
+  postImages: (id: string) => `/posts/${id}/images`, imageOrder: (id: string) => `/posts/${id}/images/order`, postImage: (id: string, imageId: string) => `/posts/${id}/images/${imageId}`,
   discoveryPosts: "/discovery/posts", discoveryCampaigns: "/discovery/campaigns", discoveryCategories: "/discovery/categories",
   publisher: (id: string) => `/discovery/publishers/${id}`, publisherPosts: (id: string) => `/discovery/publishers/${id}/posts`,
   posts: "/posts", post: (id: string) => `/posts/${id}`, submit: (id: string) => `/posts/${id}/submit`, archive: (id: string) => `/posts/${id}/archive`, repost: (id: string) => `/posts/${id}/repost`,
   like: (id: string) => `/posts/${id}/like`, save: (id: string) => `/posts/${id}/save`, reports: (id: string) => `/posts/${id}/reports`,
   myPosts: "/me/posts", myPost: (id: string) => `/me/posts/${id}`, savedPosts: "/me/saved-posts",
 } as const;
+
+const toPostImagesFormData = (images: MobileImageFile[]) => {
+  const form = new FormData();
+  images.forEach((image) => form.append("images[]", image as unknown as Blob));
+  return form;
+};
 
 export const postsApi = {
   getFeed: async (params: GetDiscoveryPostsParams = {}) => {
@@ -42,6 +49,9 @@ export const postsApi = {
   submit: async (id: string) => { const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.submit(id)); return response.data.data; },
   archive: async (id: string) => { const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.archive(id)); return response.data.data; },
   repost: async (id: string) => { const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.repost(id)); return response.data.data; },
+  uploadImages: async (id: string, images: MobileImageFile[]) => { const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.postImages(id), toPostImagesFormData(images)); return response.data.data; },
+  reorderImages: async (id: string, imageIds: string[]) => { const response = await apiClient.patch<ApiEnvelope<MyPost>>(ENDPOINTS.imageOrder(id), { imageIds }); return response.data.data; },
+  deleteImage: async (id: string, imageId: string) => { const response = await apiClient.delete<ApiEnvelope<MyPost>>(ENDPOINTS.postImage(id, imageId)); return response.data.data; },
   like: async (id: string) => { const response = await apiClient.post<ApiEnvelope<LikeToggleResult>>(ENDPOINTS.like(id)); return response.data.data; },
   unlike: async (id: string) => { const response = await apiClient.delete<ApiEnvelope<LikeToggleResult>>(ENDPOINTS.like(id)); return response.data.data; },
   save: async (id: string) => { const response = await apiClient.post<ApiEnvelope<SaveToggleResult>>(ENDPOINTS.save(id)); return response.data.data; },
