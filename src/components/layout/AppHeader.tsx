@@ -7,8 +7,8 @@ import Text from "@/src/components/ui/Text";
 import { useAuthStatus } from "@/src/features/auth/queries";
 import { useRTL } from "@/src/providers/RTLProvider";
 import { headerScrollY } from "@/src/providers/CollapsibleHeaderProvider";
+import { useAppSidebar } from "@/src/providers/AppSidebarProvider";
 import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
-import { AppSidebar } from "./AppSidebar";
 import { AppTopNav, getActiveTabTitle } from "./AppTopNav";
 import { appIcons } from "./iconMap";
 
@@ -28,8 +28,8 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   const { isRTL } = useRTL();
   const { colorScheme } = useColorScheme();
   const { refreshAuthStatus } = useAuthStatus();
+  const { openSidebar } = useAppSidebar();
   const [contentHeight, setContentHeight] = useState(MIN_HEADER_CONTENT_HEIGHT);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isDark = colorScheme === "dark";
   const actionBgClass = isDark ? "bg-dark-350" : "bg-primary-100";
   const iconColor = isDark ? "#F9FAFB" : PRIMARY_COLOR_LIGHT;
@@ -71,7 +71,6 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   };
 
   return (
-    <>
     <Animated.View
       style={{
         height: wrapperHeight,
@@ -97,7 +96,7 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
           <View className={`${rowClassName} items-center justify-between`}>
             <View className={`${rowClassName} min-w-0 flex-1 items-center gap-2`}>
               <Pressable
-                onPress={() => setIsSidebarOpen(true)}
+                onPress={openSidebar}
                 className={`h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
                 accessibilityRole="button"
                 accessibilityLabel="القائمة"
@@ -126,7 +125,7 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
               </Pressable>
               {isReelsTab ? (
                 <Pressable
-                  onPress={() => setIsSidebarOpen(true)}
+                  onPress={openSidebar}
                   className={`h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
                   accessibilityRole="button"
                   accessibilityLabel="خيارات إضافية"
@@ -142,8 +141,5 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
         </View>
       </Animated.View>
     </Animated.View>
-
-    <AppSidebar visible={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-    </>
   );
 }
