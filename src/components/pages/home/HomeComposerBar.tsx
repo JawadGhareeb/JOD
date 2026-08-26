@@ -27,7 +27,7 @@ export function HomeComposerBar() {
           accessibilityLabel="نشر بوست جديد"
         >
           <Text size="sm" className="text-gray-500 dark:text-gray-300">
-            بشو عم تفكر؟
+            بماذا تفكّر؟
           </Text>
         </Pressable>
         <Pressable
