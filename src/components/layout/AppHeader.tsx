@@ -3,6 +3,7 @@ import { useColorScheme } from "nativewind";
 import { useMemo, useState } from "react";
 import { Animated, Pressable, View, type LayoutChangeEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useRTL } from "@/src/providers/RTLProvider";
@@ -84,13 +85,14 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
         <View onLayout={handleHeaderLayout}>
           <View className="px-4 py-3">
             <View className={`${rowClassName} items-center justify-between`}>
-              <View className="min-w-0 flex-1">
+              <View className={`min-w-0 flex-1 ${rowClassName} items-center gap-2`}>
+                <Logo width={26} height={26} />
                 <Text
                   numberOfLines={1}
                   ellipsizeMode="tail"
                   size="xl"
                   weight="bold"
-                  className={activeTabTitle ? "text-dark-100 dark:text-light-50" : "text-primary-400"}
+                  className={`flex-1 ${activeTabTitle ? "text-dark-100 dark:text-light-50" : "text-primary-400"}`}
                 >
                   {activeTabTitle ?? "JOD"}
                 </Text>

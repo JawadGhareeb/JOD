@@ -1,7 +1,8 @@
 import { Pressable, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { Pencil } from "lucide-react-native";
+import { MapPin, Pencil } from "lucide-react-native";
+import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
@@ -13,7 +14,7 @@ import { useToast } from "@/src/providers/ToastProvider";
 
 const NotificationIcon = appIcons.notification;
 const SettingsIcon = appIcons.settings;
-const CreatePostIcon = appIcons.createPost;
+const BioIcon = appIcons.about;
 
 const statLabels = {
   postsCount: "المنشورات",
@@ -42,45 +43,77 @@ export function ProfileHeaderCard({ summary }: { summary: ProfileSummary }) {
       toast.error("تعذر تحديث صورة الملف الشخصي. حاول مرة أخرى.");
     }
   };
-  const metaParts = [`@${summary.username}`, summary.city].filter(Boolean);
 
   return (
     <Card padding="none" className="mb-4 overflow-hidden border-gray-200 dark:border-dark-400">
-      <View className="h-20 bg-primary-400/15" />
-      <View className="px-4 pb-4">
-        <View className="-mt-10 flex-row-reverse items-end justify-between">
-          <Pressable onPress={() => void changeAvatar()} disabled={updateAvatarMutation.isPending} className="rounded-full border-4 border-white bg-white dark:border-dark-500 dark:bg-dark-500" accessibilityLabel="تغيير صورة الملف الشخصي">
-            <Avatar name={summary.name} imageUrl={summary.avatarUrl} size={76} />
-            <View className="absolute bottom-0 right-0 size-7 items-center justify-center rounded-full bg-primary-400"><Pencil size={13} color="#FFFFFF" /></View>
-          </Pressable>
-          <View className="mb-1 flex-row-reverse items-center gap-2">
-            <Pressable onPress={() => router.push("/(tabs)/create-post")} className="size-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350" accessibilityLabel="إضافة منشور"><CreatePostIcon size={19} color={PRIMARY_COLOR_LIGHT} strokeWidth={2.2} /></Pressable>
-            <Pressable onPress={() => router.push("/(tabs)/settings")} className="size-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350" accessibilityLabel="الإعدادات"><SettingsIcon size={19} color={PRIMARY_COLOR_LIGHT} strokeWidth={2.2} /></Pressable>
-            <Pressable onPress={() => router.push("/(tabs)/notifications")} className="size-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350" accessibilityLabel="الإشعارات">
-              <NotificationIcon size={19} color={PRIMARY_COLOR_LIGHT} strokeWidth={2.2} />
-            </Pressable>
-            <Pressable onPress={() => router.push("/edit-information")} className="size-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350" accessibilityLabel="تعديل الملف الشخصي">
-              <Pencil size={18} color={PRIMARY_COLOR_LIGHT} />
-            </Pressable>
+      <View className="h-28 bg-primary-400/20 dark:bg-primary-400/10" />
+
+      <View className="items-center px-4 pb-5">
+        <Pressable
+          onPress={() => void changeAvatar()}
+          disabled={updateAvatarMutation.isPending}
+          className="-mt-12 rounded-full border-4 border-white bg-white dark:border-dark-500 dark:bg-dark-500"
+          accessibilityLabel="تغيير صورة الملف الشخصي"
+        >
+          <Avatar name={summary.name} imageUrl={summary.avatarUrl} size={96} />
+          <View className="absolute bottom-0 right-0 size-8 items-center justify-center rounded-full border-2 border-white bg-primary-400 dark:border-dark-500">
+            <Pencil size={14} color="#FFFFFF" />
           </View>
+        </Pressable>
+
+        <View className="mt-3 flex-row-reverse items-center gap-1.5">
+          <Text weight="bold" size="xl" className="text-dark-100 dark:text-light-50">{summary.name}</Text>
+          {summary.verified ? <Text size="2xs" weight="semibold" className="text-primary-400">موثق</Text> : null}
         </View>
 
-        <View className="mt-3 items-end">
-          <View className="flex-row-reverse items-center gap-1.5">
-            <Text weight="bold" size="lg" className="text-dark-100 dark:text-light-50">{summary.name}</Text>
-            {summary.verified ? <Text size="2xs" weight="semibold" className="text-primary-400">موثق</Text> : null}
-          </View>
-          {metaParts.length > 0 ? <Text size="xs" className="mt-1 text-gray-500 dark:text-gray-300">{metaParts.join(" • ")}</Text> : null}
-          {summary.bio ? <Text size="sm" className="mt-3 text-right leading-6 text-gray-600 dark:text-gray-200">{summary.bio}</Text> : null}
-        </View>
+        <Text size="sm" className="mt-1 text-gray-500 dark:text-gray-300">
+          @{summary.username} · {summary.stats.postsCount} منشورات
+        </Text>
 
-        <View className="mt-4 flex-row-reverse gap-2 border-t border-gray-100 pt-3 dark:border-dark-400">
+        {summary.city || summary.bio ? (
+          <View className="mt-3 w-full gap-2">
+            {summary.city ? (
+              <View className="flex-row-reverse items-center gap-2">
+                <MapPin size={15} color="#9CA3AF" strokeWidth={2.25} />
+                <Text size="xs" className="text-gray-600 dark:text-gray-300">{summary.city}</Text>
+              </View>
+            ) : null}
+            {summary.bio ? (
+              <View className="flex-row-reverse items-start gap-2">
+                <View className="mt-0.5"><BioIcon size={15} color="#9CA3AF" strokeWidth={2.25} /></View>
+                <Text size="xs" className="flex-1 leading-6 text-gray-600 dark:text-gray-300">{summary.bio}</Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        <View className="mt-4 w-full flex-row-reverse gap-2 border-t border-gray-100 pt-4 dark:border-dark-400">
           {(Object.keys(statLabels) as (keyof typeof statLabels)[]).map((key) => (
             <View key={key} className="flex-1 items-center rounded-2xl bg-primary-100/70 py-3 dark:bg-dark-350">
               <Text weight="bold" size="base" className="text-primary-400">{summary.stats[key]}</Text>
               <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">{statLabels[key]}</Text>
             </View>
           ))}
+        </View>
+
+        <View className="mt-3 w-full flex-row-reverse gap-2">
+          <View className="flex-1">
+            <Button
+              fullWidth
+              size="small"
+              variant="tertiary"
+              leftIcon={<Pencil size={16} color={PRIMARY_COLOR_LIGHT} strokeWidth={2.25} />}
+              onPress={() => router.push("/edit-information")}
+            >
+              تعديل الملف الشخصي
+            </Button>
+          </View>
+          <Pressable onPress={() => router.push("/(tabs)/settings")} className="size-11 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350" accessibilityLabel="الإعدادات">
+            <SettingsIcon size={19} color={PRIMARY_COLOR_LIGHT} strokeWidth={2.2} />
+          </Pressable>
+          <Pressable onPress={() => router.push("/(tabs)/notifications")} className="size-11 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350" accessibilityLabel="الإشعارات">
+            <NotificationIcon size={19} color={PRIMARY_COLOR_LIGHT} strokeWidth={2.2} />
+          </Pressable>
         </View>
       </View>
     </Card>
