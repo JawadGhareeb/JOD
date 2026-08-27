@@ -236,6 +236,7 @@ export function HomePostCard({
     }
 
     if (post.cta.type === "contact") {
+      if (!requireAuth()) return;
       await openPostContact(post);
     }
   };

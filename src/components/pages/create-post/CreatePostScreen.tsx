@@ -245,6 +245,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   };
 
   const handleSaveDraft = async () => {
+    if (!requireAuth()) return;
     setIsSavingDraft(true);
     try {
       let postId = activePostId;
@@ -265,7 +266,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   };
 
   const handlePublish = async () => {
-    if (!canPublish) return;
+    if (!requireAuth() || !canPublish) return;
     setIsPublishing(true);
     try {
       let postId = activePostId;

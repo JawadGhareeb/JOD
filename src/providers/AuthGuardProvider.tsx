@@ -47,7 +47,7 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
         onClose={() => setVisible(false)}
         buttons={[
           {
-            text: "لاحقاً",
+            text: "متابعة كزائر",
             variant: "tertiary",
             onPress: () => setVisible(false),
           },
