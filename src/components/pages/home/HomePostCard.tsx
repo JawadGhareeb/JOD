@@ -421,20 +421,12 @@ export function HomePostCard({
         </Pressable>
       ) : null}
 
-      {(post.category?.name || post.location) ? (
+      {post.category?.name ? (
         <View className="mt-2 flex-row-reverse flex-wrap items-center gap-2">
-          {post.category?.name ? (
-            <View className="flex-row-reverse items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 dark:bg-primary-400/15">
-              <Tag size={12} color={primaryColor} strokeWidth={2.2} />
-              <Text size="2xs" className="text-primary-400">{post.category.name}</Text>
-            </View>
-          ) : null}
-          {post.location ? (
-            <View className="flex-row-reverse items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 dark:bg-dark-350">
-              <MapPin size={12} color="#9CA3AF" strokeWidth={2.2} />
-              <Text size="2xs" className="text-gray-500 dark:text-gray-300">{post.location}</Text>
-            </View>
-          ) : null}
+          <View className="flex-row-reverse items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 dark:bg-primary-400/15">
+            <Tag size={12} color={primaryColor} strokeWidth={2.2} />
+            <Text size="2xs" className="text-primary-400">{post.category.name}</Text>
+          </View>
         </View>
       ) : null}
 
@@ -505,7 +497,18 @@ export function HomePostCard({
               <ShieldIcon size={17} color="#DC2626" strokeWidth={2.25} />
               <Text size="xs" className="text-error-300">إبلاغ</Text>
             </Pressable>
+            {post.location ? (
+              <View className={`${actionItemClassName} items-center gap-1 rounded-full px-2 py-1`}>
+                <MapPin size={14} color="#9CA3AF" strokeWidth={2.2} />
+                <Text size="xs" className="text-gray-500 dark:text-gray-300">{post.location}</Text>
+              </View>
+            ) : null}
           </>
+        ) : post.location ? (
+          <View className={`${actionItemClassName} items-center gap-1 rounded-full px-2 py-1`}>
+            <MapPin size={14} color="#9CA3AF" strokeWidth={2.2} />
+            <Text size="xs" className="text-gray-500 dark:text-gray-300">{post.location}</Text>
+          </View>
         ) : null}
         {isOwnPost ? (
         <View className="relative">
