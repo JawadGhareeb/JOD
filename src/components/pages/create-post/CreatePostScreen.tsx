@@ -120,7 +120,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
 
   const typeHint = postTypeOptions.find((item) => item.key === postType)?.hint;
   const selectedCategoryLabel = categoryOptions.find((item) => item.value === categoryId)?.label ?? "";
-  const canPublish = title.trim().length >= 4 && details.trim().length >= 10 && city.trim().length >= 2;
+  const canPublish = title.trim().length >= 4 && details.trim().length >= 10 && city.trim().length >= 2 && categoryId.length > 0;
   const isBusy = isSavingDraft || isPublishing || uploadImageMutation.isPending || reorderImageMutation.isPending || deleteImageMutation.isPending;
   const pageTitle = editMode ? "تعديل المنشور" : "إنشاء منشور";
 
@@ -350,12 +350,12 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">تفاصيل المنشور</Text>
           <Input fullWidth showStatusIcon={false} rightIcon={<TitleIcon size={16} strokeWidth={2.25} />} value={title} onChangeText={setTitle} placeholder="عنوان المنشور" placeholderTextColor="#9CA3AF" />
 
-          <Pressable onPress={() => setIsCityModalOpen(true)}><View pointerEvents="none"><Input fullWidth editable={false} showStatusIcon={false} rightIcon={<MapPin size={16} strokeWidth={2.25} />} value={city} placeholder="اختر المدينة" placeholderTextColor="#9CA3AF" /></View></Pressable>
+          <Pressable onPress={() => setIsCityModalOpen(true)}><View pointerEvents="none"><Input fullWidth editable={false} showStatusIcon={false} rightIcon={<MapPin size={16} strokeWidth={2.25} />} value={city} placeholder="اختر المحافظة *" placeholderTextColor="#9CA3AF" /></View></Pressable>
 
-          <Pressable onPress={() => setIsCategoryModalOpen(true)}><View pointerEvents="none"><Input fullWidth editable={false} showStatusIcon={false} value={selectedCategoryLabel} placeholder="التصنيف - اختياري" placeholderTextColor="#9CA3AF" /></View></Pressable>
+          <Pressable onPress={() => setIsCategoryModalOpen(true)}><View pointerEvents="none"><Input fullWidth editable={false} showStatusIcon={false} value={selectedCategoryLabel} placeholder="اختر التصنيف *" placeholderTextColor="#9CA3AF" /></View></Pressable>
 
           <Input fullWidth multiline showStatusIcon={false} rightIcon={<DescriptionIcon size={16} strokeWidth={2.25} />} value={details} onChangeText={setDetails} placeholder="اكتب تفاصيل المنشور" placeholderTextColor="#9CA3AF" inputClassName="min-h-[96px] font-noto text-xs" inputContainerClassName="min-h-[120px] items-start py-3" textAlignVertical="top" />
-          {!canPublish ? <Text size="2xs" className="text-error-300">للنشر: العنوان 4 أحرف على الأقل، التفاصيل 10 أحرف على الأقل، والمدينة مطلوبة.</Text> : null}
+          {!canPublish ? <Text size="2xs" className="text-error-300">للنشر: العنوان 4 أحرف على الأقل، التفاصيل 10 أحرف على الأقل، ويجب اختيار المحافظة والتصنيف.</Text> : null}
         </Card>
 
         <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
@@ -391,7 +391,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         </View>
       </Animated.ScrollView>
 
-      <SelectionModal visible={isCityModalOpen} title="اختر المدينة" options={cityOptions} selectedValue={city} onSelect={(value) => { setCity(value); setIsCityModalOpen(false); }} onClose={() => setIsCityModalOpen(false)} />
+      <SelectionModal visible={isCityModalOpen} title="اختر المحافظة السورية" options={cityOptions} selectedValue={city} onSelect={(value) => { setCity(value); setIsCityModalOpen(false); }} onClose={() => setIsCityModalOpen(false)} />
       <SelectionModal visible={isCategoryModalOpen} title="تصنيف المنشور" options={categoryOptions} selectedValue={categoryId} onSelect={(value) => { setCategoryId(value); setIsCategoryModalOpen(false); }} onClose={() => setIsCategoryModalOpen(false)} />
     </View>
   );

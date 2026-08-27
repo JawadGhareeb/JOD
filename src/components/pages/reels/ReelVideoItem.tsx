@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Heart, Bookmark, Flag, Check } from "lucide-react-native";
+import { Check } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
+import { appIcons } from "@/src/components/layout/iconMap";
 import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Avatar } from "@/src/components/shared/Avatar";
@@ -14,7 +16,7 @@ import { useLikeMedia, useReportMedia, useSaveMedia } from "@/src/features/media
 import type { PublicMediaItem } from "@/src/features/media/types";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
-import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
+import { getPrimaryColor, PRIMARY_COLOR_LIGHT } from "@/src/theme";
 
 export function ReelVideoItem({
   video,
@@ -30,6 +32,11 @@ export function ReelVideoItem({
   const router = useRouter();
   const { requireAuth } = useAuthGuard();
   const toast = useToast();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
+  const HeartIcon = appIcons.myDonations;
+  const BookmarkIcon = appIcons.savedPosts;
+  const ShieldIcon = appIcons.shield;
   const likeMutation = useLikeMedia();
   const saveMutation = useSaveMedia();
   const reportMutation = useReportMedia();
@@ -129,16 +136,7 @@ export function ReelVideoItem({
               <Text size="2xs" className="text-gray-500 dark:text-gray-300">فيديو من جود</Text>
             </View>
           </Pressable>
-          <Pressable
-            onPress={() => {
-              if (!requireAuth()) return;
-              setReportPickerOpen(true);
-            }}
-            className="size-9 items-center justify-center rounded-full bg-gray-100 dark:bg-dark-350"
-            accessibilityLabel="الإبلاغ عن الريل"
-          >
-            <Flag size={18} color="#9CA3AF" />
-          </Pressable>
+          <View className="size-9" />
         </View>
 
         <View className="min-h-0 flex-1 bg-dark-500">
@@ -158,32 +156,18 @@ export function ReelVideoItem({
               {video.description}
             </Text>
           ) : null}
-          <View className="flex-row-reverse items-center gap-5 border-t border-gray-100 pt-3 dark:border-dark-400">
-            <Pressable onPress={toggleLike} className="flex-row-reverse items-center gap-1.5" disabled={likeMutation.isPending}>
-              <Heart
-                size={22}
-                color={isLiked ? "#E5484D" : "#9CA3AF"}
-                fill={isLiked ? "#E5484D" : "transparent"}
-              />
-              <Text size="xs" className={isLiked ? "text-error-300" : "text-gray-500 dark:text-gray-300"}>
-                {likesCount > 0 ? likesCount : "إعجاب"}
-              </Text>
+          <View className="flex-row-reverse items-center gap-3 border-t border-gray-100 pt-3 dark:border-dark-400">
+            <Pressable onPress={toggleLike} className="flex-row-reverse items-center gap-1 rounded-full px-2 py-1" disabled={likeMutation.isPending}>
+              <HeartIcon size={18} color={isLiked ? "#E11D48" : "#9CA3AF"} fill={isLiked ? "#E11D48" : "transparent"} strokeWidth={2.25} />
+              <Text size="xs" className={isLiked ? "text-rose-600" : "text-gray-500 dark:text-gray-300"}>{likesCount}</Text>
             </Pressable>
-            <Pressable onPress={toggleSave} className="flex-row-reverse items-center gap-1.5" disabled={saveMutation.isPending}>
-              <Bookmark size={21} color={isSaved ? PRIMARY_COLOR_LIGHT : "#9CA3AF"} fill={isSaved ? PRIMARY_COLOR_LIGHT : "transparent"} />
-              <Text size="xs" className={isSaved ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}>
-                {isSaved ? "محفوظ" : "حفظ"}
-              </Text>
+            <Pressable onPress={toggleSave} className="flex-row-reverse items-center gap-1 rounded-full px-2 py-1" disabled={saveMutation.isPending}>
+              <BookmarkIcon size={17} color={isSaved ? primaryColor : "#9CA3AF"} fill={isSaved ? primaryColor : "transparent"} strokeWidth={2.25} />
+              <Text size="xs" className={isSaved ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}>{isSaved ? "محفوظ" : "حفظ"}</Text>
             </Pressable>
-            <Pressable
-              onPress={() => {
-                if (!requireAuth()) return;
-                setReportPickerOpen(true);
-              }}
-              className="flex-row-reverse items-center gap-1.5"
-            >
-              <Flag size={20} color="#9CA3AF" />
-              <Text size="xs" className="text-gray-500 dark:text-gray-300">إبلاغ</Text>
+            <Pressable onPress={() => { if (!requireAuth()) return; setReportPickerOpen(true); }} className="flex-row-reverse items-center gap-1 rounded-full px-2 py-1">
+              <ShieldIcon size={17} color="#DC2626" strokeWidth={2.25} />
+              <Text size="xs" className="text-error-300">إبلاغ</Text>
             </Pressable>
           </View>
         </View>

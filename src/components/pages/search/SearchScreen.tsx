@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { Pressable, ScrollView, View } from "react-native";
+import { Image, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
@@ -26,36 +26,30 @@ const TYPES: { value: GlobalSearchType; label: string }[] = [
 ];
 
 function OrganizationCard({ account, onPress }: { account: SearchAccount; onPress: () => void }) {
+  const initials = account.name.split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("");
   return (
-    <Card padding="md" className="mb-3 w-full border-gray-200 dark:border-dark-400">
-      <View className="flex-row-reverse items-center gap-4">
-        <Avatar name={account.name} imageUrl={account.avatarUrl} size={66} />
-        <View className="min-w-0 flex-1">
-          <View className="flex-row-reverse items-center gap-2">
-            <Text numberOfLines={1} weight="semibold" size="sm" className="flex-1 text-dark-100 dark:text-light-50">
-              {account.name}
-            </Text>
-            {account.verified ? (
-              <Text size="2xs" className="text-primary-400">
-                موثق
-              </Text>
-            ) : null}
+    <Card padding="none" className="w-[220px] overflow-hidden border-gray-200 dark:border-dark-400">
+      <View className="items-center px-4 pb-4 pt-4">
+        {account.avatarUrl ? (
+          <Image source={{ uri: account.avatarUrl }} className="h-28 w-28 rounded-2xl bg-gray-100 dark:bg-dark-350" resizeMode="cover" />
+        ) : (
+          <View className="h-28 w-28 items-center justify-center rounded-2xl bg-primary-100 dark:bg-primary-400/15">
+            <Text weight="bold" size="lg" className="text-primary-400">{initials || "ج"}</Text>
           </View>
-          <Text numberOfLines={1} size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-            @{account.username}
-            {account.city ? ` • ${account.city}` : ""}
-          </Text>
-          {account.bio ? (
-            <Text numberOfLines={2} ellipsizeMode="tail" size="2xs" className="mt-2 leading-5 text-gray-500 dark:text-gray-300">
-              {account.bio}
+        )}
+        <View className="mt-3 w-full items-center">
+          <View className="max-w-full flex-row-reverse items-center gap-1.5">
+            <Text numberOfLines={1} weight="semibold" size="sm" className="max-w-[165px] text-dark-100 dark:text-light-50">{account.name}</Text>
+            {account.verified ? <Text size="2xs" className="text-primary-400">موثق</Text> : null}
+          </View>
+          <Text numberOfLines={1} size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">{account.city || `@${account.username}`}</Text>
+          <View className="h-12 w-full justify-center">
+            <Text numberOfLines={2} ellipsizeMode="tail" size="2xs" rtlAlign="center" className="leading-5 text-gray-500 dark:text-gray-300">
+              {account.bio || "منظمة مسجلة على منصة جود."}
             </Text>
-          ) : null}
+          </View>
         </View>
-      </View>
-      <View className="mt-4">
-        <Button fullWidth size="small" variant="tertiary" onPress={onPress}>
-          زيارة الملف
-        </Button>
+        <View className="mt-2 w-full"><Button fullWidth size="small" variant="tertiary" onPress={onPress}>زيارة الملف</Button></View>
       </View>
     </Card>
   );
@@ -179,17 +173,13 @@ export function SearchScreen() {
             </View>
 
             {organizationsQuery.isLoading ? (
-              <View className="gap-3">
-                {[0, 1, 2].map((item) => (
-                  <CardSkeleton key={item} width="100%" height={166} margin={0} />
-                ))}
-              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 4 }}>
+                {[0, 1, 2].map((item) => <CardSkeleton key={item} width={220} height={250} margin={0} />)}
+              </ScrollView>
             ) : organizations.length ? (
-              <View>
-                {organizations.map((account) => (
-                  <OrganizationCard key={account.id} account={account} onPress={() => openAccount(account.id)} />
-                ))}
-              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 4 }}>
+                {organizations.map((account) => <OrganizationCard key={account.id} account={account} onPress={() => openAccount(account.id)} />)}
+              </ScrollView>
             ) : (
               <Card padding="md" className="border-gray-200 dark:border-dark-400">
                 <Text size="xs" rtlAlign="center" className="text-gray-500 dark:text-gray-300">
@@ -224,36 +214,20 @@ export function SearchScreen() {
                 <Text weight="semibold" size="sm" className="mb-2 text-dark-100 dark:text-light-50">
                   الحسابات ({counts?.accounts ?? 0})
                 </Text>
-                {result?.accounts.map((account) =>
-                  account.accountType === "organization" ? (
-                    <OrganizationCard key={account.id} account={account} onPress={() => openAccount(account.id)} />
-                  ) : (
-                    <Card
-                      key={account.id}
-                      padding="md"
-                      className="mb-2 border-gray-200 dark:border-dark-400"
-                      onPress={() => openAccount(account.id)}
-                    >
-                      <View className="flex-row-reverse items-center gap-3">
-                        <Avatar name={account.name} imageUrl={account.avatarUrl} size={46} />
-                        <View className="flex-1">
-                          <Text weight="semibold" size="sm">
-                            {account.name}
-                          </Text>
-                          <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-                            @{account.username}
-                            {account.city ? ` • ${account.city}` : ""}
-                          </Text>
-                        </View>
-                        {account.verified ? (
-                          <Text size="2xs" className="text-primary-400">
-                            موثق
-                          </Text>
-                        ) : null}
-                      </View>
-                    </Card>
-                  ),
-                )}
+                {(result?.accounts.some((account) => account.accountType === "organization")) ? (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 12 }}>
+                    {result?.accounts.filter((account) => account.accountType === "organization").map((account) => <OrganizationCard key={account.id} account={account} onPress={() => openAccount(account.id)} />)}
+                  </ScrollView>
+                ) : null}
+                {result?.accounts.filter((account) => account.accountType !== "organization").map((account) => (
+                  <Card key={account.id} padding="md" className="mb-2 border-gray-200 dark:border-dark-400" onPress={() => openAccount(account.id)}>
+                    <View className="flex-row-reverse items-center gap-3">
+                      <Avatar name={account.name} imageUrl={account.avatarUrl} size={46} />
+                      <View className="flex-1"><Text weight="semibold" size="sm">{account.name}</Text><Text size="2xs" className="text-gray-500 dark:text-gray-300">@{account.username}{account.city ? ` • ${account.city}` : ""}</Text></View>
+                      {account.verified ? <Text size="2xs" className="text-primary-400">موثق</Text> : null}
+                    </View>
+                  </Card>
+                ))}
               </View>
             ) : null}
 

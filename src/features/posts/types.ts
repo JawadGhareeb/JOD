@@ -59,6 +59,7 @@ export interface HomePost {
   status: string;
   campaignId: string | null;
   location: string | null;
+  category?: { id: string; name: string } | null;
   helpStatus?: "open" | "in_progress" | "fulfilled" | null;
   canOfferHelp?: boolean;
   activeOffersCount?: number;

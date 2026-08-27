@@ -11,8 +11,8 @@ import Text from "@/src/components/ui/Text";
 import { useAuthStatus, useLogout } from "@/src/features/auth/queries";
 import { applyColorScheme } from "@/src/lib/theme";
 import { getPrimaryColor, PRIMARY_COLOR_LIGHT } from "@/src/theme";
-import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import { useToast } from "@/src/providers/ToastProvider";
+import { MenuPageHeader } from "./MenuPageHeader";
 
 type SettingsRow = {
   title: string;
@@ -103,7 +103,6 @@ export function SettingsScreen() {
   const { isAuthenticated } = useAuthStatus();
   const toast = useToast();
   const { colorScheme } = useColorScheme();
-  const { onScroll } = useCollapsibleHeaderScreen();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const isDark = colorScheme === "dark";
   const themeMode = useMemo(() => (isDark ? "dark" : "light"), [isDark]);
@@ -120,11 +119,10 @@ export function SettingsScreen() {
 
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
+      <MenuPageHeader title="الإعدادات" />
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
       >
         {visibleGroups.map((group) => (
           <View key={group.title} className="mb-3">

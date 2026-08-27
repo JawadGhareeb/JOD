@@ -3,16 +3,16 @@ import * as ImagePicker from "expo-image-picker";
 import { FileText, Mail, MapPin, Phone } from "lucide-react-native";
 import { ScrollView, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
+import { Avatar } from "@/src/components/shared/Avatar";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Input from "@/src/components/ui/Input";
-import Text from "@/src/components/ui/Text";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
-import { useToast } from "@/src/providers/ToastProvider";
-import { useAuthStatus, useRemoveAvatar, useUpdateAvatar } from "@/src/features/auth/queries";
-import { Avatar } from "@/src/components/shared/Avatar";
+import Text from "@/src/components/ui/Text";
 import { useUpdateProfile } from "@/src/features/account/queries";
+import { useAuthStatus, useRemoveAvatar, useUpdateAvatar } from "@/src/features/auth/queries";
 import { ApiClientError } from "@/src/lib/api-client";
+import { useToast } from "@/src/providers/ToastProvider";
 import { MenuPageHeader } from "./MenuPageHeader";
 
 const UserIcon = appIcons.profile;
@@ -40,11 +40,8 @@ export function EditInformationScreen() {
   }, [user]);
 
   const isEmailValid = useMemo(() => /\S+@\S+\.\S+/.test(email.trim()), [email]);
-  // Phone is optional server-side (ProfileRequest only requires name/email) —
-  // only validate its length when the user actually typed something.
   const isPhoneValid = phoneNumber.trim().length === 0 || phoneNumber.trim().length >= 8;
-  const canSave =
-    fullName.trim().length > 2 && isEmailValid && isPhoneValid && !updateProfileMutation.isPending;
+  const canSave = fullName.trim().length > 2 && isEmailValid && isPhoneValid && !updateProfileMutation.isPending;
 
   const changeAvatar = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -52,14 +49,32 @@ export function EditInformationScreen() {
       toast.error("اسمح للتطبيق بالوصول إلى الصور لتغيير صورة الملف الشخصي.");
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.85 });
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
     try {
-      await updateAvatarMutation.mutateAsync({ uri: asset.uri, name: asset.fileName ?? `avatar-${Date.now()}.jpg`, type: asset.mimeType ?? "image/jpeg" });
+      await updateAvatarMutation.mutateAsync({
+        uri: asset.uri,
+        name: asset.fileName ?? `avatar-${Date.now()}.jpg`,
+        type: asset.mimeType ?? "image/jpeg",
+      });
       toast.success("تم تحديث صورة الملف الشخصي.");
     } catch {
       toast.error("تعذر تحديث صورة الملف الشخصي.");
+    }
+  };
+
+  const removeAvatar = async () => {
+    try {
+      await removeAvatarMutation.mutateAsync();
+      toast.success("تم حذف صورة الملف الشخصي.");
+    } catch {
+      toast.error("تعذر حذف الصورة.");
     }
   };
 
@@ -74,8 +89,7 @@ export function EditInformationScreen() {
       });
       toast.success("تم تحديث بيانات الحساب بنجاح.", "تم حفظ المعلومات");
     } catch (error) {
-      const message =
-        error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
+      const message = error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
       toast.error(message, "تعذر حفظ المعلومات");
     }
   };
@@ -92,126 +106,44 @@ export function EditInformationScreen() {
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
       <MenuPageHeader title="تعديل المعلومات الشخصية" />
-
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
-          <View className="flex-row-reverse items-center justify-between gap-3">
-            <View className="flex-row-reverse items-center gap-3">
-              <Avatar name={user?.name ?? "مستخدم"} imageUrl={user?.avatarUrl} size={68} />
-              <View className="items-end"><Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">صورة الملف الشخصي</Text><Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">يمكنك تغيير الصورة أو حذفها.</Text></View>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 28 }}>
+        <Card padding="lg" className="mb-3 overflow-hidden rounded-3xl border-primary-200 bg-primary-100/50 dark:border-dark-400 dark:bg-dark-500">
+          <View className="items-center">
+            <View className="rounded-full border-4 border-white bg-white p-1 shadow-sm dark:border-dark-350 dark:bg-dark-350">
+              <Avatar name={user?.name ?? "مستخدم"} imageUrl={user?.avatarUrl} size={92} />
             </View>
-            <View className="gap-2"><Button size="small" loading={updateAvatarMutation.isPending} disabled={removeAvatarMutation.isPending} onPress={() => void changeAvatar()}>تغيير</Button>{user?.avatarUrl ? <Button size="small" variant="tertiary" loading={removeAvatarMutation.isPending} disabled={updateAvatarMutation.isPending} onPress={() => void removeAvatarMutation.mutateAsync().then(() => toast.success("تم حذف صورة الملف الشخصي.")).catch(() => toast.error("تعذر حذف الصورة."))}>حذف</Button> : null}</View>
+            <Text weight="bold" size="base" className="mt-3 text-dark-100 dark:text-light-50">{user?.name ?? "مستخدم جود"}</Text>
+            <Text size="2xs" rtlAlign="center" className="mt-1 text-gray-500 dark:text-gray-300">حدّث صورتك لتسهيل التعرف على حسابك داخل مجتمع جود.</Text>
+            <View className="mt-4 w-full flex-row-reverse gap-2">
+              <View className="flex-1"><Button fullWidth size="small" loading={updateAvatarMutation.isPending} disabled={removeAvatarMutation.isPending} onPress={() => void changeAvatar()}>تغيير الصورة</Button></View>
+              {user?.avatarUrl ? <View className="flex-1"><Button fullWidth size="small" variant="tertiary" loading={removeAvatarMutation.isPending} disabled={updateAvatarMutation.isPending} onPress={() => void removeAvatar()}>حذف الصورة</Button></View> : null}
+            </View>
           </View>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
-          <Text weight="semibold" size="sm" className="mb-2 text-dark-100 dark:text-light-50">
-            بيانات الحساب
-          </Text>
-
-          <View className="gap-2">
-            <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-              الاسم الكامل *
-            </Text>
-            <Input
-              fullWidth
-              showStatusIcon={false}
-              inputClassName="font-noto text-xs"
-              rightIcon={<UserIcon size={16} strokeWidth={2.25} />}
-              value={fullName}
-              onChangeText={setFullName}
-              placeholder="أدخل الاسم الكامل"
-              placeholderTextColor="#9CA3AF"
-            />
-
-            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-              البريد الإلكتروني *
-            </Text>
-            <Input
-              fullWidth
-              showStatusIcon={false}
-              inputClassName="font-noto text-xs"
-              rightIcon={<Mail size={16} strokeWidth={2.25} />}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              placeholder="example@jod.org"
-              placeholderTextColor="#9CA3AF"
-            />
-
-            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-              رقم الجوال (اختياري)
-            </Text>
-            <Input
-              fullWidth
-              showStatusIcon={false}
-              inputClassName="font-noto text-xs"
-              rightIcon={<Phone size={16} strokeWidth={2.25} />}
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              keyboardType="phone-pad"
-              placeholder="09xxxxxxxx"
-              placeholderTextColor="#9CA3AF"
-            />
-
-            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-              المدينة
-            </Text>
-            <Input
-              fullWidth
-              showStatusIcon={false}
-              inputClassName="font-noto text-xs"
-              rightIcon={<MapPin size={16} strokeWidth={2.25} />}
-              value={city}
-              onChangeText={setCity}
-              placeholder="مثال: دمشق"
-              placeholderTextColor="#9CA3AF"
-            />
-
-            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-              نبذة تعريفية
-            </Text>
-            <Input
-              fullWidth
-              showStatusIcon={false}
-              inputClassName="min-h-[64px] font-noto text-xs"
-              inputContainerClassName="min-h-[88px] py-2"
-              rightIcon={<FileText size={16} strokeWidth={2.25} />}
-              value={bio}
-              onChangeText={setBio}
-              placeholder="اكتب نبذة مختصرة عنك"
-              placeholderTextColor="#9CA3AF"
-              multiline
-              textAlignVertical="top"
-              maxLength={180}
-            />
-            <Text size="2xs" className="self-start text-gray-400 dark:text-gray-300">
-              {bio.trim().length}/180
-            </Text>
+        <Card padding="lg" className="mb-3 rounded-3xl border-gray-200 dark:border-dark-400">
+          <View className="mb-4">
+            <Text weight="bold" size="sm" className="text-dark-100 dark:text-light-50">بيانات الحساب</Text>
+            <Text size="2xs" className="mt-1 leading-5 text-gray-500 dark:text-gray-300">تأكد أن معلومات التواصل والنبذة محدثة وواضحة.</Text>
+          </View>
+          <View className="gap-3">
+            <Text size="2xs" className="text-gray-500 dark:text-gray-300">الاسم الكامل *</Text>
+            <Input fullWidth showStatusIcon={false} inputClassName="font-noto text-xs" rightIcon={<UserIcon size={16} strokeWidth={2.25} />} value={fullName} onChangeText={setFullName} placeholder="أدخل الاسم الكامل" placeholderTextColor="#9CA3AF" />
+            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">البريد الإلكتروني *</Text>
+            <Input fullWidth showStatusIcon={false} inputClassName="font-noto text-xs" rightIcon={<Mail size={16} strokeWidth={2.25} />} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholder="example@jod.org" placeholderTextColor="#9CA3AF" />
+            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">رقم الجوال (اختياري)</Text>
+            <Input fullWidth showStatusIcon={false} inputClassName="font-noto text-xs" rightIcon={<Phone size={16} strokeWidth={2.25} />} value={phoneNumber} onChangeText={setPhoneNumber} keyboardType="phone-pad" placeholder="+9639XXXXXXXX" placeholderTextColor="#9CA3AF" />
+            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">المحافظة</Text>
+            <Input fullWidth showStatusIcon={false} inputClassName="font-noto text-xs" rightIcon={<MapPin size={16} strokeWidth={2.25} />} value={city} onChangeText={setCity} placeholder="مثال: دمشق" placeholderTextColor="#9CA3AF" />
+            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">نبذة تعريفية</Text>
+            <Input fullWidth showStatusIcon={false} inputClassName="min-h-[64px] font-noto text-xs" inputContainerClassName="min-h-[88px] py-2" rightIcon={<FileText size={16} strokeWidth={2.25} />} value={bio} onChangeText={setBio} placeholder="اكتب نبذة مختصرة عنك" placeholderTextColor="#9CA3AF" multiline textAlignVertical="top" maxLength={180} />
+            <Text size="2xs" className="self-start text-gray-400 dark:text-gray-300">{bio.trim().length}/180</Text>
           </View>
         </Card>
 
-        <Button
-          fullWidth
-          size="small"
-          disabled={!canSave}
-          loading={updateProfileMutation.isPending}
-          onPress={handleSave}
-        >
-          حفظ التعديلات
-        </Button>
-
-        {!isEmailValid ? (
-          <Text size="2xs" className="mt-2 text-center text-error-300">
-            البريد الإلكتروني غير صالح.
-          </Text>
-        ) : null}
-        {!isPhoneValid ? (
-          <Text size="2xs" className="mt-2 text-center text-error-300">
-            رقم الجوال قصير جداً.
-          </Text>
-        ) : null}
+        <Button fullWidth size="medium" disabled={!canSave} loading={updateProfileMutation.isPending} onPress={handleSave}>حفظ التعديلات</Button>
+        {!isEmailValid ? <Text size="2xs" className="mt-2 text-center text-error-300">البريد الإلكتروني غير صالح.</Text> : null}
+        {!isPhoneValid ? <Text size="2xs" className="mt-2 text-center text-error-300">رقم الجوال قصير جداً.</Text> : null}
       </ScrollView>
     </View>
   );

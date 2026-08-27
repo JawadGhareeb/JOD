@@ -12,6 +12,7 @@ import { queryClient } from "@/src/lib/query-client";
 import { loadStoredColorScheme } from "@/src/lib/theme";
 import { RTLProvider } from "@/src/providers/RTLProvider";
 import { AuthGuardProvider } from "@/src/providers/AuthGuardProvider";
+import { ProtectedRouteBridge } from "@/src/providers/ProtectedRouteBridge";
 import { ToastProvider } from "@/src/providers/ToastProvider";
 import "./global.css";
 
@@ -60,6 +61,7 @@ export default function RootLayout() {
           <SafeAreaProvider>
             <ToastProvider>
               <AuthGuardProvider>
+                <ProtectedRouteBridge />
                 <NotificationRuntimeBridge />
                 <StatusBar
                   style={isDark ? "light" : "dark"}

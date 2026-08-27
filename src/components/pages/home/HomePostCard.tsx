@@ -8,7 +8,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { Archive, Pencil, Trash2 } from "lucide-react-native";
+import { Archive, MapPin, Pencil, Tag, Trash2 } from "lucide-react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
@@ -434,6 +434,23 @@ export function HomePostCard({
             {expanded ? "عرض أقل" : "عرض المزيد"}
           </Text>
         </Pressable>
+      ) : null}
+
+      {(post.category?.name || post.location) ? (
+        <View className="mt-2 flex-row-reverse flex-wrap items-center gap-2">
+          {post.category?.name ? (
+            <View className="flex-row-reverse items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 dark:bg-primary-400/15">
+              <Tag size={12} color={primaryColor} strokeWidth={2.2} />
+              <Text size="2xs" className="text-primary-400">{post.category.name}</Text>
+            </View>
+          ) : null}
+          {post.location ? (
+            <View className="flex-row-reverse items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 dark:bg-dark-350">
+              <MapPin size={12} color="#9CA3AF" strokeWidth={2.2} />
+              <Text size="2xs" className="text-gray-500 dark:text-gray-300">{post.location}</Text>
+            </View>
+          ) : null}
+        </View>
       ) : null}
 
       {previewImages.length > 0 ? (
