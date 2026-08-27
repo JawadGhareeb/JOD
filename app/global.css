@@ -10,7 +10,7 @@
 }
 
 .dark {
-  --color-primary: 101 181 160; /* #65B5A0 */
+  --color-primary: 74 151 130; /* #4A9782 */
 }
 
 @layer components {

@@ -27,28 +27,35 @@ const TYPES: { value: GlobalSearchType; label: string }[] = [
 
 function OrganizationCard({ account, onPress }: { account: SearchAccount; onPress: () => void }) {
   return (
-    <Card padding="md" className="w-40 border-gray-200 dark:border-dark-400">
-      <View className="items-center">
-        <Avatar name={account.name} imageUrl={account.avatarUrl} size={58} />
-        <Text
-          numberOfLines={1}
-          weight="semibold"
-          size="xs"
-          rtlAlign="center"
-          className="mt-3 w-full text-dark-100 dark:text-light-50"
-        >
-          {account.name}
-        </Text>
-        {account.city ? (
+    <Card padding="md" className="mb-3 w-full border-gray-200 dark:border-dark-400">
+      <View className="flex-row-reverse items-center gap-4">
+        <Avatar name={account.name} imageUrl={account.avatarUrl} size={66} />
+        <View className="min-w-0 flex-1">
+          <View className="flex-row-reverse items-center gap-2">
+            <Text numberOfLines={1} weight="semibold" size="sm" className="flex-1 text-dark-100 dark:text-light-50">
+              {account.name}
+            </Text>
+            {account.verified ? (
+              <Text size="2xs" className="text-primary-400">
+                موثق
+              </Text>
+            ) : null}
+          </View>
           <Text numberOfLines={1} size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-            {account.city}
+            @{account.username}
+            {account.city ? ` • ${account.city}` : ""}
           </Text>
-        ) : null}
-        <View className="mt-3 w-full">
-          <Button fullWidth size="small" variant="tertiary" onPress={onPress}>
-            زيارة الملف
-          </Button>
+          {account.bio ? (
+            <Text numberOfLines={2} ellipsizeMode="tail" size="2xs" className="mt-2 leading-5 text-gray-500 dark:text-gray-300">
+              {account.bio}
+            </Text>
+          ) : null}
         </View>
+      </View>
+      <View className="mt-4">
+        <Button fullWidth size="small" variant="tertiary" onPress={onPress}>
+          زيارة الملف
+        </Button>
       </View>
     </Card>
   );
@@ -91,8 +98,7 @@ export function SearchScreen() {
     [organizationsQuery.data],
   );
 
-  const openAccount = (id: string) =>
-    router.push({ pathname: "/author/[id]", params: { id } });
+  const openAccount = (id: string) => router.push({ pathname: "/author/[id]", params: { id } });
 
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
@@ -125,48 +131,43 @@ export function SearchScreen() {
         autoCapitalize="none"
       />
 
-      <View className="py-3">
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ flexGrow: 0 }}
-          contentContainerStyle={{ gap: 8, alignItems: "center" }}
-        >
-          {TYPES.map((item) => {
-            const active = type === item.value;
-            return (
-              <Pressable
-                key={item.value}
-                onPress={() => setType(item.value)}
-                className={`self-start rounded-full border px-4 py-2 ${
-                  active
-                    ? "border-primary-400 bg-primary-400/10"
-                    : "border-gray-200 bg-white dark:border-dark-400 dark:bg-dark-500"
-                }`}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-              >
-                <Text
-                  size="xs"
-                  className={active ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}
-                >
-                  {item.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+      <View className="flex-row-reverse flex-wrap items-center justify-start gap-2 py-3">
+        {TYPES.map((item) => {
+          const active = type === item.value;
+          return (
+            <Pressable
+              key={item.value}
+              onPress={() => setType(item.value)}
+              className={`rounded-full border px-4 py-2 ${
+                active
+                  ? "border-primary-400 bg-primary-400/10"
+                  : "border-gray-200 bg-white dark:border-dark-400 dark:bg-dark-500"
+              }`}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+            >
+              <Text size="xs" className={active ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}>
+                {item.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 28 }}>
         {!debouncedSearch ? (
           <View>
-            <Text weight="bold" size="base" className="mb-1 text-dark-100 dark:text-light-50">
-              ابحث
-            </Text>
-            <Text size="xs" className="mb-4 leading-6 text-gray-500 dark:text-gray-300">
-              ابحث عن المحتوى الذي يهمك، أو تعرّف على منظمات موجودة على جود.
-            </Text>
+            <View className="w-full items-center px-4 pb-7 pt-4">
+              <View className="h-16 w-16 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-400/15">
+                <SearchIcon size={30} color={primaryColor} strokeWidth={2.1} />
+              </View>
+              <Text weight="bold" size="base" rtlAlign="center" className="mt-3 text-dark-100 dark:text-light-50">
+                ابحث
+              </Text>
+              <Text size="xs" rtlAlign="center" className="mt-2 w-full max-w-[340px] leading-6 text-gray-500 dark:text-gray-300">
+                ابحث عن المحتوى الذي يهمك، أو تعرّف على منظمات موجودة على جود.
+              </Text>
+            </View>
 
             <View className="mb-3 flex-row-reverse items-center justify-between">
               <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
@@ -178,31 +179,17 @@ export function SearchScreen() {
             </View>
 
             {organizationsQuery.isLoading ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={{ flexGrow: 0 }}
-                contentContainerStyle={{ gap: 10 }}
-              >
+              <View className="gap-3">
                 {[0, 1, 2].map((item) => (
-                  <CardSkeleton key={item} width={160} height={170} margin={0} />
+                  <CardSkeleton key={item} width="100%" height={166} margin={0} />
                 ))}
-              </ScrollView>
+              </View>
             ) : organizations.length ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={{ flexGrow: 0 }}
-                contentContainerStyle={{ gap: 10, paddingBottom: 4 }}
-              >
+              <View>
                 {organizations.map((account) => (
-                  <OrganizationCard
-                    key={account.id}
-                    account={account}
-                    onPress={() => openAccount(account.id)}
-                  />
+                  <OrganizationCard key={account.id} account={account} onPress={() => openAccount(account.id)} />
                 ))}
-              </ScrollView>
+              </View>
             ) : (
               <Card padding="md" className="border-gray-200 dark:border-dark-400">
                 <Text size="xs" rtlAlign="center" className="text-gray-500 dark:text-gray-300">
@@ -225,7 +212,7 @@ export function SearchScreen() {
           </View>
         ) : total === 0 ? (
           <View className="items-center py-16">
-            <SearchIcon size={30} color="#9CA3AF" />
+            <SearchIcon size={36} color="#9CA3AF" />
             <Text size="sm" className="mt-3 text-gray-500 dark:text-gray-300">
               لا توجد نتائج مطابقة.
             </Text>
@@ -237,32 +224,36 @@ export function SearchScreen() {
                 <Text weight="semibold" size="sm" className="mb-2 text-dark-100 dark:text-light-50">
                   الحسابات ({counts?.accounts ?? 0})
                 </Text>
-                {result?.accounts.map((account) => (
-                  <Card
-                    key={account.id}
-                    padding="md"
-                    className="mb-2 border-gray-200 dark:border-dark-400"
-                    onPress={() => openAccount(account.id)}
-                  >
-                    <View className="flex-row-reverse items-center gap-3">
-                      <Avatar name={account.name} imageUrl={account.avatarUrl} size={42} />
-                      <View className="flex-1">
-                        <Text weight="semibold" size="sm">
-                          {account.name}
-                        </Text>
-                        <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-                          @{account.username}
-                          {account.city ? ` • ${account.city}` : ""}
-                        </Text>
+                {result?.accounts.map((account) =>
+                  account.accountType === "organization" ? (
+                    <OrganizationCard key={account.id} account={account} onPress={() => openAccount(account.id)} />
+                  ) : (
+                    <Card
+                      key={account.id}
+                      padding="md"
+                      className="mb-2 border-gray-200 dark:border-dark-400"
+                      onPress={() => openAccount(account.id)}
+                    >
+                      <View className="flex-row-reverse items-center gap-3">
+                        <Avatar name={account.name} imageUrl={account.avatarUrl} size={46} />
+                        <View className="flex-1">
+                          <Text weight="semibold" size="sm">
+                            {account.name}
+                          </Text>
+                          <Text size="2xs" className="text-gray-500 dark:text-gray-300">
+                            @{account.username}
+                            {account.city ? ` • ${account.city}` : ""}
+                          </Text>
+                        </View>
+                        {account.verified ? (
+                          <Text size="2xs" className="text-primary-400">
+                            موثق
+                          </Text>
+                        ) : null}
                       </View>
-                      {account.verified ? (
-                        <Text size="2xs" className="text-primary-400">
-                          موثق
-                        </Text>
-                      ) : null}
-                    </View>
-                  </Card>
-                ))}
+                    </Card>
+                  ),
+                )}
               </View>
             ) : null}
 

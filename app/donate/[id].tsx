@@ -82,7 +82,7 @@ export default function DonatePage() {
                 <Text size="xs" className="text-gray-500 dark:text-gray-300">تم جمع {campaign.raisedAmount.toLocaleString("ar-SY")} من {campaign.goalAmount.toLocaleString("ar-SY")}</Text>
               </Card>
               <Card padding="lg" className="gap-3 border-gray-200 dark:border-dark-400">
-                <View className="flex-row-reverse items-center gap-2"><HeartHandshake size={20} color="#405d72" /><Text weight="semibold" size="sm">بيانات طلب التبرع</Text></View>
+                <View className="flex-row-reverse items-center gap-2"><HeartHandshake size={20} color="#4A9782" /><Text weight="semibold" size="sm">بيانات طلب التبرع</Text></View>
                 <Input fullWidth showStatusIcon={false} value={amount} onChangeText={setAmount} placeholder="المبلغ" keyboardType="decimal-pad" />
                 <Text size="2xs" className="text-gray-500 dark:text-gray-300">طريقة التواصل</Text>
                 <View className="flex-row-reverse flex-wrap gap-2">{CONTACT_METHODS.map((method) => <Pressable key={method.value} onPress={() => setContactMethod(method.value)} className={`rounded-xl border px-3 py-2 ${contactMethod === method.value ? "border-primary-400 bg-primary-400/10" : "border-gray-200 dark:border-dark-400"}`}><Text size="2xs" className={contactMethod === method.value ? "text-primary-400" : "text-gray-600 dark:text-gray-200"}>{method.label}</Text></Pressable>)}</View>

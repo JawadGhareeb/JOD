@@ -55,7 +55,7 @@ export default function ApplyPage() {
                 <Text size="2xs" className="text-gray-500 dark:text-gray-300">عدد المتقدمين الحالي: {campaign.applicantsCount}</Text>
               </Card>
               <Card padding="lg" className="gap-3 border-gray-200 dark:border-dark-400">
-                <View className="flex-row-reverse items-center gap-2"><BriefcaseBusiness size={20} color="#405d72" /><Text weight="semibold" size="sm">بيانات التواصل</Text></View>
+                <View className="flex-row-reverse items-center gap-2"><BriefcaseBusiness size={20} color="#4A9782" /><Text weight="semibold" size="sm">بيانات التواصل</Text></View>
                 <Input fullWidth showStatusIcon={false} value={phone} onChangeText={setPhone} placeholder="رقم الهاتف - اختياري" keyboardType="phone-pad" />
                 <Input fullWidth showStatusIcon={false} value={city} onChangeText={setCity} placeholder="المدينة - اختياري" />
                 <Button fullWidth loading={applyMutation.isPending} disabled={applyMutation.isPending || campaign.status !== "active"} onPress={() => void submit()}>{campaign.status === "active" ? "إرسال طلب التقديم" : "الحملة غير متاحة للتقديم"}</Button>

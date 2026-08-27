@@ -5,16 +5,15 @@ import { Animated, Pressable, View, type LayoutChangeEvent } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Text from "@/src/components/ui/Text";
 import { useAuthStatus } from "@/src/features/auth/queries";
+import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useRTL } from "@/src/providers/RTLProvider";
 import { headerScrollY } from "@/src/providers/CollapsibleHeaderProvider";
-import { useAppSidebar } from "@/src/providers/AppSidebarProvider";
 import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
 import { AppTopNav, getActiveTabTitle } from "./AppTopNav";
 import { appIcons } from "./iconMap";
 
 const SearchIcon = appIcons.search;
-const MenuIcon = appIcons.menu;
-const MoreIcon = appIcons.more;
+const CreatePostIcon = appIcons.createPost;
 const MIN_HEADER_CONTENT_HEIGHT = 64;
 
 type AppHeaderProps = {
@@ -28,18 +27,14 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   const { isRTL } = useRTL();
   const { colorScheme } = useColorScheme();
   const { refreshAuthStatus } = useAuthStatus();
-  const { openSidebar } = useAppSidebar();
+  const { requireAuth } = useAuthGuard();
   const [contentHeight, setContentHeight] = useState(MIN_HEADER_CONTENT_HEIGHT);
   const isDark = colorScheme === "dark";
   const actionBgClass = isDark ? "bg-dark-350" : "bg-primary-100";
   const iconColor = isDark ? "#F9FAFB" : PRIMARY_COLOR_LIGHT;
-  // Animated.View often doesn't re-apply NativeWind className when the scheme
-  // changes — drive the surface color via style so light/dark always sync.
   const surfaceColor = isDark ? "#1f222b" : "#FFFFFF";
   const rowClassName = isRTL ? "flex-row-reverse" : "flex-row";
-
   const activeTabTitle = useMemo(() => getActiveTabTitle(pathname), [pathname]);
-  const isReelsTab = pathname === "/reels" || pathname.startsWith("/reels/");
 
   const topInsetHeight = includeTopInset ? insets.top : 0;
   const resolvedContentHeight = Math.max(contentHeight, MIN_HEADER_CONTENT_HEIGHT);
@@ -70,6 +65,11 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
     }
   };
 
+  const openCreatePost = () => {
+    if (!requireAuth()) return;
+    router.push("/(tabs)/create-post");
+  };
+
   return (
     <Animated.View
       style={{
@@ -88,56 +88,43 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
           backgroundColor: surfaceColor,
         }}
       >
-        {topInsetHeight > 0 ? (
-          <View style={{ height: topInsetHeight, backgroundColor: surfaceColor }} />
-        ) : null}
+        {topInsetHeight > 0 ? <View style={{ height: topInsetHeight, backgroundColor: surfaceColor }} /> : null}
         <View onLayout={handleHeaderLayout}>
-        <View className="px-4 py-3">
-          <View className={`${rowClassName} items-center justify-between`}>
-            <View className={`${rowClassName} min-w-0 flex-1 items-center gap-2`}>
-              <Pressable
-                onPress={openSidebar}
-                className={`h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
-                accessibilityRole="button"
-                accessibilityLabel="القائمة"
-              >
-                <MenuIcon size={20} color={iconColor} strokeWidth={2.25} />
-              </Pressable>
-              <Text
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                size="base"
-                weight="bold"
-                className="shrink text-dark-100 dark:text-light-50"
-              >
-                {activeTabTitle ?? "جود"}
-              </Text>
-            </View>
+          <View className="px-4 py-3">
+            <View className={`${rowClassName} items-center justify-between`}>
+              <View className="min-w-0 flex-1">
+                <Text
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  size="xl"
+                  weight="bold"
+                  className={activeTabTitle ? "text-dark-100 dark:text-light-50" : "text-primary-400"}
+                >
+                  {activeTabTitle ?? "JOD"}
+                </Text>
+              </View>
 
-            <View className={`${rowClassName} items-center gap-2`}>
-              <Pressable
-                onPress={() => router.push("/search")}
-                className={`h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
-                accessibilityRole="button"
-                accessibilityLabel="البحث"
-              >
-                <SearchIcon size={20} color={iconColor} strokeWidth={2.25} />
-              </Pressable>
-              {isReelsTab ? (
+              <View className={`${rowClassName} items-center gap-2`}>
                 <Pressable
-                  onPress={openSidebar}
+                  onPress={openCreatePost}
                   className={`h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
                   accessibilityRole="button"
-                  accessibilityLabel="خيارات إضافية"
+                  accessibilityLabel="إضافة بوست"
                 >
-                  <MoreIcon size={20} color={iconColor} strokeWidth={2.25} />
+                  <CreatePostIcon size={21} color={iconColor} strokeWidth={2.4} />
                 </Pressable>
-              ) : null}
+                <Pressable
+                  onPress={() => router.push("/search")}
+                  className={`h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
+                  accessibilityRole="button"
+                  accessibilityLabel="البحث"
+                >
+                  <SearchIcon size={20} color={iconColor} strokeWidth={2.25} />
+                </Pressable>
+              </View>
             </View>
           </View>
-        </View>
-
-        <AppTopNav />
+          <AppTopNav />
         </View>
       </Animated.View>
     </Animated.View>

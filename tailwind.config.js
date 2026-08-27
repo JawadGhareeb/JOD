@@ -28,8 +28,8 @@ module.exports = {
       },
       colors: {
         primary: {
-          100: "#eaedef",
-          200: "#9faeb8",
+          100: "#e8f5f1",
+          200: "#8fc4b5",
           400: "rgb(var(--color-primary) / <alpha-value>)",
         },
 

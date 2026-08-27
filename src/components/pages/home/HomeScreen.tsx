@@ -7,8 +7,8 @@ import { HomeComposerBar } from "./HomeComposerBar";
 import { HomeFeed } from "./HomeFeed";
 
 const AUDIENCE_TABS = [
-  { id: "general", label: "عام" },
-  { id: "student", label: "طلاب" },
+  { id: "general", label: "مساعدات عامة" },
+  { id: "student", label: "مساعدات طلابية" },
 ];
 
 export function HomeScreen() {
@@ -17,19 +17,20 @@ export function HomeScreen() {
 
   return (
     <View className="flex-1 bg-light-100 dark:bg-dark-300">
-      <View className="px-4 pb-3 pt-3">
-        <Tabs
-          tabs={AUDIENCE_TABS}
-          activeTab={audience}
-          onTabChange={(id) => setAudience(id as ContentAudience)}
-        />
-      </View>
-
       <HomeFeed
         audience={audience}
         onScroll={onScroll}
         onRefresh={resetHeader}
-        listHeaderComponent={<HomeComposerBar />}
+        listHeaderComponent={
+          <View className="pb-3">
+            <HomeComposerBar />
+            <Tabs
+              tabs={AUDIENCE_TABS}
+              activeTab={audience}
+              onTabChange={(id) => setAudience(id as ContentAudience)}
+            />
+          </View>
+        }
       />
     </View>
   );

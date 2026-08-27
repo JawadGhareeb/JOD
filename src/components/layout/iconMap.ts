@@ -1,5 +1,6 @@
 import {
   CircleHelp,
+  CircleUserRound,
   Bell,
   Bookmark,
   ChevronRight,
@@ -23,7 +24,6 @@ import {
   Settings,
   ShieldCheck,
   Sun,
-  UserRound,
   X,
   Moon,
   ChevronLeft,
@@ -36,7 +36,7 @@ export const appIcons = {
   menu: Menu,
   close: X,
   home: Home,
-  profile: UserRound,
+  profile: CircleUserRound,
   blogs: Newspaper,
   reels: Clapperboard,
   play: Play,

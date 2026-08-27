@@ -3,7 +3,6 @@ import { useColorScheme } from "nativewind";
 import { Pressable, ScrollView, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { SectionHeader } from "@/src/components/shared/SectionHeader";
-import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import type { PublicMediaItem } from "@/src/features/media/types";
@@ -28,11 +27,7 @@ export function HomeReelsSection({ items, loading = false }: Props) {
   return (
     <View className="mb-4 rounded-2xl bg-white py-3 dark:bg-dark-500">
       <View className="px-4">
-        <SectionHeader
-          title="ريلز جود"
-          actionLabel="مشاهدة الكل"
-          onActionPress={() => router.push("/(tabs)/reels")}
-        />
+        <SectionHeader title="ريلز جود" />
       </View>
 
       <ScrollView
@@ -45,9 +40,7 @@ export function HomeReelsSection({ items, loading = false }: Props) {
           : items.map((video) => (
               <Pressable
                 key={video.id}
-                onPress={() =>
-                  router.push({ pathname: "/(tabs)/reels", params: { videoId: video.id } })
-                }
+                onPress={() => router.push({ pathname: "/(tabs)/reels", params: { videoId: video.id } })}
                 accessibilityRole="button"
                 accessibilityLabel="تشغيل الفيديو"
                 className="w-[150px] overflow-hidden rounded-2xl bg-dark-500"
@@ -65,22 +58,21 @@ export function HomeReelsSection({ items, loading = false }: Props) {
                 </View>
               </Pressable>
             ))}
-
-        {!loading ? (
-          <Card
-            padding="md"
-            className="h-[224px] w-[120px] items-center justify-center border-gray-200 dark:border-dark-400"
-            onPress={() => router.push("/(tabs)/reels")}
-          >
-            <View className="h-12 w-12 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-400/15">
-              <ArrowIcon size={20} color={primaryColor} />
-            </View>
-            <Text size="xs" weight="medium" rtlAlign="center" className="mt-3 text-primary-400">
-              مشاهدة الكل
-            </Text>
-          </Card>
-        ) : null}
       </ScrollView>
+
+      {!loading ? (
+        <Pressable
+          onPress={() => router.push("/(tabs)/reels")}
+          accessibilityRole="button"
+          accessibilityLabel="مشاهدة كل الريلز"
+          className="mx-4 mt-3 flex-row-reverse items-center justify-center gap-2 rounded-xl border border-primary-400/30 bg-primary-400/10 px-4 py-3"
+        >
+          <Text size="xs" weight="semibold" className="text-primary-400">
+            مشاهدة كل الريلز
+          </Text>
+          <ArrowIcon size={16} color={primaryColor} strokeWidth={2.25} />
+        </Pressable>
+      ) : null}
     </View>
   );
 }

@@ -8,10 +8,8 @@ import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 import { appIcons } from "./iconMap";
 
-type TopNavKey = "home" | "reels" | "notifications" | "profile" | "help-offers";
+type TopNavKey = "home" | "reels" | "notifications" | "profile" | "settings";
 
-// Shared with AppHeader, which reads .label to show a per-tab title instead
-// of always showing the "جود" logo.
 export const TOP_NAV_ITEMS: {
   key: TopNavKey;
   path: `/${string}`;
@@ -19,51 +17,18 @@ export const TOP_NAV_ITEMS: {
   requiresAuth: boolean;
   label: string;
 }[] = [
-  {
-    key: "home",
-    path: "/(tabs)/home",
-    Icon: appIcons.home,
-    requiresAuth: false,
-    label: "الرئيسية",
-  },
-  {
-    key: "reels",
-    path: "/(tabs)/reels",
-    Icon: appIcons.reels,
-    requiresAuth: false,
-    label: "ريلز",
-  },
-  {
-    key: "notifications",
-    path: "/(tabs)/notifications",
-    Icon: appIcons.notification,
-    requiresAuth: true,
-    label: "الإشعارات",
-  },
-  {
-    key: "profile",
-    path: "/(tabs)/profile",
-    Icon: appIcons.profile,
-    requiresAuth: true,
-    label: "الملف الشخصي",
-  },
-  {
-    key: "help-offers",
-    path: "/(tabs)/help-offers",
-    Icon: appIcons.helpOffers,
-    requiresAuth: true,
-    label: "عروض المساعدة",
-  },
+  { key: "home", path: "/(tabs)/home", Icon: appIcons.home, requiresAuth: false, label: "الرئيسية" },
+  { key: "reels", path: "/(tabs)/reels", Icon: appIcons.reels, requiresAuth: false, label: "ريلز" },
+  { key: "notifications", path: "/(tabs)/notifications", Icon: appIcons.notification, requiresAuth: true, label: "الإشعارات" },
+  { key: "profile", path: "/(tabs)/profile", Icon: appIcons.profile, requiresAuth: true, label: "الملف الشخصي" },
+  { key: "settings", path: "/(tabs)/settings", Icon: appIcons.settings, requiresAuth: false, label: "الإعدادات" },
 ];
 
-/** Returns the tab's Arabic label for the current pathname, or null on Home
- * (where AppHeader shows the "جود" logo instead) or an unrecognized route. */
 export function getActiveTabTitle(pathname: string): string | null {
   const match = TOP_NAV_ITEMS.find((item) => {
     const tabPath = item.path.replace("/(tabs)", "");
     return pathname === tabPath || pathname.startsWith(`${tabPath}/`);
   });
-
   if (!match || match.key === "home") return null;
   return match.label;
 }
@@ -74,19 +39,15 @@ export function AppTopNav() {
   const { colorScheme } = useColorScheme();
   const { isAuthenticated } = useAuthStatus();
   const { requireAuth } = useAuthGuard();
-  const { data: unreadNotificationCount = 0 } =
-    useUnreadNotificationCount(isAuthenticated);
-  const isDark = colorScheme === "dark";
-  const activeColor = getPrimaryColor(isDark);
-  const inactiveColor = isDark ? "#9CA3AF" : "#9CA3AF";
+  const { data: unreadNotificationCount = 0 } = useUnreadNotificationCount(isAuthenticated);
+  const activeColor = getPrimaryColor(colorScheme === "dark");
+  const inactiveColor = "#9CA3AF";
 
   return (
     <View className="flex-row-reverse items-stretch border-t border-gray-100 pb-2 dark:border-dark-400">
       {TOP_NAV_ITEMS.map((item) => {
-        const isActive =
-          pathname === item.path.replace("/(tabs)", "") ||
-          pathname.startsWith(item.path.replace("/(tabs)", ""));
-
+        const tabPath = item.path.replace("/(tabs)", "");
+        const isActive = pathname === tabPath || pathname.startsWith(`${tabPath}/`);
         const handlePress = () => {
           if (item.requiresAuth && !requireAuth()) return;
           router.push(item.path as never);
@@ -103,16 +64,10 @@ export function AppTopNav() {
             <item.Icon
               size={24}
               color={isActive ? activeColor : inactiveColor}
-              fill={isActive ? activeColor : "transparent"}
-              // A bold stroke drawn on top of a fill bulges the rounded
-              // joins outward (lucide defaults to strokeLinecap/Linejoin
-              // "round"), which is what made the filled icon look like a
-              // blob. Thin the stroke once fill is doing the work.
-              strokeWidth={isActive ? 1.5 : 2}
+              fill={item.key === "home" && isActive ? activeColor : "transparent"}
+              strokeWidth={isActive ? 2.25 : 2}
             />
-            {item.key === "notifications" &&
-            isAuthenticated &&
-            unreadNotificationCount > 0 ? (
+            {item.key === "notifications" && isAuthenticated && unreadNotificationCount > 0 ? (
               <View className="absolute right-[28%] top-1 min-w-4 items-center justify-center rounded-full bg-error-300 px-1">
                 <Text size="2xs" weight="semibold" className="text-light-50">
                   {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
@@ -121,9 +76,7 @@ export function AppTopNav() {
             ) : null}
             <View
               className="absolute -bottom-2 left-0 right-0 h-[3px] rounded-t-full"
-              style={{
-                backgroundColor: isActive ? activeColor : "transparent",
-              }}
+              style={{ backgroundColor: isActive ? activeColor : "transparent" }}
             />
           </Pressable>
         );

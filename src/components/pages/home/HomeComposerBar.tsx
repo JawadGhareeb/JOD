@@ -9,8 +9,6 @@ import { useAuthStatus } from "@/src/features/auth/queries";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { getPrimaryColor } from "@/src/theme";
 
-// Facebook-style composer prompt — tapping it (or the image icon) just opens
-// the full create-post screen, same as tapping FB's own composer bar does.
 export function HomeComposerBar() {
   const router = useRouter();
   const { user } = useAuthStatus();
@@ -23,19 +21,24 @@ export function HomeComposerBar() {
     router.push("/(tabs)/create-post");
   };
 
+  const openProfile = () => {
+    if (!requireAuth()) return;
+    router.push("/(tabs)/profile");
+  };
+
   return (
     <Card padding="sm" className="mb-3 border-gray-200 dark:border-dark-400">
       <View className="flex-row-reverse items-center gap-2">
-        <Avatar name={user?.name || "زائر"} size={38} />
+        <Pressable onPress={openProfile} accessibilityRole="button" accessibilityLabel="فتح الملف الشخصي" className="rounded-full">
+          <Avatar name={user?.name || "زائر"} size={38} />
+        </Pressable>
         <Pressable
           onPress={openComposer}
           className="h-10 flex-1 justify-center rounded-full bg-gray-100 px-4 dark:bg-dark-350"
           accessibilityRole="button"
           accessibilityLabel="نشر بوست جديد"
         >
-          <Text size="sm" className="text-gray-500 dark:text-gray-300">
-            بماذا تفكّر؟
-          </Text>
+          <Text size="sm" className="text-gray-500 dark:text-gray-300">بماذا تفكّر؟</Text>
         </Pressable>
         <Pressable
           onPress={openComposer}
