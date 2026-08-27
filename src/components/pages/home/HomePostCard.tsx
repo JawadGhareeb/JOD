@@ -17,6 +17,7 @@ import Input from "@/src/components/ui/Input";
 import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
+import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import { HomePostTypeEnum } from "@/src/constants/global";
 import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
 import { openPostContact } from "@/src/features/posts/contact";
@@ -391,11 +392,7 @@ export function HomePostCard({
               <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
                 {post.publisher.name}
               </Text>
-              {post.publisher.verified ? (
-                <Text size="2xs" className="text-primary-400">
-                  موثق
-                </Text>
-              ) : null}
+              {post.publisher.verified ? <VerifiedBadge /> : null}
             </View>
             <Text size="2xs" className="text-gray-500 dark:text-gray-300">
               @{post.publisher.username} • {formatHomePostRelativeDate(post.createdAt)}

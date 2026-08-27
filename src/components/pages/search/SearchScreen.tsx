@@ -7,6 +7,7 @@ import { appIcons } from "@/src/components/layout/iconMap";
 import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
 import { HomePostCardSkeleton } from "@/src/components/pages/home/HomePostCardSkeleton";
 import { Avatar } from "@/src/components/shared/Avatar";
+import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
@@ -40,7 +41,7 @@ function OrganizationCard({ account, onPress }: { account: SearchAccount; onPres
         <View className="mt-3 w-full items-center">
           <View className="max-w-full flex-row-reverse items-center gap-1.5">
             <Text numberOfLines={1} weight="semibold" size="sm" className="max-w-[165px] text-dark-100 dark:text-light-50">{account.name}</Text>
-            {account.verified ? <Text size="2xs" className="text-primary-400">موثق</Text> : null}
+            {account.verified ? <VerifiedBadge /> : null}
           </View>
           <Text numberOfLines={1} size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">{account.city || `@${account.username}`}</Text>
           <View className="h-12 w-full justify-center">
@@ -224,7 +225,7 @@ export function SearchScreen() {
                     <View className="flex-row-reverse items-center gap-3">
                       <Avatar name={account.name} imageUrl={account.avatarUrl} size={46} />
                       <View className="flex-1"><Text weight="semibold" size="sm">{account.name}</Text><Text size="2xs" className="text-gray-500 dark:text-gray-300">@{account.username}{account.city ? ` • ${account.city}` : ""}</Text></View>
-                      {account.verified ? <Text size="2xs" className="text-primary-400">موثق</Text> : null}
+                      {account.verified ? <VerifiedBadge /> : null}
                     </View>
                   </Card>
                 ))}

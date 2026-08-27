@@ -5,6 +5,7 @@ import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
+import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
 import { HomePostCardSkeleton } from "@/src/components/pages/home/HomePostCardSkeleton";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
@@ -239,9 +240,7 @@ export function AuthorProfileScreen() {
                   <Text weight="semibold" size="base" className="text-dark-100 dark:text-light-50">
                     {author.name}
                   </Text>
-                  {author.verified ? (
-                    <Text size="2xs" className="text-primary-400">موثق</Text>
-                  ) : null}
+                  {author.verified ? <VerifiedBadge /> : null}
                 </View>
                 <Text size="xs" className="mt-1 text-gray-500 dark:text-gray-300">
                   @{author.username}{author.city ? ` • ${author.city}` : ""}
