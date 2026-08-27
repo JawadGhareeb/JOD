@@ -20,10 +20,12 @@ export function ReelVideoItem({
   video,
   active,
   height,
+  onPlayRequest,
 }: {
   video: PublicMediaItem;
   active: boolean;
   height: number;
+  onPlayRequest: () => void;
 }) {
   const router = useRouter();
   const { requireAuth } = useAuthGuard();
@@ -143,6 +145,7 @@ export function ReelVideoItem({
           <VideoPlayer
             url={video.url}
             active={active}
+            onRequestPlay={onPlayRequest}
             loop
             showProgressControls
             style={{ width: "100%", height: "100%" }}
@@ -198,17 +201,8 @@ export function ReelVideoItem({
       <Dialog
         visible={customReportOpen}
         title="سبب آخر"
-        message="اكتب باختصار سبب الإبلاغ عن هذا الريل."
         cancelable={!reportMutation.isPending}
         onClose={() => !reportMutation.isPending && setCustomReportOpen(false)}
-        customContent={
-          <Input
-            value={customReason}
-            onChangeText={setCustomReason}
-            placeholder="اكتب سبب الإبلاغ..."
-            multiline
-          />
-        }
         buttons={[
           { text: "إلغاء", variant: "outline", onPress: () => setCustomReportOpen(false) },
           {
@@ -224,7 +218,12 @@ export function ReelVideoItem({
             },
           },
         ]}
-      />
+      >
+        <View className="gap-3">
+          <Text size="xs" className="text-center text-gray-500 dark:text-gray-300">اكتب باختصار سبب الإبلاغ عن هذا الريل.</Text>
+          <Input value={customReason} onChangeText={setCustomReason} placeholder="اكتب سبب الإبلاغ..." multiline />
+        </View>
+      </Dialog>
     </View>
   );
 }

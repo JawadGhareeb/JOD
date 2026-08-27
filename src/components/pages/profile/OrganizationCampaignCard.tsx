@@ -1,15 +1,17 @@
 import { Image, View } from "react-native";
+import { useRouter } from "expo-router";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import type { Campaign } from "@/src/features/posts/types";
 
 export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
+  const router = useRouter();
   const progress = campaign.goalAmount > 0
     ? Math.min(100, Math.max(0, (campaign.raisedAmount / campaign.goalAmount) * 100))
     : 0;
 
   return (
-    <Card padding="none" className="mb-3 overflow-hidden border-gray-200 dark:border-dark-400">
+    <Card padding="none" className="mb-3 overflow-hidden border-gray-200 dark:border-dark-400" onPress={() => router.push(`/campaigns/${campaign.id}` as never)} accessibilityRole="button" accessibilityLabel={`فتح حملة ${campaign.title}`}>
       {campaign.images[0] ? (
         <Image source={{ uri: campaign.images[0] }} className="h-40 w-full bg-gray-100 dark:bg-dark-350" resizeMode="cover" />
       ) : null}

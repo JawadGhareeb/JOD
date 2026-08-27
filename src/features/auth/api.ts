@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { apiClient } from "@/src/lib/api-client";
 import type { ApiEnvelope } from "@/src/types/api";
 import type {
@@ -18,6 +19,7 @@ const ENDPOINTS = {
   verifyResetCode: "/auth/verify-reset-code",
   resetPassword: "/auth/reset-password",
   me: "/me",
+  avatar: "/me/avatar",
 } as const;
 
 export const authApi = {
@@ -47,6 +49,21 @@ export const authApi = {
   resetPassword: async (input: ResetPasswordInput): Promise<boolean> => {
     const response = await apiClient.post<ApiEnvelope<{ resetPasswordUpdated: boolean }>>(ENDPOINTS.resetPassword, input);
     return response.data.data.resetPasswordUpdated;
+  },
+  updateAvatar: async (image: { uri: string; name: string; type: string }): Promise<AuthUser> => {
+    const form = new FormData();
+    if (Platform.OS === "web") {
+      const blob = await fetch(image.uri).then((response) => response.blob());
+      form.append("file", blob, image.name);
+    } else {
+      form.append("file", image as unknown as Blob);
+    }
+    const response = await apiClient.post<ApiEnvelope<AuthUser>>(ENDPOINTS.avatar, form);
+    return response.data.data;
+  },
+  removeAvatar: async (): Promise<AuthUser> => {
+    const response = await apiClient.delete<ApiEnvelope<AuthUser>>(ENDPOINTS.avatar);
+    return response.data.data;
   },
   me: async (): Promise<AuthUser> => {
     const response = await apiClient.get<ApiEnvelope<AuthUser>>(ENDPOINTS.me);

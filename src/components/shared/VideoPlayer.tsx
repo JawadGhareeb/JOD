@@ -23,6 +23,7 @@ type VideoPlayerProps = {
   muted?: boolean;
   nativeControls?: boolean;
   showProgressControls?: boolean;
+  onRequestPlay?: () => void;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -41,6 +42,7 @@ export function VideoPlayer({
   muted = false,
   nativeControls = false,
   showProgressControls = false,
+  onRequestPlay,
   style,
 }: VideoPlayerProps) {
   const [manuallyPaused, setManuallyPaused] = useState(false);
@@ -93,7 +95,10 @@ export function VideoPlayer({
   );
 
   const togglePlayback = () => {
-    if (!active) return;
+    if (!active) {
+      onRequestPlay?.();
+      return;
+    }
     setManuallyPaused((current) => !current);
   };
 
@@ -131,7 +136,7 @@ export function VideoPlayer({
           contentFit="contain"
           allowsFullscreen
         />
-        {!nativeControls && manuallyPaused ? (
+        {!nativeControls && (!active || manuallyPaused) ? (
           <View className="absolute inset-0 items-center justify-center bg-black/20">
             <View className="h-14 w-14 items-center justify-center rounded-full bg-black/65">
               <PlayIcon size={26} color="#FFFFFF" fill="#FFFFFF" />

@@ -64,7 +64,6 @@ export function AppTopNav() {
             <item.Icon
               size={24}
               color={isActive ? activeColor : inactiveColor}
-              fill={item.key === "home" && isActive ? activeColor : "transparent"}
               strokeWidth={isActive ? 2.25 : 2}
             />
             {item.key === "notifications" && isAuthenticated && unreadNotificationCount > 0 ? (

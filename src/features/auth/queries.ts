@@ -30,3 +30,5 @@ export function useLogout() { const queryClient = useQueryClient(); return useMu
 export function useForgotPassword() { return useMutation({ mutationFn: (login: string) => authApi.forgotPassword(login) }); }
 export function useVerifyResetCode() { return useMutation({ mutationFn: ({ login, code }: { login: string; code: string }) => authApi.verifyResetCode(login, code) }); }
 export function useResetPassword() { return useMutation({ mutationFn: (input: ResetPasswordInput) => authApi.resetPassword(input) }); }
+export function useUpdateAvatar() { const queryClient = useQueryClient(); return useMutation({ mutationFn: authApi.updateAvatar, onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.session() }) }); }
+export function useRemoveAvatar() { const queryClient = useQueryClient(); return useMutation({ mutationFn: authApi.removeAvatar, onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.session() }) }); }

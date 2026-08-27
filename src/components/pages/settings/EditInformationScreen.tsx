@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import * as ImagePicker from "expo-image-picker";
 import { FileText, Mail, MapPin, Phone } from "lucide-react-native";
 import { ScrollView, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
@@ -8,7 +9,8 @@ import Input from "@/src/components/ui/Input";
 import Text from "@/src/components/ui/Text";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import { useToast } from "@/src/providers/ToastProvider";
-import { useAuthStatus } from "@/src/features/auth/queries";
+import { useAuthStatus, useRemoveAvatar, useUpdateAvatar } from "@/src/features/auth/queries";
+import { Avatar } from "@/src/components/shared/Avatar";
 import { useUpdateProfile } from "@/src/features/account/queries";
 import { ApiClientError } from "@/src/lib/api-client";
 import { MenuPageHeader } from "./MenuPageHeader";
@@ -20,6 +22,8 @@ export function EditInformationScreen() {
   const { user, isLoading } = useAuthStatus();
   const toast = useToast();
   const updateProfileMutation = useUpdateProfile();
+  const updateAvatarMutation = useUpdateAvatar();
+  const removeAvatarMutation = useRemoveAvatar();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -41,6 +45,23 @@ export function EditInformationScreen() {
   const isPhoneValid = phoneNumber.trim().length === 0 || phoneNumber.trim().length >= 8;
   const canSave =
     fullName.trim().length > 2 && isEmailValid && isPhoneValid && !updateProfileMutation.isPending;
+
+  const changeAvatar = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permission.status !== "granted") {
+      toast.error("اسمح للتطبيق بالوصول إلى الصور لتغيير صورة الملف الشخصي.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.85 });
+    if (result.canceled || !result.assets[0]) return;
+    const asset = result.assets[0];
+    try {
+      await updateAvatarMutation.mutateAsync({ uri: asset.uri, name: asset.fileName ?? `avatar-${Date.now()}.jpg`, type: asset.mimeType ?? "image/jpeg" });
+      toast.success("تم تحديث صورة الملف الشخصي.");
+    } catch {
+      toast.error("تعذر تحديث صورة الملف الشخصي.");
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -73,6 +94,16 @@ export function EditInformationScreen() {
       <MenuPageHeader title="تعديل المعلومات الشخصية" />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+          <View className="flex-row-reverse items-center justify-between gap-3">
+            <View className="flex-row-reverse items-center gap-3">
+              <Avatar name={user?.name ?? "مستخدم"} imageUrl={user?.avatarUrl} size={68} />
+              <View className="items-end"><Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">صورة الملف الشخصي</Text><Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">يمكنك تغيير الصورة أو حذفها.</Text></View>
+            </View>
+            <View className="gap-2"><Button size="small" loading={updateAvatarMutation.isPending} disabled={removeAvatarMutation.isPending} onPress={() => void changeAvatar()}>تغيير</Button>{user?.avatarUrl ? <Button size="small" variant="tertiary" loading={removeAvatarMutation.isPending} disabled={updateAvatarMutation.isPending} onPress={() => void removeAvatarMutation.mutateAsync().then(() => toast.success("تم حذف صورة الملف الشخصي.")).catch(() => toast.error("تعذر حذف الصورة."))}>حذف</Button> : null}</View>
+          </View>
+        </Card>
+
         <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="mb-2 text-dark-100 dark:text-light-50">
             بيانات الحساب

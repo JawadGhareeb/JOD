@@ -8,7 +8,6 @@ import { Alert, Animated, Image, Pressable, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
-import Dialog from "@/src/components/ui/Dialog";
 import Input from "@/src/components/ui/Input";
 import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
@@ -75,7 +74,6 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const [activePostId, setActivePostId] = useState(editingPostId);
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [initializedPostId, setInitializedPostId] = useState<string | null>(null);
@@ -279,7 +277,6 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
       }
       await syncPostImages(postId);
       await submitMutation.mutateAsync(postId);
-      setIsSubmitConfirmOpen(false);
       toast.success("تم إرسال المنشور للمراجعة، وسيظهر بعد موافقة الإدارة.", "تم إرسال المنشور");
       if (editMode) router.back();
       else router.replace("/(tabs)/profile");
@@ -389,25 +386,13 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         </Card>
 
         <View className="mb-2 flex-row-reverse gap-2">
-          <View className="flex-1"><Button fullWidth size="small" disabled={!canPublish || isBusy} loading={isPublishing} onPress={() => { if (requireAuth()) setIsSubmitConfirmOpen(true); }}>{editMode ? "حفظ وإعادة الإرسال" : "إرسال المنشور"}</Button></View>
+          <View className="flex-1"><Button fullWidth size="small" disabled={!canPublish || isBusy} loading={isPublishing} onPress={() => void handlePublish()}>{editMode ? "حفظ وإعادة الإرسال" : "إرسال المنشور"}</Button></View>
           <View className="flex-1"><Button fullWidth size="small" variant="tertiary" disabled={isBusy} loading={isSavingDraft} onPress={() => { if (requireAuth()) void handleSaveDraft(); }}>حفظ كمسودة</Button></View>
         </View>
       </Animated.ScrollView>
 
       <SelectionModal visible={isCityModalOpen} title="اختر المدينة" options={cityOptions} selectedValue={city} onSelect={(value) => { setCity(value); setIsCityModalOpen(false); }} onClose={() => setIsCityModalOpen(false)} />
       <SelectionModal visible={isCategoryModalOpen} title="تصنيف المنشور" options={categoryOptions} selectedValue={categoryId} onSelect={(value) => { setCategoryId(value); setIsCategoryModalOpen(false); }} onClose={() => setIsCategoryModalOpen(false)} />
-      <Dialog
-        visible={isSubmitConfirmOpen}
-        title="تأكيد إرسال المنشور"
-        message="سيتم حفظ المنشور كمسودة أولاً، رفع الصور المرفقة، ثم إرساله للمراجعة."
-        icon={<ImageIcon size={28} color={primaryColor} strokeWidth={2.25} />}
-        cancelable={!isPublishing}
-        onClose={() => { if (!isPublishing) setIsSubmitConfirmOpen(false); }}
-        buttons={[
-          { text: "إلغاء", variant: "tertiary", onPress: () => setIsSubmitConfirmOpen(false) },
-          { text: "إرسال", variant: "primary", onPress: () => void handlePublish() },
-        ]}
-      />
     </View>
   );
 }

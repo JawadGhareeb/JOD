@@ -31,7 +31,7 @@ const registerSchema = z
       .trim()
       .min(1, "البريد الإلكتروني مطلوب")
       .email("صيغة البريد الإلكتروني غير صحيحة"),
-    phoneNumber: z.string().trim().min(1, "رقم الهاتف مطلوب").max(20, "رقم الهاتف طويل جداً"),
+    phoneNumber: z.string().trim().min(1, "رقم الموبايل مطلوب").regex(/^\+9639\d{8}$/, "أدخل رقم موبايل سوري صحيحاً بصيغة +9639XXXXXXXX"),
     password: z
       .string()
       .trim()
@@ -182,16 +182,19 @@ export default function RegisterScreen() {
               name="phoneNumber"
               render={({ field: { onChange, onBlur, value } }) => (
                 <Input
-                  label="رقم الهاتف (اختياري)"
-                  placeholder="0999999999"
-                  value={value}
-                  onChangeText={onChange}
+                  label="رقم الموبايل"
+                  placeholder="9XXXXXXXX"
+                  value={value.replace(/^\+963/, "")}
+                  onChangeText={(text) => {
+                    const digits = text.replace(/\D/g, "").slice(0, 9);
+                    onChange(digits ? `+963${digits}` : "");
+                  }}
                   onBlur={onBlur}
                   keyboardType="phone-pad"
                   autoComplete="tel"
                   textContentType="telephoneNumber"
                   error={errors.phoneNumber?.message}
-                  leftIcon={<PhoneCall size={18} />}
+                  leftIcon={<View className="flex-row items-center gap-1"><Text size="xs">🇸🇾</Text><Text size="xs" weight="semibold" className="text-primary-400">+963</Text><PhoneCall size={16} /></View>}
                   fullWidth
                 />
               )}

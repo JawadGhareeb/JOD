@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, View, type ViewToken } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { Search } from "lucide-react-native";
@@ -8,53 +8,65 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
 import { ReelVideoItem } from "./ReelVideoItem";
 
+const REELS_PAGE_SIZE = 6;
+const REEL_GAP = 12;
+
 export function ReelsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ videoId?: string | string[] }>();
   const selectedId = Array.isArray(params.videoId) ? params.videoId[0] : params.videoId;
-  const query = usePublicMedia({ perPage: 20 });
+  const query = usePublicMedia({ perPage: REELS_PAGE_SIZE });
   const items = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data]);
-  const [activeId, setActiveId] = useState<string | null>(selectedId ?? null);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [screenFocused, setScreenFocused] = useState(false);
   const [pageHeight, setPageHeight] = useState(1);
   const listRef = useRef<FlatList<(typeof items)[number]>>(null);
   const didScrollToSelected = useRef(false);
+  const activeIdRef = useRef<string | null>(null);
+
+  const setActiveReel = useCallback((id: string | null) => {
+    activeIdRef.current = id;
+    setActiveId(id);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       setScreenFocused(true);
       return () => {
         setScreenFocused(false);
-        setActiveId(null);
+        setActiveReel(null);
       };
-    }, []),
+    }, [setActiveReel]),
   );
 
-  useEffect(() => {
-    if (activeId === null && screenFocused && items[0]) setActiveId(items[0].id);
-  }, [activeId, items, screenFocused]);
-
-  useEffect(() => {
-    if (!selectedId || didScrollToSelected.current || pageHeight <= 1) return;
-    const index = items.findIndex((item) => item.id === selectedId);
-    if (index < 0) return;
-    requestAnimationFrame(() => listRef.current?.scrollToIndex({ index, animated: false }));
-    setActiveId(selectedId);
-    didScrollToSelected.current = true;
-  }, [items, pageHeight, selectedId]);
-
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken<(typeof items)[number]>[] }) => {
-      const visible = viewableItems.find((entry) => entry.isViewable)?.item;
-      if (visible) setActiveId(visible.id);
-    },
-  ).current;
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 70 }).current;
   const headerHeight = 64;
-  const usableHeight = Math.max(420, pageHeight - headerHeight);
+  const availableHeight = Math.max(430, pageHeight - headerHeight);
+  const cardHeight = Math.min(620, Math.max(430, Math.round(availableHeight * 0.76)));
 
-  if (query.isLoading) {
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken<(typeof items)[number]>[] }) => {
+      const visibleIds = new Set(viewableItems.filter((entry) => entry.isViewable).map((entry) => entry.item.id));
+      if (activeIdRef.current && !visibleIds.has(activeIdRef.current)) setActiveReel(null);
+
+      const furthestVisibleIndex = Math.max(-1, ...viewableItems.map((entry) => entry.index ?? -1));
+      if (furthestVisibleIndex >= items.length - 3 && query.hasNextPage && !query.isFetchingNextPage) {
+        void query.fetchNextPage();
+      }
+    },
+    [items.length, query, setActiveReel],
+  );
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 55 }).current;
+
+  if (selectedId && !didScrollToSelected.current && items.length > 0 && pageHeight > 1) {
+    const index = items.findIndex((item) => item.id === selectedId);
+    if (index >= 0) {
+      requestAnimationFrame(() => listRef.current?.scrollToIndex({ index, animated: false }));
+      didScrollToSelected.current = true;
+    }
+  }
+
+  if (query.isLoading && items.length === 0) {
     return (
       <View className="flex-1 items-center justify-center bg-light-100 dark:bg-dark-300">
         <ActivityIndicator color={PRIMARY_COLOR_LIGHT} />
@@ -63,7 +75,7 @@ export function ReelsScreen() {
     );
   }
 
-  if (query.isError) {
+  if (query.isError && items.length === 0) {
     return (
       <View className="flex-1 items-center justify-center bg-light-100 px-6 dark:bg-dark-300">
         <Text size="sm" className="text-center text-gray-500 dark:text-gray-300">تعذر تحميل الريلز. حاول مرة أخرى.</Text>
@@ -79,11 +91,7 @@ export function ReelsScreen() {
     >
       <View className="h-16 flex-row-reverse items-center justify-between border-b border-gray-100 bg-white px-4 dark:border-dark-400 dark:bg-dark-500">
         <Text weight="bold" size="lg" className="text-dark-100 dark:text-light-50">ريلز جود</Text>
-        <Pressable
-          onPress={() => router.push("/search")}
-          className="size-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350"
-          accessibilityLabel="البحث"
-        >
+        <Pressable onPress={() => router.push("/search")} className="size-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350" accessibilityLabel="البحث">
           <Search size={20} color={PRIMARY_COLOR_LIGHT} />
         </Pressable>
       </View>
@@ -92,18 +100,27 @@ export function ReelsScreen() {
         ref={listRef}
         data={items}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingVertical: 12 }}
+        ItemSeparatorComponent={() => <View style={{ height: REEL_GAP }} />}
         renderItem={({ item }) => (
-          <ReelVideoItem video={item} active={screenFocused && item.id === activeId} height={usableHeight} />
+          <ReelVideoItem
+            video={item}
+            active={screenFocused && item.id === activeId}
+            height={cardHeight}
+            onPlayRequest={() => setActiveReel(item.id)}
+          />
         )}
-        pagingEnabled
         showsVerticalScrollIndicator={false}
+        snapToInterval={cardHeight + REEL_GAP}
+        snapToAlignment="start"
+        decelerationRate="fast"
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         onEndReached={() => {
           if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
         }}
-        onEndReachedThreshold={0.5}
-        getItemLayout={(_, index) => ({ length: usableHeight, offset: usableHeight * index, index })}
+        onEndReachedThreshold={0.25}
+        ListFooterComponent={query.isFetchingNextPage ? <View className="items-center py-5"><ActivityIndicator size="small" color={PRIMARY_COLOR_LIGHT} /></View> : <View className="h-4" />}
       />
     </View>
   );

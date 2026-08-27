@@ -5,16 +5,18 @@ import Button from "@/src/components/ui/Button";
 import Text from "@/src/components/ui/Text";
 import { useArticles } from "@/src/features/articles/queries";
 import { usePublicMedia } from "@/src/features/media/queries";
-import { usePostsFeed } from "@/src/features/posts/queries";
-import type { ContentAudience, HomePost } from "@/src/features/posts/types";
+import { useCampaigns, usePostsFeed } from "@/src/features/posts/queries";
+import type { Campaign, ContentAudience, HomePost } from "@/src/features/posts/types";
 import { getPrimaryColor } from "@/src/theme";
 import { HomeBlogsSection } from "./HomeBlogsSection";
 import { HomePostCard } from "./HomePostCard";
 import { HomePostCardSkeleton } from "./HomePostCardSkeleton";
 import { HomeReelsSection } from "./HomeReelsSection";
+import { OrganizationCampaignCard } from "@/src/components/pages/profile/OrganizationCampaignCard";
 
 type HomeFeedItem =
   | { kind: "post"; key: string; post: HomePost }
+  | { kind: "campaign"; key: string; campaign: Campaign }
   | { kind: "reels"; key: string; occurrence: number }
   | { kind: "blogs"; key: string; occurrence: number };
 
@@ -33,16 +35,21 @@ function randomGap(random: () => number) {
   return 3 + Math.floor(random() * 8);
 }
 
-function composeHomeFeed(posts: HomePost[], seed: number): HomeFeedItem[] {
+function composeHomeFeed(posts: HomePost[], campaigns: Campaign[], seed: number): HomeFeedItem[] {
   const random = seededRandom(seed);
   const result: HomeFeedItem[] = [];
   let postsSinceModule = 0;
   let nextGap = randomGap(random);
   let reelsOccurrence = 0;
   let blogsOccurrence = 0;
+  let campaignIndex = 0;
 
   posts.forEach((post, index) => {
     result.push({ kind: "post", key: `post-${post.id}`, post });
+    if ((index + 1) % 2 === 0 && campaigns[campaignIndex]) {
+      const campaign = campaigns[campaignIndex++];
+      result.push({ kind: "campaign", key: `campaign-${campaign.id}`, campaign });
+    }
     postsSinceModule += 1;
 
     if (postsSinceModule < nextGap) return;
@@ -65,6 +72,10 @@ function composeHomeFeed(posts: HomePost[], seed: number): HomeFeedItem[] {
 
     postsSinceModule = 0;
     nextGap = randomGap(random);
+  });
+
+  campaigns.slice(campaignIndex).forEach((campaign) => {
+    result.push({ kind: "campaign", key: `campaign-${campaign.id}`, campaign });
   });
 
   return result;
@@ -98,10 +109,12 @@ export function HomeFeed({ audience, listHeaderComponent, onScroll, onRefresh }:
     hasNextPage,
     isFetchingNextPage,
   } = usePostsFeed({ audience });
+  const campaignsQuery = useCampaigns({ audience, status: "active", perPage: 10 });
   const articlesQuery = useArticles({ perPage: 20 });
   const mediaQuery = usePublicMedia({ perPage: 20 });
 
   const posts = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data]);
+  const campaigns = useMemo(() => campaignsQuery.data?.pages.flatMap((page) => page.items) ?? [], [campaignsQuery.data]);
   const articles = useMemo(
     () => articlesQuery.data?.pages.flatMap((page) => page.items) ?? [],
     [articlesQuery.data],
@@ -110,7 +123,7 @@ export function HomeFeed({ audience, listHeaderComponent, onScroll, onRefresh }:
     () => mediaQuery.data?.pages.flatMap((page) => page.items) ?? [],
     [mediaQuery.data],
   );
-  const feed = useMemo(() => composeHomeFeed(posts, compositionSeed), [compositionSeed, posts]);
+  const feed = useMemo(() => composeHomeFeed(posts, campaigns, compositionSeed), [campaigns, compositionSeed, posts]);
 
   const reelsModuleCount = useMemo(
     () => feed.filter((item) => item.kind === "reels").length,
@@ -137,15 +150,16 @@ export function HomeFeed({ audience, listHeaderComponent, onScroll, onRefresh }:
 
   const handleLoadMore = () => {
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+    if (campaignsQuery.hasNextPage && !campaignsQuery.isFetchingNextPage) void campaignsQuery.fetchNextPage();
   };
 
   const handleRefresh = () => {
     onRefresh?.();
     setCompositionSeed(Math.floor(Math.random() * 2_000_000_000));
-    void Promise.all([refetch(), articlesQuery.refetch(), mediaQuery.refetch()]);
+    void Promise.all([refetch(), campaignsQuery.refetch(), articlesQuery.refetch(), mediaQuery.refetch()]);
   };
 
-  if (isLoading) {
+  if (isLoading && campaignsQuery.isLoading) {
     return (
       <View className="flex-1 bg-light-100 px-4 pt-4 dark:bg-dark-300">
         <HomePostCardSkeleton />
@@ -179,6 +193,10 @@ export function HomeFeed({ audience, listHeaderComponent, onScroll, onRefresh }:
             return <HomePostCard post={item.post} enableAuthorNavigation />;
           }
 
+          if (item.kind === "campaign") {
+            return <OrganizationCampaignCard campaign={item.campaign} />;
+          }
+
           if (item.kind === "reels") {
             const start = item.occurrence * 5;
             return (
@@ -204,7 +222,7 @@ export function HomeFeed({ audience, listHeaderComponent, onScroll, onRefresh }:
         scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching || articlesQuery.isRefetching || mediaQuery.isRefetching}
+            refreshing={isRefetching || campaignsQuery.isRefetching || articlesQuery.isRefetching || mediaQuery.isRefetching}
             onRefresh={handleRefresh}
             tintColor={primaryColor}
           />
@@ -221,11 +239,11 @@ export function HomeFeed({ audience, listHeaderComponent, onScroll, onRefresh }:
           </View>
         }
         ListFooterComponent={
-          isFetchingNextPage ? (
+          isFetchingNextPage || campaignsQuery.isFetchingNextPage ? (
             <View className="py-2">
               <HomePostCardSkeleton />
             </View>
-          ) : hasNextPage ? (
+          ) : hasNextPage || campaignsQuery.hasNextPage ? (
             <View className="py-3" />
           ) : posts.length > 0 ? (
             <View className="items-center py-4">

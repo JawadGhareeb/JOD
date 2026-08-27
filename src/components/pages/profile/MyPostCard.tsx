@@ -32,13 +32,14 @@ type Props = {
   authorName: string;
   authorUsername?: string | null;
   onArchive: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
   onRepost: (id: string) => void;
 };
 
 export function MyPostCard({ post, authorName, authorUsername, onArchive, onDelete, onRepost }: Props) {
   const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const mappedType = (API_TYPE_TO_POST_TYPE[post.type as ApiPostType] ?? post.type) as HomePostType;
   const typeLabel = HOME_POST_TYPE_LABELS[mappedType] ?? post.type;
   const rejectionReason = post.status === "rejected" ? post.rejectionReason?.trim() : "";
@@ -144,17 +145,26 @@ export function MyPostCard({ post, authorName, authorUsername, onArchive, onDele
 
       <Dialog
         visible={deleteDialogOpen}
-        title="حذف المنشور"
-        message="هل أنت متأكد من حذف هذا المنشور؟ لا يمكن التراجع عن هذه العملية."
-        onClose={() => setDeleteDialogOpen(false)}
+        title="حذف المنشور نهائياً؟"
+        message={`سيتم حذف «${post.title}» وصوره من حسابك. هذا الإجراء نهائي ولا يمكن التراجع عنه.`}
+        cancelable={!isDeleting}
+        icon={<Trash2 size={28} color="#E5484D" />}
+        onClose={() => { if (!isDeleting) setDeleteDialogOpen(false); }}
         buttons={[
-          { text: "إلغاء", variant: "outline", onPress: () => setDeleteDialogOpen(false) },
+          { text: "إبقاء المنشور", variant: "outline", onPress: () => { if (!isDeleting) setDeleteDialogOpen(false); } },
           {
-            text: "حذف",
-            variant: "danger",
-            onPress: () => {
-              setDeleteDialogOpen(false);
-              onDelete(post.id);
+            text: "حذف نهائي",
+            variant: "primary",
+            className: "bg-error-300",
+            loading: isDeleting,
+            onPress: async () => {
+              setIsDeleting(true);
+              try {
+                await onDelete(post.id);
+                setDeleteDialogOpen(false);
+              } finally {
+                setIsDeleting(false);
+              }
             },
           },
         ]}

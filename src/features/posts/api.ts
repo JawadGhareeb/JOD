@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { apiClient } from "@/src/lib/api-client";
 import { buildQuery } from "@/src/lib/build-query";
 import type { ApiEnvelope, PaginationMeta } from "@/src/types/api";
@@ -24,9 +25,16 @@ const ENDPOINTS = {
   myPosts: "/me/posts", myPost: (id: string) => `/me/posts/${id}`, savedPosts: "/me/saved-posts",
 } as const;
 
-const toPostImagesFormData = (images: MobileImageFile[]) => {
+const toPostImagesFormData = async (images: MobileImageFile[]) => {
   const form = new FormData();
-  images.forEach((image) => form.append("images[]", image as unknown as Blob));
+  for (const image of images) {
+    if (Platform.OS === "web") {
+      const blob = await fetch(image.uri).then((response) => response.blob());
+      form.append("images[]", blob, image.name);
+    } else {
+      form.append("images[]", image as unknown as Blob);
+    }
+  }
   return form;
 };
 
@@ -49,7 +57,7 @@ export const postsApi = {
   submit: async (id: string) => { const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.submit(id)); return response.data.data; },
   archive: async (id: string) => { const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.archive(id)); return response.data.data; },
   repost: async (id: string) => { const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.repost(id)); return response.data.data; },
-  uploadImages: async (id: string, images: MobileImageFile[]) => { const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.postImages(id), toPostImagesFormData(images)); return response.data.data; },
+  uploadImages: async (id: string, images: MobileImageFile[]) => { const form = await toPostImagesFormData(images); const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.postImages(id), form); return response.data.data; },
   reorderImages: async (id: string, imageIds: string[]) => { const response = await apiClient.patch<ApiEnvelope<MyPost>>(ENDPOINTS.imageOrder(id), { imageIds }); return response.data.data; },
   deleteImage: async (id: string, imageId: string) => { const response = await apiClient.delete<ApiEnvelope<MyPost>>(ENDPOINTS.postImage(id, imageId)); return response.data.data; },
   like: async (id: string) => { const response = await apiClient.post<ApiEnvelope<LikeToggleResult>>(ENDPOINTS.like(id)); return response.data.data; },

@@ -53,7 +53,7 @@ export function AuthorProfileScreen() {
     Boolean(authorId) && isOrganization && activeTab === "campaigns",
   );
   const videosQuery = useOrganizationVideos(
-    authorId,
+    authorId ?? "",
     { perPage: 20 },
     Boolean(authorId) && isOrganization && activeTab === "videos",
   );
