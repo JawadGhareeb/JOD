@@ -3,13 +3,13 @@ import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderPro
 import { HomeComposerBar } from "./HomeComposerBar";
 import { HomeFeed } from "./HomeFeed";
 
-export function HomeScreen() {
+export function StudentAssistanceScreen() {
   const { onScroll, resetHeader } = useCollapsibleHeaderScreen();
 
   return (
     <View className="flex-1 bg-light-100 dark:bg-dark-300">
       <HomeFeed
-        audience="general"
+        audience="student"
         onScroll={onScroll}
         onRefresh={resetHeader}
         listHeaderComponent={

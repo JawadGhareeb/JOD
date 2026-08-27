@@ -1,230 +1,161 @@
 import { useState } from "react";
-import { Image, View } from "react-native";
+import { Image, Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
-import { Archive, RotateCcw, Trash2 } from "lucide-react-native";
-import { useColorScheme } from "nativewind";
-import Button from "@/src/components/ui/Button";
+import { Archive, Pencil, RotateCcw, Trash2, Eye, Heart } from "lucide-react-native";
 import Card from "@/src/components/ui/Card";
 import Dialog from "@/src/components/ui/Dialog";
 import Text from "@/src/components/ui/Text";
+import { Avatar } from "@/src/components/shared/Avatar";
 import { API_TYPE_TO_POST_TYPE } from "@/src/features/posts/api";
 import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
 import type { ApiPostType, HomePostType, MyPost, MyPostStatus } from "@/src/features/posts/types";
-import { getPrimaryColor } from "@/src/theme";
-
-const MAX_DETAILS = 120;
+import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
 
 const STATUS_LABELS: Record<MyPostStatus, string> = {
-  draft: "مسودة",
-  pending: "قيد المراجعة",
   active: "منشور",
+  pending: "قيد المراجعة",
   rejected: "مرفوض",
+  draft: "مسودة",
   archived: "مؤرشف",
 };
 
-const STATUS_BADGE_CLASSNAME: Record<MyPostStatus, string> = {
-  draft: "bg-gray-100 dark:bg-dark-350",
-  pending: "bg-amber-100 dark:bg-dark-350",
-  active: "bg-success-100/15",
-  rejected: "bg-error-300/10",
-  archived: "bg-gray-100 dark:bg-dark-350",
+const STATUS_CLASSES: Record<MyPostStatus, string> = {
+  active: "bg-primary-400/15 text-primary-400",
+  pending: "bg-warning-100 text-warning-400",
+  rejected: "bg-error-100 text-error-300",
+  draft: "bg-gray-100 text-gray-600 dark:bg-dark-350 dark:text-gray-200",
+  archived: "bg-gray-100 text-gray-500 dark:bg-dark-350 dark:text-gray-300",
 };
 
-const STATUS_TEXT_CLASSNAME: Record<MyPostStatus, string> = {
-  draft: "text-gray-500 dark:text-gray-300",
-  pending: "text-amber-700 dark:text-amber-400",
-  active: "text-success-100",
-  rejected: "text-error-300",
-  archived: "text-gray-500 dark:text-gray-300",
+type Props = {
+  post: MyPost;
+  authorName: string;
+  authorUsername?: string | null;
+  onArchive: (id: string) => void;
+  onDelete: (id: string) => void;
+  onRepost: (id: string) => void;
 };
 
-type PendingAction = "archive" | "delete" | "repost" | null;
-
-interface MyPostCardProps {
-  readonly post: MyPost;
-  readonly onArchive: (postId: string) => Promise<void>;
-  readonly onDelete: (postId: string) => Promise<void>;
-  readonly onRepost: (postId: string) => Promise<void>;
-}
-
-export function MyPostCard({ post, onArchive, onDelete, onRepost }: MyPostCardProps) {
+export function MyPostCard({ post, authorName, authorUsername, onArchive, onDelete, onRepost }: Props) {
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
-  const primaryColor = getPrimaryColor(colorScheme === "dark");
-  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const details = post.details ?? "";
-  const shouldTruncate = details.length > MAX_DETAILS;
-  const displayDetails = shouldTruncate
-    ? `${details.slice(0, MAX_DETAILS).trim()}...`
-    : details;
-
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const mappedType = (API_TYPE_TO_POST_TYPE[post.type as ApiPostType] ?? post.type) as HomePostType;
+  const typeLabel = HOME_POST_TYPE_LABELS[mappedType] ?? post.type;
+  const rejectionReason = post.status === "rejected" ? post.rejectionReason?.trim() : "";
   const canEdit = post.status === "draft" || post.status === "rejected";
   const canArchive = post.status === "active";
   const canRepost = post.status === "archived";
 
-  const handleEdit = () => {
-    const postType = API_TYPE_TO_POST_TYPE[post.type as ApiPostType] ?? "help";
-
-    router.push({
-      pathname: "/(tabs)/create-post",
-      params: {
-        mode: "edit",
-        postId: post.id,
-        postType,
-        title: post.title || "",
-        details: post.details || "",
-        city: post.city || "",
-        images: post.images.join("|"),
-      },
-    });
-  };
-
-  const runPendingAction = async () => {
-    const action = pendingAction;
-    setPendingAction(null);
-    if (!action) return;
-
-    setIsProcessing(true);
-    try {
-      if (action === "archive") await onArchive(post.id);
-      if (action === "delete") await onDelete(post.id);
-      if (action === "repost") await onRepost(post.id);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   return (
-    <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
-      <View className="mb-2 flex-row-reverse flex-wrap items-center gap-2">
-        <View className={`rounded-full px-3 py-1 ${STATUS_BADGE_CLASSNAME[post.status]}`}>
-          <Text size="2xs" weight="medium" className={STATUS_TEXT_CLASSNAME[post.status]}>
-            {STATUS_LABELS[post.status]}
-          </Text>
+    <Card padding="none" className="mb-4 overflow-hidden border-gray-200 dark:border-dark-400">
+      <View className="p-4">
+        <View className="mb-3 flex-row-reverse items-start justify-between gap-3">
+          <View className="min-w-0 flex-1 flex-row-reverse items-center gap-2">
+            <Avatar name={authorName} size={42} />
+            <View className="min-w-0 flex-1 items-end">
+              <Text numberOfLines={1} weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
+                {authorName}
+              </Text>
+              <Text numberOfLines={1} size="2xs" className="text-gray-500 dark:text-gray-300">
+                {authorUsername ? `@${authorUsername} • ` : ""}{formatHomePostRelativeDate(post.createdAt)}
+              </Text>
+            </View>
+          </View>
+          <View className={`rounded-full px-2.5 py-1 ${STATUS_CLASSES[post.status].split(" text-")[0]}`}>
+            <Text size="2xs" weight="semibold" className={STATUS_CLASSES[post.status].includes("text-") ? STATUS_CLASSES[post.status].substring(STATUS_CLASSES[post.status].indexOf("text-")) : "text-primary-400"}>
+              {STATUS_LABELS[post.status]}
+            </Text>
+          </View>
         </View>
-        <View className="rounded-full bg-primary-400/15 px-3 py-1">
-          <Text size="2xs" weight="medium" className="text-primary-400">
-            {HOME_POST_TYPE_LABELS[post.type as HomePostType] || post.type}
-          </Text>
-        </View>
-      </View>
 
-      {post.title ? (
-        <Text weight="semibold" size="sm" className="mb-1 text-dark-100 dark:text-light-50">
+        <View className="mb-3 flex-row-reverse items-center gap-2">
+          <View className="rounded-full bg-primary-400/10 px-2.5 py-1">
+            <Text size="2xs" className="text-primary-400">{typeLabel}</Text>
+          </View>
+          {post.city ? <Text size="2xs" className="text-gray-500 dark:text-gray-300">{post.city}</Text> : null}
+        </View>
+
+        <Text weight="semibold" size="base" className="mb-2 text-right text-dark-100 dark:text-light-50">
           {post.title}
         </Text>
-      ) : null}
-
-      {details ? (
-        <Text size="sm" className="text-dark-100 dark:text-light-50">
-          {displayDetails}
+        <Text size="sm" className="mb-3 text-right leading-6 text-gray-600 dark:text-gray-200">
+          {post.details}
         </Text>
-      ) : null}
 
-      {post.images.length > 0 ? (
-        <View className="mt-3 h-32 w-full overflow-hidden rounded-xl bg-gray-200 dark:bg-dark-350">
-          <Image source={{ uri: post.images[0] }} className="h-full w-full" resizeMode="cover" />
+        {post.images.length > 0 ? (
+          post.images.length === 1 ? (
+            <Image source={{ uri: post.images[0] }} className="h-52 w-full rounded-2xl bg-gray-100 dark:bg-dark-350" resizeMode="cover" />
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+              {post.images.map((image) => (
+                <Image key={image} source={{ uri: image }} className="h-48 w-64 rounded-2xl bg-gray-100 dark:bg-dark-350" resizeMode="cover" />
+              ))}
+            </ScrollView>
+          )
+        ) : null}
+
+        {rejectionReason ? (
+          <View className="mt-3 rounded-2xl border border-error-200 bg-error-100/60 p-3 dark:bg-error-300/10">
+            <Text size="2xs" weight="semibold" className="mb-1 text-error-300">سبب الرفض</Text>
+            <Text size="xs" className="text-right text-error-300">{rejectionReason}</Text>
+          </View>
+        ) : null}
+
+        {post.status === "pending" ? (
+          <View className="mt-3 rounded-2xl bg-warning-100/70 p-3 dark:bg-warning-400/10">
+            <Text size="xs" className="text-right text-warning-400">المنشور حالياً عند الإدارة للمراجعة، ولا يمكن تعديله قبل انتهاء المراجعة.</Text>
+          </View>
+        ) : null}
+
+        <View className="mt-4 flex-row-reverse items-center justify-between border-t border-gray-100 pt-3 dark:border-dark-400">
+          <View className="flex-row-reverse items-center gap-4">
+            <View className="flex-row-reverse items-center gap-1">
+              <Eye size={17} color="#9CA3AF" />
+              <Text size="2xs" className="text-gray-500 dark:text-gray-300">{post.viewsCount ?? 0}</Text>
+            </View>
+            <View className="flex-row-reverse items-center gap-1">
+              <Heart size={17} color="#9CA3AF" />
+              <Text size="2xs" className="text-gray-500 dark:text-gray-300">{post.reactionsCount ?? 0}</Text>
+            </View>
+          </View>
+
+          <View className="flex-row-reverse items-center gap-1">
+            {canEdit ? (
+              <Pressable onPress={() => router.push({ pathname: "/(tabs)/create-post", params: { postId: post.id } } as never)} className="size-9 items-center justify-center rounded-full bg-primary-100 dark:bg-dark-350" accessibilityLabel="تعديل المنشور">
+                <Pencil size={17} color={PRIMARY_COLOR_LIGHT} />
+              </Pressable>
+            ) : null}
+            {canArchive ? (
+              <Pressable onPress={() => onArchive(post.id)} className="size-9 items-center justify-center rounded-full bg-gray-100 dark:bg-dark-350" accessibilityLabel="أرشفة المنشور">
+                <Archive size={17} color="#6B7280" />
+              </Pressable>
+            ) : null}
+            {canRepost ? (
+              <Pressable onPress={() => onRepost(post.id)} className="size-9 items-center justify-center rounded-full bg-primary-100 dark:bg-dark-350" accessibilityLabel="إعادة نشر المنشور">
+                <RotateCcw size={17} color={PRIMARY_COLOR_LIGHT} />
+              </Pressable>
+            ) : null}
+            <Pressable onPress={() => setDeleteDialogOpen(true)} className="size-9 items-center justify-center rounded-full bg-error-100 dark:bg-error-300/10" accessibilityLabel="حذف المنشور">
+              <Trash2 size={17} color="#E5484D" />
+            </Pressable>
+          </View>
         </View>
-      ) : null}
-
-      {post.status === "rejected" && post.rejectionReason ? (
-        <View className="mt-3 rounded-xl bg-error-300/10 p-3">
-          <Text size="xs" weight="semibold" className="text-error-300">
-            سبب رفض المنشور
-          </Text>
-          <Text size="xs" className="mt-1 text-error-300">
-            {post.rejectionReason}
-          </Text>
-          <Text size="2xs" className="mt-2 text-error-300">
-            عدّل المنشور حسب الملاحظة ثم أعد إرساله للمراجعة.
-          </Text>
-        </View>
-      ) : null}
-
-      <View className="mt-3 flex-row-reverse items-center justify-between border-t border-gray-100 pt-3 dark:border-dark-400">
-        <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-          {post.city || "مدينة غير محددة"}
-        </Text>
-        <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-          {post.createdAt ? formatHomePostRelativeDate(post.createdAt) : ""}
-        </Text>
-      </View>
-
-      <View className="mt-3 flex-row-reverse flex-wrap gap-2">
-        {canEdit ? (
-          <Button size="small" variant="outline" onPress={handleEdit}>
-            تعديل
-          </Button>
-        ) : null}
-        {canArchive ? (
-          <Button size="small" variant="outline" onPress={() => setPendingAction("archive")}>
-            أرشفة
-          </Button>
-        ) : null}
-        {canRepost ? (
-          <Button size="small" variant="outline" onPress={() => setPendingAction("repost")}>
-            إعادة نشر
-          </Button>
-        ) : null}
-        <Button
-          size="small"
-          variant="tertiary"
-          className="border border-error-300/30 bg-error-300/5"
-          onPress={() => setPendingAction("delete")}
-        >
-          حذف
-        </Button>
       </View>
 
       <Dialog
-        visible={pendingAction !== null}
-        title={
-          pendingAction === "delete"
-            ? "حذف المنشور"
-            : pendingAction === "archive"
-              ? "أرشفة المنشور"
-              : "إعادة نشر المنشور"
-        }
-        titleColor={pendingAction === "delete" ? "error" : undefined}
-        message={
-          pendingAction === "delete"
-            ? "هل أنت متأكد أنك تريد حذف هذا المنشور؟ لا يمكن التراجع عن هذه العملية."
-            : pendingAction === "archive"
-              ? "سيتم نقل هذا المنشور إلى الأرشيف ولن يظهر ضمن المنشورات النشطة."
-              : "سيتم إعادة نشر هذا المنشور وسيظهر مجدداً على المنصة مباشرة."
-        }
-        icon={
-          pendingAction === "delete" ? (
-            <Trash2 size={28} color="#DC2626" strokeWidth={2.25} />
-          ) : pendingAction === "archive" ? (
-            <Archive size={28} color={primaryColor} strokeWidth={2.25} />
-          ) : (
-            <RotateCcw size={28} color={primaryColor} strokeWidth={2.25} />
-          )
-        }
-        onClose={() => {
-          if (!isProcessing) setPendingAction(null);
-        }}
-        cancelable={!isProcessing}
+        visible={deleteDialogOpen}
+        title="حذف المنشور"
+        message="هل أنت متأكد من حذف هذا المنشور؟ لا يمكن التراجع عن هذه العملية."
+        onClose={() => setDeleteDialogOpen(false)}
         buttons={[
+          { text: "إلغاء", variant: "outline", onPress: () => setDeleteDialogOpen(false) },
           {
-            text: "تراجع",
-            variant: "tertiary",
-            onPress: () => setPendingAction(null),
-          },
-          {
-            text:
-              pendingAction === "delete"
-                ? "حذف"
-                : pendingAction === "archive"
-                  ? "أرشفة"
-                  : "إعادة نشر",
-            variant: "primary",
-            className: pendingAction === "delete" ? "bg-error-300 shadow-error-300/30" : undefined,
-            loading: isProcessing,
-            onPress: () => void runPendingAction(),
+            text: "حذف",
+            variant: "danger",
+            onPress: () => {
+              setDeleteDialogOpen(false);
+              onDelete(post.id);
+            },
           },
         ]}
       />

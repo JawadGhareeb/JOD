@@ -13,6 +13,7 @@ export default function TabsLayout() {
       tabBar={() => null}
     >
       <Tabs.Screen name="home" options={{ title: "الرئيسية" }} />
+      <Tabs.Screen name="student-assistance" options={{ title: "مساعدات طلابية" }} />
       <Tabs.Screen name="reels" options={{ title: "ريلز", headerShown: false }} />
       <Tabs.Screen name="notifications" options={{ title: "الإشعارات" }} />
       <Tabs.Screen name="profile" options={{ title: "الملف الشخصي" }} />

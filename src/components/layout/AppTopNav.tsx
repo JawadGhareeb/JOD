@@ -8,7 +8,7 @@ import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 import { appIcons } from "./iconMap";
 
-type TopNavKey = "home" | "reels" | "notifications" | "profile" | "settings";
+type TopNavKey = "home" | "student" | "reels" | "notifications" | "profile";
 
 export const TOP_NAV_ITEMS: {
   key: TopNavKey;
@@ -18,10 +18,10 @@ export const TOP_NAV_ITEMS: {
   label: string;
 }[] = [
   { key: "home", path: "/(tabs)/home", Icon: appIcons.home, requiresAuth: false, label: "الرئيسية" },
+  { key: "student", path: "/(tabs)/student-assistance", Icon: appIcons.studentHub, requiresAuth: false, label: "مساعدات طلابية" },
   { key: "reels", path: "/(tabs)/reels", Icon: appIcons.reels, requiresAuth: false, label: "ريلز" },
   { key: "notifications", path: "/(tabs)/notifications", Icon: appIcons.notification, requiresAuth: true, label: "الإشعارات" },
   { key: "profile", path: "/(tabs)/profile", Icon: appIcons.profile, requiresAuth: true, label: "الملف الشخصي" },
-  { key: "settings", path: "/(tabs)/settings", Icon: appIcons.settings, requiresAuth: false, label: "الإعدادات" },
 ];
 
 export function getActiveTabTitle(pathname: string): string | null {

@@ -4,7 +4,26 @@ import { authKeys } from "./query-keys";
 import { endSession, getSessionState, storeSession } from "./session";
 import { getLoginPushFields } from "@/src/features/notifications/registration";
 import type { LoginInput, RegisterInput, ResetPasswordInput } from "./types";
-export function useAuthStatus() { const { data, isLoading, refetch } = useQuery({ queryKey: authKeys.session(), queryFn: getSessionState }); return { isLoading, isAuthenticated: data?.isAuthenticated ?? false, user: data?.user ?? null, refreshAuthStatus: refetch }; }
+const authSessionQueryOptions = {
+  staleTime: Infinity,
+  refetchOnMount: false,
+  refetchOnReconnect: false,
+  refetchOnWindowFocus: false,
+} as const;
+
+export function useAuthStatus() {
+  const { data, isLoading } = useQuery({
+    queryKey: authKeys.session(),
+    queryFn: getSessionState,
+    ...authSessionQueryOptions,
+  });
+
+  return {
+    isLoading,
+    isAuthenticated: data?.isAuthenticated ?? false,
+    user: data?.user ?? null,
+  };
+}
 export function useLogin() { const queryClient = useQueryClient(); return useMutation({ mutationFn: async (input: LoginInput) => { const pushFields = await getLoginPushFields(); const session = await authApi.login({ ...input, ...pushFields }); await storeSession(session); return session; }, onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.session() }) }); }
 export function useRegister() { const queryClient = useQueryClient(); return useMutation({ mutationFn: async (input: RegisterInput) => { const session = await authApi.register(input); await storeSession(session); return session; }, onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.session() }) }); }
 export function useLogout() { const queryClient = useQueryClient(); return useMutation({ mutationFn: endSession, onSuccess: () => { queryClient.clear(); queryClient.invalidateQueries({ queryKey: authKeys.session() }); } }); }

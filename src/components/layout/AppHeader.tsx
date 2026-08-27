@@ -1,10 +1,9 @@
-import { useFocusEffect, usePathname, useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Animated, Pressable, View, type LayoutChangeEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Text from "@/src/components/ui/Text";
-import { useAuthStatus } from "@/src/features/auth/queries";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useRTL } from "@/src/providers/RTLProvider";
 import { headerScrollY } from "@/src/providers/CollapsibleHeaderProvider";
@@ -26,7 +25,6 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   const insets = useSafeAreaInsets();
   const { isRTL } = useRTL();
   const { colorScheme } = useColorScheme();
-  const { refreshAuthStatus } = useAuthStatus();
   const { requireAuth } = useAuthGuard();
   const [contentHeight, setContentHeight] = useState(MIN_HEADER_CONTENT_HEIGHT);
   const isDark = colorScheme === "dark";
@@ -51,12 +49,6 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
     outputRange: [0, -headerHeight],
     extrapolate: "clamp",
   });
-
-  useFocusEffect(
-    useCallback(() => {
-      void refreshAuthStatus();
-    }, [refreshAuthStatus]),
-  );
 
   const handleHeaderLayout = (event: LayoutChangeEvent) => {
     const measuredHeight = Math.ceil(event.nativeEvent.layout.height);
