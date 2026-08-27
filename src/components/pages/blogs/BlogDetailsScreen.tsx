@@ -1,32 +1,30 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useColorScheme } from "nativewind";
-import { Pressable, ScrollView, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { appIcons } from "@/src/components/layout/iconMap";
+import { useLocalSearchParams } from "expo-router";
+import { ScrollView, View } from "react-native";
 import Text from "@/src/components/ui/Text";
 import { useArticle } from "@/src/features/articles/queries";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
-import { getPrimaryColor } from "@/src/theme";
-
-const BackIcon = appIcons.chevronRight;
 
 export function BlogDetailsScreen() {
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
   const articleId = Array.isArray(id) ? id[0] : id;
   const query = useArticle(articleId);
   const article = query.data;
-  const { colorScheme } = useColorScheme();
-  const primaryColor = getPrimaryColor(colorScheme === "dark");
 
   return (
     <View className="flex-1 bg-light-100 dark:bg-dark-300">
-      <View style={{ paddingTop: Math.max(insets.top, 8) }} className="flex-row-reverse items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-dark-400">
-        <Pressable onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100"><BackIcon size={20} color={primaryColor} strokeWidth={2.25} /></Pressable>
-        <Text weight="semibold" size="base" className="text-dark-100 dark:text-light-50">المقال</Text><View className="h-10 w-10" />
-      </View>
-      {query.isLoading ? <View className="flex-1 items-center justify-center"><Text size="sm" className="text-gray-500 dark:text-gray-300">جارِ تحميل المقال...</Text></View> : !article ? <View className="flex-1 items-center justify-center px-4"><Text size="sm" className="text-gray-500 dark:text-gray-300">تعذر العثور على المقال.</Text></View> : (
+      {query.isLoading ? (
+        <View className="flex-1 items-center justify-center">
+          <Text size="sm" className="text-gray-500 dark:text-gray-300">
+            جارِ تحميل المقال...
+          </Text>
+        </View>
+      ) : !article ? (
+        <View className="flex-1 items-center justify-center px-4">
+          <Text size="sm" className="text-gray-500 dark:text-gray-300">
+            تعذر العثور على المقال.
+          </Text>
+        </View>
+      ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 36 }}>
           <Text variant="heading" weight="bold" className="text-dark-100 dark:text-light-50">{article.title}</Text>
           <View className="mt-3 flex-row-reverse items-center gap-2"><Text size="2xs" className="text-gray-500 dark:text-gray-300">{article.authorName || "فريق جود"}</Text>{article.publishedAt ? <Text size="2xs" className="text-gray-500 dark:text-gray-300">• {formatRelativeDateAr(article.publishedAt)}</Text> : null}</View>

@@ -6,14 +6,16 @@ import { StatusBar } from "expo-status-bar";
 import { colorScheme as nativewindColorScheme, useColorScheme } from "nativewind";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import * as SystemUI from "expo-system-ui";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useNotificationRuntimeSync } from "@/src/features/notifications/hooks/use-notification-runtime-sync";
 import { queryClient } from "@/src/lib/query-client";
-import { loadStoredColorScheme } from "@/src/lib/theme";
+import { loadStoredColorScheme, getThemeBackground } from "@/src/lib/theme";
 import { RTLProvider } from "@/src/providers/RTLProvider";
 import { AuthGuardProvider } from "@/src/providers/AuthGuardProvider";
 import { ProtectedRouteBridge } from "@/src/providers/ProtectedRouteBridge";
 import { ToastProvider } from "@/src/providers/ToastProvider";
+import { AppShell } from "@/src/components/layout/AppShell";
 import "./global.css";
 
 SplashScreen.preventAutoHideAsync();
@@ -41,7 +43,10 @@ export default function RootLayout() {
   useEffect(() => {
     let cancelled = false;
     void loadStoredColorScheme().then((stored) => {
-      if (!cancelled && stored) nativewindColorScheme.set(stored);
+      if (!cancelled && stored) {
+        nativewindColorScheme.set(stored);
+        void SystemUI.setBackgroundColorAsync(getThemeBackground(stored));
+      }
     });
     return () => {
       cancelled = true;
@@ -68,31 +73,35 @@ export default function RootLayout() {
                   translucent={false}
                   backgroundColor={isDark ? "#1f222b" : "#FFFFFF"}
                 />
-                <Stack initialRouteName="index" screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="index" />
-                  <Stack.Screen name="(auth)" />
-                  <Stack.Screen name="(tabs)" />
-                  <Stack.Screen name="apply/[id]" />
-                  <Stack.Screen name="author/[id]" />
-                  <Stack.Screen name="donate/[id]" />
-                  <Stack.Screen name="donations/[id]" />
-                  <Stack.Screen name="campaigns/[id]" />
-                  <Stack.Screen name="help-offers/[id]" />
-                  <Stack.Screen name="help-offers/create/[postId]" />
-                  <Stack.Screen name="blogs/[id]" />
-                  <Stack.Screen name="blogs/index" />
-                  <Stack.Screen name="about" />
-                  <Stack.Screen name="account-settings" />
-                  <Stack.Screen name="change-password" />
-                  <Stack.Screen name="edit-information" />
-                  <Stack.Screen name="help-center" />
-                  <Stack.Screen name="my-donations" />
-                  <Stack.Screen name="notifications/[id]" />
-                  <Stack.Screen name="posts/[id]" />
-                  <Stack.Screen name="saved-posts" />
-                  <Stack.Screen name="search" />
-                  <Stack.Screen name="terms-privacy" />
-                </Stack>
+                <AppShell>
+                  <Stack initialRouteName="index" screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="(auth)" />
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen name="apply/[id]" />
+                    <Stack.Screen name="author/[id]" />
+                    <Stack.Screen name="donate/[id]" />
+                    <Stack.Screen name="donations/[id]" />
+                    <Stack.Screen name="campaigns/[id]" />
+                    <Stack.Screen name="help-offers/[id]" />
+                    <Stack.Screen name="help-offers/create/[postId]" />
+                    <Stack.Screen name="blogs/[id]" />
+                    <Stack.Screen name="blogs/index" />
+                    <Stack.Screen name="about" />
+                    <Stack.Screen name="account-settings" />
+                    <Stack.Screen name="change-password" />
+                    <Stack.Screen name="edit-information" />
+                    <Stack.Screen name="help-center" />
+                    <Stack.Screen name="my-donations" />
+                    <Stack.Screen name="my-applications" />
+                    <Stack.Screen name="notifications/[id]" />
+                    <Stack.Screen name="applications/[id]" />
+                    <Stack.Screen name="posts/[id]" />
+                    <Stack.Screen name="saved-posts" />
+                    <Stack.Screen name="search" />
+                    <Stack.Screen name="terms-privacy" />
+                  </Stack>
+                </AppShell>
               </AuthGuardProvider>
             </ToastProvider>
           </SafeAreaProvider>

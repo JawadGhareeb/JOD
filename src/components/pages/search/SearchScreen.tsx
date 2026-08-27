@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { Image, Pressable, ScrollView, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
 import { HomePostCardSkeleton } from "@/src/components/pages/home/HomePostCardSkeleton";
@@ -58,7 +57,6 @@ function OrganizationCard({ account, onPress }: { account: SearchAccount; onPres
 
 export function SearchScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const primaryColor = getPrimaryColor(colorScheme === "dark");
   const [search, setSearch] = useState("");
@@ -97,10 +95,7 @@ export function SearchScreen() {
 
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
-      <View
-        style={{ paddingTop: Math.max(insets.top, 8) }}
-        className="mb-3 flex-row-reverse items-center justify-between border-b border-gray-200 py-3 dark:border-dark-400"
-      >
+      <View className="mb-3 flex-row-reverse items-center justify-between border-b border-gray-200 py-3 dark:border-dark-400">
         <Pressable
           onPress={() => router.back()}
           className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100"

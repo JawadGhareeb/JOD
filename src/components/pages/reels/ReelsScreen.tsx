@@ -1,10 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, View, type ViewToken } from "react-native";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { Search } from "lucide-react-native";
+import { ActivityIndicator, FlatList, View, type ViewToken } from "react-native";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import Text from "@/src/components/ui/Text";
 import { usePublicMedia } from "@/src/features/media/queries";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
 import { ReelVideoItem } from "./ReelVideoItem";
 
@@ -12,8 +10,6 @@ const REELS_PAGE_SIZE = 6;
 const REEL_GAP = 12;
 
 export function ReelsScreen() {
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ videoId?: string | string[] }>();
   const selectedId = Array.isArray(params.videoId) ? params.videoId[0] : params.videoId;
   const query = usePublicMedia({ perPage: REELS_PAGE_SIZE });
@@ -40,8 +36,7 @@ export function ReelsScreen() {
     }, [setActiveReel]),
   );
 
-  const headerHeight = 64;
-  const availableHeight = Math.max(430, pageHeight - headerHeight);
+  const availableHeight = Math.max(430, pageHeight);
   const cardHeight = Math.min(620, Math.max(430, Math.round(availableHeight * 0.76)));
 
   const onViewableItemsChanged = useCallback(
@@ -86,16 +81,8 @@ export function ReelsScreen() {
   return (
     <View
       className="flex-1 bg-light-100 dark:bg-dark-300"
-      style={{ paddingTop: insets.top }}
-      onLayout={(event) => setPageHeight(Math.max(1, event.nativeEvent.layout.height - insets.top))}
+      onLayout={(event) => setPageHeight(Math.max(1, event.nativeEvent.layout.height))}
     >
-      <View className="h-16 flex-row-reverse items-center justify-between border-b border-gray-100 bg-white px-4 dark:border-dark-400 dark:bg-dark-500">
-        <Text weight="bold" size="lg" className="text-dark-100 dark:text-light-50">ريلز جود</Text>
-        <Pressable onPress={() => router.push("/search")} className="size-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350" accessibilityLabel="البحث">
-          <Search size={20} color={PRIMARY_COLOR_LIGHT} />
-        </Pressable>
-      </View>
-
       <FlatList
         ref={listRef}
         data={items}

@@ -4,13 +4,13 @@ import { useRouter, type Href } from "expo-router";
 import { LogIn } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { appIcons } from "@/src/components/layout/iconMap";
+import { ThemeSwitcher } from "@/src/components/shared/ThemeSwitcher";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Dialog from "@/src/components/ui/Dialog";
 import Text from "@/src/components/ui/Text";
 import { useAuthStatus, useLogout } from "@/src/features/auth/queries";
-import { applyColorScheme } from "@/src/lib/theme";
-import { getPrimaryColor, PRIMARY_COLOR_LIGHT } from "@/src/theme";
+import { getPrimaryColor } from "@/src/theme";
 import { useToast } from "@/src/providers/ToastProvider";
 import { MenuPageHeader } from "./MenuPageHeader";
 
@@ -93,8 +93,6 @@ const settingsGroups: SettingsGroup[] = [
 ];
 
 const ArrowIcon = appIcons.chevronLeft;
-const LightModeIcon = appIcons.lightMode;
-const DarkModeIcon = appIcons.darkMode;
 const LogoutIcon = appIcons.logout;
 
 export function SettingsScreen() {
@@ -103,11 +101,9 @@ export function SettingsScreen() {
   const { isAuthenticated } = useAuthStatus();
   const toast = useToast();
   const { colorScheme } = useColorScheme();
-  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const isDark = colorScheme === "dark";
-  const themeMode = useMemo(() => (isDark ? "dark" : "light"), [isDark]);
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const iconColor = getPrimaryColor(isDark);
-  const inactiveThemeIconColor = isDark ? "#E5E7EB" : PRIMARY_COLOR_LIGHT;
   const arrowIconColor = isDark ? "#D1D5DB" : "#9CA3AF";
   const visibleGroups = useMemo(
     () =>
@@ -164,44 +160,11 @@ export function SettingsScreen() {
             المظهر
           </Text>
           <Text size="xs" className="mt-1 text-gray-500 dark:text-gray-300">
-            اختر النمط المناسب للتطبيق.
+            اختر النمط المناسب — يُطبَّق فوراً على كامل التطبيق.
           </Text>
 
-          <View className="mt-3 flex-row-reverse gap-2">
-            <View className="flex-1">
-              <Button
-                fullWidth
-                size="small"
-                variant={themeMode === "light" ? "primary" : "tertiary"}
-                leftIcon={
-                  <LightModeIcon
-                    size={16}
-                    color={themeMode === "light" ? "#FFFFFF" : inactiveThemeIconColor}
-                    strokeWidth={2.25}
-                  />
-                }
-                onPress={() => applyColorScheme("light")}
-              >
-                فاتح
-              </Button>
-            </View>
-            <View className="flex-1">
-              <Button
-                fullWidth
-                size="small"
-                variant={themeMode === "dark" ? "primary" : "tertiary"}
-                leftIcon={
-                  <DarkModeIcon
-                    size={16}
-                    color={themeMode === "dark" ? "#FFFFFF" : inactiveThemeIconColor}
-                    strokeWidth={2.25}
-                  />
-                }
-                onPress={() => applyColorScheme("dark")}
-              >
-                داكن
-              </Button>
-            </View>
+          <View className="mt-3">
+            <ThemeSwitcher />
           </View>
         </Card>
 
