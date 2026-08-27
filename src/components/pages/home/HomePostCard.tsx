@@ -8,7 +8,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { Archive, MapPin, Pencil, Tag, Trash2 } from "lucide-react-native";
+import { MapPin, Pencil, Tag, Trash2 } from "lucide-react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
@@ -37,7 +37,6 @@ type HomePostCardProps = {
   enableAuthorNavigation?: boolean;
   mode?: HomePostCardMode;
   ownPostStatus?: ProfilePostStatus;
-  onArchive?: (post: HomePost) => void;
   onDelete?: (post: HomePost) => void;
   onUnsave?: (post: HomePost) => void;
   onEdit?: (post: HomePost) => void;
@@ -89,7 +88,6 @@ export function HomePostCard({
   enableAuthorNavigation = false,
   mode = "default",
   ownPostStatus,
-  onArchive,
   onDelete,
   onUnsave,
   onEdit,
@@ -122,9 +120,7 @@ export function HomePostCard({
   const [otherReportReason, setOtherReportReason] = useState("");
   const optionsButtonRef = useRef<View>(null);
   const [optionsAnchor, setOptionsAnchor] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  const [pendingOwnPostAction, setPendingOwnPostAction] = useState<
-    "archive" | "delete" | "edit" | null
-  >(null);
+  const [pendingOwnPostAction, setPendingOwnPostAction] = useState<"delete" | "edit" | null>(null);
   const shouldTruncate = post.content.length > MAX_CONTENT;
   const displayContent = useMemo(() => {
     if (expanded || !shouldTruncate) return post.content;
@@ -146,7 +142,6 @@ export function HomePostCard({
     post.cta.type === "apply" || post.cta.type === "donate" ? "primary" : "secondary";
   const isOwnPost = mode === "own";
   const isSavedPostList = mode === "saved";
-  const canArchiveOwnPost = isOwnPost && ownPostStatus !== "archived";
   const canEditRejectedPost = isOwnPost && ownPostStatus === "unposted";
   const actionRowClassName = isRTL ? "flex-row-reverse" : "flex-row";
   const actionItemClassName = isRTL ? "flex-row-reverse" : "flex-row";
@@ -296,11 +291,6 @@ export function HomePostCard({
     }
   };
 
-  const handleArchiveOwnPost = () => {
-    closeOptionsMenu();
-    setPendingOwnPostAction("archive");
-  };
-
   const handleDeleteOwnPost = () => {
     closeOptionsMenu();
     setPendingOwnPostAction("delete");
@@ -334,11 +324,6 @@ export function HomePostCard({
   const handleConfirmOwnPostAction = () => {
     const action = pendingOwnPostAction;
     setPendingOwnPostAction(null);
-
-    if (action === "archive") {
-      onArchive?.(post);
-      return;
-    }
 
     if (action === "delete") {
       onDelete?.(post);
@@ -572,18 +557,6 @@ export function HomePostCard({
                   </Pressable>
                 ) : null}
 
-                {canArchiveOwnPost ? (
-                  <Pressable
-                    onPress={handleArchiveOwnPost}
-                    className={`mt-1 ${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
-                    accessibilityRole="button"
-                    accessibilityLabel="أرشفة المنشور"
-                  >
-                    <Text size="xs" className="text-dark-100 dark:text-light-50">أرشفة المنشور</Text>
-                    <Archive size={15} color={primaryColor} strokeWidth={2.25} />
-                  </Pressable>
-                ) : null}
-
                 <Pressable
                   onPress={handleDeleteOwnPost}
                   className={`mt-1 ${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
@@ -619,25 +592,17 @@ export function HomePostCard({
       <Dialog
         visible={pendingOwnPostAction !== null}
         title={
-          pendingOwnPostAction === "delete"
-            ? "حذف المنشور"
-            : pendingOwnPostAction === "archive"
-              ? "أرشفة المنشور"
-              : "تأكيد التعديلات"
+          pendingOwnPostAction === "delete" ? "حذف المنشور" : "تأكيد التعديلات"
         }
         titleColor={pendingOwnPostAction === "delete" ? "error" : undefined}
         message={
           pendingOwnPostAction === "delete"
             ? "هل أنت متأكد أنك تريد حذف هذا المنشور؟ لا يمكن التراجع عن هذه العملية."
-            : pendingOwnPostAction === "archive"
-              ? "هل تريد نقل هذا المنشور إلى المنشورات المؤرشفة بدل إبقائه ظاهراً ضمن منشوراتك؟"
-              : "هل تريد فتح صفحة التعديل ومراجعة التغييرات قبل إعادة إرسال المنشور؟"
+            : "هل تريد فتح صفحة التعديل ومراجعة التغييرات قبل إعادة إرسال المنشور؟"
         }
         icon={
           pendingOwnPostAction === "delete" ? (
             <Trash2 size={28} color="#DC2626" strokeWidth={2.25} />
-          ) : pendingOwnPostAction === "archive" ? (
-            <Archive size={28} color={primaryColor} strokeWidth={2.25} />
           ) : (
             <Pencil size={28} color={primaryColor} strokeWidth={2.25} />
           )
@@ -651,11 +616,7 @@ export function HomePostCard({
           },
           {
             text:
-              pendingOwnPostAction === "delete"
-                ? "حذف المنشور"
-                : pendingOwnPostAction === "archive"
-                  ? "أرشفة"
-                  : "متابعة التعديل",
+              pendingOwnPostAction === "delete" ? "حذف المنشور" : "متابعة التعديل",
             variant: "primary",
             className: pendingOwnPostAction === "delete" ? "bg-error-300 shadow-error-300/30" : undefined,
             onPress: handleConfirmOwnPostAction,

@@ -1,6 +1,6 @@
 import type { HomePost } from "@/src/features/posts/types";
 
-export type ProfilePostStatus = "posted" | "unposted" | "archived";
+export type ProfilePostStatus = "posted" | "unposted";
 
 export type ProfilePost = HomePost & {
   profileStatus: ProfilePostStatus;

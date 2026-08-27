@@ -300,10 +300,10 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         onScroll={showPageHeader ? undefined : onScroll}
         scrollEventThrottle={showPageHeader ? undefined : 16}
       >
-        {editMode && myPostQuery.data?.status === "rejected" && myPostQuery.data.rejectionReason ? (
+        {editMode && myPostQuery.data?.status === "blocked" && myPostQuery.data.blockReason ? (
           <Card padding="md" className="mb-3 border-error-300/30 bg-error-300/5">
             <Text weight="semibold" size="sm" className="text-error-300">سبب رفض المنشور</Text>
-            <Text size="xs" className="mt-2 text-error-300">{myPostQuery.data.rejectionReason}</Text>
+            <Text size="xs" className="mt-2 text-error-300">{myPostQuery.data.blockReason}</Text>
             <Text size="2xs" className="mt-2 text-gray-500 dark:text-gray-300">عدّل البيانات المطلوبة ثم استخدم «حفظ وإعادة الإرسال» لإرساله للمراجعة من جديد.</Text>
           </Card>
         ) : null}

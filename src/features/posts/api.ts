@@ -20,7 +20,7 @@ const ENDPOINTS = {
   postImages: (id: string) => `/posts/${id}/images`, imageOrder: (id: string) => `/posts/${id}/images/order`, postImage: (id: string, imageId: string) => `/posts/${id}/images/${imageId}`,
   discoveryPosts: "/discovery/posts", discoveryCampaigns: "/discovery/campaigns", discoveryCategories: "/discovery/categories",
   publisher: (id: string) => `/discovery/publishers/${id}`, publisherPosts: (id: string) => `/discovery/publishers/${id}/posts`,
-  posts: "/posts", post: (id: string) => `/posts/${id}`, submit: (id: string) => `/posts/${id}/submit`, archive: (id: string) => `/posts/${id}/archive`, repost: (id: string) => `/posts/${id}/repost`,
+  posts: "/posts", post: (id: string) => `/posts/${id}`, submit: (id: string) => `/posts/${id}/submit`,
   like: (id: string) => `/posts/${id}/like`, save: (id: string) => `/posts/${id}/save`, reports: (id: string) => `/posts/${id}/reports`,
   myPosts: "/me/posts", myPost: (id: string) => `/me/posts/${id}`, savedPosts: "/me/saved-posts",
 } as const;
@@ -55,8 +55,6 @@ export const postsApi = {
   update: async (id: string, input: UpdatePostInput) => { const response = await apiClient.patch<ApiEnvelope<MyPost>>(ENDPOINTS.post(id), input); return response.data.data; },
   delete: async (id: string) => { await apiClient.delete(ENDPOINTS.post(id)); },
   submit: async (id: string) => { const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.submit(id)); return response.data.data; },
-  archive: async (id: string) => { const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.archive(id)); return response.data.data; },
-  repost: async (id: string) => { const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.repost(id)); return response.data.data; },
   uploadImages: async (id: string, images: MobileImageFile[]) => { const form = await toPostImagesFormData(images); const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.postImages(id), form); return response.data.data; },
   reorderImages: async (id: string, imageIds: string[]) => { const response = await apiClient.patch<ApiEnvelope<MyPost>>(ENDPOINTS.imageOrder(id), { imageIds }); return response.data.data; },
   deleteImage: async (id: string, imageId: string) => { const response = await apiClient.delete<ApiEnvelope<MyPost>>(ENDPOINTS.postImage(id, imageId)); return response.data.data; },

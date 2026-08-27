@@ -111,13 +111,13 @@ export interface UpdatePostInput {
 }
 export type PostInput = CreatePostInput;
 
-export type MyPostStatus = "draft" | "pending" | "active" | "rejected" | "archived";
+export type MyPostStatus = "draft" | "pending" | "published" | "blocked";
 export interface PostImageMedia { id: string; url: string; position: number }
 export interface MyPost {
   id: string; ownerId: string | null; title: string | null; details: string | null; city: string | null; type: string; categoryId: string | null;
   images: string[]; imageMedia: PostImageMedia[]; viewsCount: number; reactionsCount: number; commentsCount: number; sharesCount: number;
-  stats: { likes: number; comments: number; shares: number }; status: MyPostStatus; rejectionReason: string | null;
-  submittedAt: string | null; reviewedAt: string | null; createdAt: string | null; updatedAt: string | null; publishedAt: string | null;
+  stats: { likes: number; comments: number; shares: number }; status: MyPostStatus; blockReason: string | null;
+  submittedAt: string | null; reviewedAt: string | null; blockedAt?: string | null; createdAt: string | null; updatedAt: string | null; publishedAt: string | null;
   audience?: ContentAudience;
 }
 export interface GetMyPostsParams { page?: number; perPage?: number; status?: MyPostStatus; sort?: "createdAt" | "-createdAt" | "updatedAt" | "-updatedAt" | "title" | "-title" }

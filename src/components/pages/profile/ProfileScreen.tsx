@@ -8,7 +8,7 @@ import { SectionHeader } from "@/src/components/shared/SectionHeader";
 import { toProfileSummary } from "@/src/features/account/helpers";
 import { useAuthStatus } from "@/src/features/auth/queries";
 import { ApiClientError } from "@/src/lib/api-client";
-import { useArchivePost, useDeletePost, useMyPosts, useRepostPost } from "@/src/features/posts/queries";
+import { useDeletePost, useMyPosts } from "@/src/features/posts/queries";
 import type { MyPostStatus } from "@/src/features/posts/types";
 import { ProfileHeaderCard } from "./ProfileHeaderCard";
 import { MyPostCard } from "./MyPostCard";
@@ -18,46 +18,24 @@ import { useToast } from "@/src/providers/ToastProvider";
 const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
 const STATUS_TABS: { key: MyPostStatus; label: string }[] = [
-  { key: "active", label: "منشور" },
+  { key: "published", label: "منشور" },
   { key: "pending", label: "قيد المراجعة" },
-  { key: "rejected", label: "مرفوض" },
+  { key: "blocked", label: "مرفوض" },
   { key: "draft", label: "مسودة" },
-  { key: "archived", label: "مؤرشف" },
 ];
 
 export function ProfileScreen() {
   const router = useRouter();
   const { onScroll } = useCollapsibleHeaderScreen();
   const toast = useToast();
-  const [activeTab, setActiveTab] = useState<MyPostStatus>("active");
+  const [activeTab, setActiveTab] = useState<MyPostStatus>("published");
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStatus();
   const { data, isLoading, isError, refetch } = useMyPosts({ enabled: isAuthenticated });
-  const archiveMutation = useArchivePost();
-  const repostMutation = useRepostPost();
   const deleteMutation = useDeletePost();
   const posts = useMemo(() => data?.items ?? [], [data]);
   const filteredPosts = useMemo(() => posts.filter((post) => post.status === activeTab), [posts, activeTab]);
   const summary = useMemo(() => (user ? toProfileSummary(user) : null), [user]);
   const getTabCount = (status: MyPostStatus) => posts.filter((post) => post.status === status).length;
-
-  const handleArchive = async (postId: string) => {
-    try {
-      await archiveMutation.mutateAsync(postId);
-      toast.success("تم نقل المنشور إلى المنشورات المؤرشفة.", "تمت الأرشفة");
-    } catch (error) {
-      toast.error(error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE, "تعذر أرشفة المنشور");
-    }
-  };
-
-  const handleRepost = async (postId: string) => {
-    try {
-      await repostMutation.mutateAsync(postId);
-      toast.success("تم إرسال المنشور للمراجعة مجدداً.", "تمت إعادة الإرسال");
-      setActiveTab("pending");
-    } catch (error) {
-      toast.error(error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE, "تعذر إعادة نشر المنشور");
-    }
-  };
 
   const handleDelete = async (postId: string) => {
     try {
@@ -94,9 +72,7 @@ export function ProfileScreen() {
             post={item}
             authorName={summary.name}
             authorUsername={summary.username}
-            onArchive={handleArchive}
             onDelete={handleDelete}
-            onRepost={handleRepost}
           />
         )}
         showsVerticalScrollIndicator={false}
@@ -106,21 +82,11 @@ export function ProfileScreen() {
           <View>
             <ProfileHeaderCard summary={summary} />
             <SectionHeader title="منشوراتي" />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ flexDirection: "row-reverse", gap: 8, paddingBottom: 12 }}
-            >
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row-reverse", gap: 8, paddingBottom: 12 }}>
               {STATUS_TABS.map((tab) => {
                 const isActive = activeTab === tab.key;
                 return (
-                  <Pressable
-                    key={tab.key}
-                    onPress={() => setActiveTab(tab.key)}
-                    className={`flex-row-reverse items-center gap-2 rounded-full px-4 py-2.5 ${isActive ? "bg-primary-400/15" : "bg-white dark:bg-dark-500"}`}
-                    accessibilityRole="button"
-                    accessibilityLabel={tab.label}
-                  >
+                  <Pressable key={tab.key} onPress={() => setActiveTab(tab.key)} className={`flex-row-reverse items-center gap-2 rounded-full px-4 py-2.5 ${isActive ? "bg-primary-400/15" : "bg-white dark:bg-dark-500"}`} accessibilityRole="button" accessibilityLabel={tab.label}>
                     <Text size="xs" weight="medium" className={isActive ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}>{tab.label}</Text>
                     <View className={`min-w-6 items-center justify-center rounded-full px-1.5 py-1 ${isActive ? "bg-primary-400" : "bg-gray-200 dark:bg-dark-350"}`}>
                       <Text size="2xs" weight="medium" className={isActive ? "text-light-50" : "text-gray-600 dark:text-gray-200"}>{getTabCount(tab.key)}</Text>
