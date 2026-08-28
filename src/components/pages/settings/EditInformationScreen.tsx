@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { FileText, Mail, MapPin, Phone } from "lucide-react-native";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Input from "@/src/components/ui/Input";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
+import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
+import { useCities } from "@/src/features/lookups/queries";
 import { useUpdateProfile } from "@/src/features/account/queries";
 import { useAuthStatus, useRemoveAvatar, useUpdateAvatar } from "@/src/features/auth/queries";
 import { ApiClientError } from "@/src/lib/api-client";
@@ -29,6 +31,12 @@ export function EditInformationScreen() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [city, setCity] = useState("");
   const [bio, setBio] = useState("");
+  const [isCityModalOpen, setIsCityModalOpen] = useState(false);
+  const citiesQuery = useCities();
+  const cityOptions: SelectionOption[] = useMemo(
+    () => (citiesQuery.data ?? []).map((item) => ({ label: item.name, value: item.name })),
+    [citiesQuery.data],
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -134,7 +142,7 @@ export function EditInformationScreen() {
             <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">رقم الجوال (اختياري)</Text>
             <Input fullWidth showStatusIcon={false} inputClassName="font-noto text-xs" rightIcon={<Phone size={16} strokeWidth={2.25} />} value={phoneNumber} onChangeText={setPhoneNumber} keyboardType="phone-pad" placeholder="+9639XXXXXXXX" placeholderTextColor="#9CA3AF" />
             <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">المحافظة</Text>
-            <Input fullWidth showStatusIcon={false} inputClassName="font-noto text-xs" rightIcon={<MapPin size={16} strokeWidth={2.25} />} value={city} onChangeText={setCity} placeholder="مثال: دمشق" placeholderTextColor="#9CA3AF" />
+            <Pressable onPress={() => setIsCityModalOpen(true)} accessibilityRole="button" accessibilityLabel="اختر المحافظة"><View pointerEvents="none"><Input fullWidth editable={false} showStatusIcon={false} inputClassName="font-noto text-xs" rightIcon={<MapPin size={16} strokeWidth={2.25} />} value={city} placeholder="اختر المحافظة" placeholderTextColor="#9CA3AF" /></View></Pressable>
             <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">نبذة تعريفية</Text>
             <Input fullWidth showStatusIcon={false} inputClassName="min-h-[64px] font-noto text-xs" inputContainerClassName="min-h-[88px] py-2" rightIcon={<FileText size={16} strokeWidth={2.25} />} value={bio} onChangeText={setBio} placeholder="اكتب نبذة مختصرة عنك" placeholderTextColor="#9CA3AF" multiline textAlignVertical="top" maxLength={180} />
             <Text size="2xs" className="self-start text-gray-400 dark:text-gray-300">{bio.trim().length}/180</Text>
@@ -145,6 +153,7 @@ export function EditInformationScreen() {
         {!isEmailValid ? <Text size="2xs" className="mt-2 text-center text-error-300">البريد الإلكتروني غير صالح.</Text> : null}
         {!isPhoneValid ? <Text size="2xs" className="mt-2 text-center text-error-300">رقم الجوال قصير جداً.</Text> : null}
       </ScrollView>
+      <SelectionModal visible={isCityModalOpen} title="اختر المحافظة السورية" options={cityOptions} selectedValue={city} onSelect={(value) => { setCity(value); setIsCityModalOpen(false); }} onClose={() => setIsCityModalOpen(false)} />
     </View>
   );
 }
