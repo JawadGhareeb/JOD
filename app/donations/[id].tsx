@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 import { View } from "react-native";
+import { EyeOff as EyeOffIcon } from "lucide-react-native";
 import Card from "@/src/components/ui/Card";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Text from "@/src/components/ui/Text";
@@ -72,6 +73,26 @@ export default function DonationDetailsPage() {
               <DetailRow label="سبب الإلغاء" value={donation.cancelReason} error />
             ) : null}
           </Card>
+
+          {donation.isAnonymous ? (
+            <Card padding="md" className="gap-2 border-gray-200 dark:border-dark-400">
+              <View className="flex-row-reverse items-center gap-2">
+                <EyeOffIcon size={16} color="#6B7280" strokeWidth={2.25} />
+                <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
+                  خصوصية التبرع
+                </Text>
+                <View className="rounded-full bg-gray-100 px-2.5 py-1 dark:bg-dark-350">
+                  <Text size="2xs" className="text-gray-600 dark:text-gray-200">
+                    مجهول علنًا
+                  </Text>
+                </View>
+              </View>
+              <Text size="2xs" className="leading-5 text-gray-500 dark:text-gray-300">
+                لن يظهر اسمك في أي عرض عام لهذا التبرع. تبقى بياناتك متاحة للمنظمة لمتابعة التبرع
+                والتواصل معك.
+              </Text>
+            </Card>
+          ) : null}
 
           <Card padding="md" className="gap-2 border-gray-200 dark:border-dark-400">
             <Text weight="semibold" size="sm" className="mb-1 text-dark-100 dark:text-light-50">

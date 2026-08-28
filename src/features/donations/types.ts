@@ -9,6 +9,8 @@ export interface DonationInput {
   phone?: string | null;
   city?: string | null;
   notes?: string | null;
+  /** Publicly anonymous only — the donation stays linked to the donor and still counts toward the campaign. */
+  isAnonymous?: boolean;
 }
 
 export interface Donation {
@@ -23,6 +25,7 @@ export interface Donation {
   phone: string | null;
   city: string | null;
   notes: string | null;
+  isAnonymous: boolean;
   cancelReason: string | null;
   source: string | null;
   createdAt: string | null;

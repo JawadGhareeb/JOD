@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useColorScheme } from "nativewind";
 import { FlatList, Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
+import { EyeOff as EyeOffIcon } from "lucide-react-native";
 import Card from "@/src/components/ui/Card";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Text from "@/src/components/ui/Text";
@@ -120,10 +121,20 @@ export function MyDonationsScreen() {
                   {item.createdAt ? ` • ${formatRelativeDateAr(item.createdAt)}` : ""}
                 </Text>
               </View>
-              <View className="rounded-full bg-primary-400/10 px-3 py-1">
-                <Text size="2xs" weight="medium" className="text-primary-400">
-                  {statusLabels[item.status]}
-                </Text>
+              <View className="items-end gap-1">
+                <View className="rounded-full bg-primary-400/10 px-3 py-1">
+                  <Text size="2xs" weight="medium" className="text-primary-400">
+                    {statusLabels[item.status]}
+                  </Text>
+                </View>
+                {item.isAnonymous ? (
+                  <View className="flex-row-reverse items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 dark:bg-dark-350">
+                    <EyeOffIcon size={11} color="#6B7280" strokeWidth={2.25} />
+                    <Text size="2xs" className="text-gray-600 dark:text-gray-200">
+                      تبرع مجهول
+                    </Text>
+                  </View>
+                ) : null}
               </View>
             </View>
             <View className="flex-row-reverse items-center justify-between">

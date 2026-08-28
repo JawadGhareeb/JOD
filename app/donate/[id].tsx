@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { HeartHandshake } from "lucide-react-native";
+import { Check, HeartHandshake } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import Button from "@/src/components/ui/Button";
@@ -44,6 +44,9 @@ export default function DonatePage() {
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [city, setCity] = useState(user?.city ?? "");
   const [notes, setNotes] = useState("");
+  // Never reset on a failed submit — silently reverting to false would publish
+  // the donor's identity on a retry they thought was still anonymous.
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const campaign = campaignQuery.data;
   const amountNumber = Number(amount);
   const validAmount = Number.isFinite(amountNumber) && amountNumber >= 0.01 && amountNumber <= 999999999.99;
@@ -60,6 +63,7 @@ export default function DonatePage() {
           phone: phone.trim() || null,
           city: city.trim() || null,
           notes: notes.trim() || null,
+          isAnonymous,
         },
       });
       toast.success("تم إرسال طلب التبرع. بانتظار تواصل المنظمة معك.", "تم إرسال الطلب");
@@ -91,6 +95,7 @@ export default function DonatePage() {
                 <Input fullWidth showStatusIcon={false} value={phone} onChangeText={setPhone} placeholder="رقم الهاتف - اختياري" keyboardType="phone-pad" />
                 <Input fullWidth showStatusIcon={false} value={city} onChangeText={setCity} placeholder="المدينة - اختياري" />
                 <Input fullWidth showStatusIcon={false} multiline value={notes} onChangeText={setNotes} placeholder="ملاحظات للمنظمة - اختياري" maxLength={2000} />
+                <AnonymousDonationToggle value={isAnonymous} onChange={setIsAnonymous} disabled={donateMutation.isPending} />
                 {!validAmount && amount.length ? <Text size="2xs" className="text-error-300">أدخل مبلغاً صالحاً يبدأ من 0.01.</Text> : null}
                 <Text size="2xs" className="leading-5 text-gray-500 dark:text-gray-300">هذا طلب تبرع وليس عملية دفع مكتملة. يتم احتساب المبلغ ضمن الحملة فقط بعد تأكيد المنظمة استلامه.</Text>
                 <Button fullWidth loading={donateMutation.isPending} disabled={!validAmount || donateMutation.isPending || campaign.status !== "active"} onPress={() => void submit()}>إرسال طلب التبرع</Button>
@@ -100,5 +105,41 @@ export default function DonatePage() {
         </View>
       </Container>
     </KeyboardAvoider>
+  );
+}
+
+function AnonymousDonationToggle({
+  value,
+  onChange,
+  disabled = false,
+}: {
+  value: boolean;
+  onChange: (next: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={() => onChange(!value)}
+      disabled={disabled}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: value, disabled }}
+      accessibilityLabel="التبرع كمجهول"
+      accessibilityHint="لن تُنسب مساهمتك لك علنًا، وسيبقى المبلغ محسوباً ضمن الحملة"
+      className={`gap-2 rounded-xl border p-3 ${value ? "border-primary-400 bg-primary-400/5" : "border-gray-200 dark:border-dark-400"}`}
+    >
+      <View className="flex-row-reverse items-center gap-2">
+        <View
+          className={`size-5 items-center justify-center rounded-md border ${value ? "border-primary-400 bg-primary-400" : "border-gray-300 dark:border-dark-400"}`}
+        >
+          {value ? <Check size={14} color="#FFFFFF" strokeWidth={3} /> : null}
+        </View>
+        <Text size="xs" weight="semibold" className={value ? "text-primary-400" : "text-dark-100 dark:text-light-50"}>
+          التبرع كمجهول
+        </Text>
+      </View>
+      <Text size="2xs" className="leading-5 text-gray-500 dark:text-gray-300">
+        سيتم احتساب مبلغ تبرعك ضمن تقدم الحملة، ولن تُنسب مساهمتك لك علنًا.
+      </Text>
+    </Pressable>
   );
 }
