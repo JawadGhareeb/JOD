@@ -65,14 +65,6 @@ const settingsGroups: SettingsGroup[] = [
         Icon: appIcons.savedPosts,
         route: "/saved-posts",
       },
-      {
-        title: "المتابَعون",
-        hint: "الحسابات والمنظمات التي تتابعها",
-        Icon: appIcons.profile,
-        // expo-router regenerates typed routes on dev-server start; cast until then,
-        // matching how "/help-offers" is handled above.
-        route: "/following" as Href,
-      },
     ],
   },
   {

@@ -7,6 +7,7 @@ import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import { SectionHeader } from "@/src/components/shared/SectionHeader";
 import { toProfileSummary } from "@/src/features/account/helpers";
 import { useAuthStatus } from "@/src/features/auth/queries";
+import { useMyFollowing } from "@/src/features/follows/queries";
 import { ApiClientError } from "@/src/lib/api-client";
 import { useDeletePost, useMyPosts } from "@/src/features/posts/queries";
 import type { MyPostStatus } from "@/src/features/posts/types";
@@ -30,11 +31,13 @@ export function ProfileScreen() {
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<MyPostStatus>("published");
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStatus();
+  const followingQuery = useMyFollowing("all", isAuthenticated);
   const { data, isLoading, isError, refetch } = useMyPosts({ enabled: isAuthenticated });
   const deleteMutation = useDeletePost();
   const posts = useMemo(() => data?.items ?? [], [data]);
   const filteredPosts = useMemo(() => posts.filter((post) => post.status === activeTab), [posts, activeTab]);
   const summary = useMemo(() => (user ? toProfileSummary(user) : null), [user]);
+  const followingCount = followingQuery.data?.pages[0]?.meta.total ?? 0;
   const getTabCount = (status: MyPostStatus) => posts.filter((post) => post.status === status).length;
 
   const handleDelete = async (postId: string) => {
@@ -80,7 +83,7 @@ export function ProfileScreen() {
         scrollEventThrottle={16}
         ListHeaderComponent={
           <View>
-            <ProfileHeaderCard summary={summary} />
+            <ProfileHeaderCard summary={summary} followingCount={followingCount} />
             <SectionHeader title="منشوراتي" />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row-reverse", gap: 8, paddingBottom: 12 }}>
               {STATUS_TABS.map((tab) => {

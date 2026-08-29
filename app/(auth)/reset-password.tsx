@@ -282,7 +282,7 @@ export default function ResetPasswordScreen() {
         <Text variant="heading" weight="bold" rtlAlign="center">
           إعادة تعيين كلمة المرور
         </Text>
-        <Text size="sm" color="secondary" rtlAlign="center">
+        <Text size="sm" className="text-gray-600 dark:text-gray-300" rtlAlign="center">
           أدخل بريدك الإلكتروني لإرسال رمز التحقق.
         </Text>
       </View>
@@ -320,7 +320,7 @@ export default function ResetPasswordScreen() {
         <Text variant="heading" weight="bold" rtlAlign="center">
           تحقق من الرمز
         </Text>
-        <Text size="sm" color="secondary" rtlAlign="center">
+        <Text size="sm" className="text-gray-600 dark:text-gray-300" rtlAlign="center">
           أدخل الرمز المرسل إلى {login || "بريدك الإلكتروني"}.
         </Text>
       </View>
@@ -355,7 +355,7 @@ export default function ResetPasswordScreen() {
                 {errors.code.message}
               </Text>
             ) : null}
-            <Text size="xs" color="secondary" rtlAlign="center">
+            <Text size="xs" className="text-gray-600 dark:text-gray-300" rtlAlign="center">
               رمز مكون من {VERIFICATION_CODE_LENGTH} أرقام.
             </Text>
           </View>
@@ -387,7 +387,7 @@ export default function ResetPasswordScreen() {
         <Text variant="heading" weight="bold" rtlAlign="center">
           تعيين كلمة مرور جديدة
         </Text>
-        <Text size="sm" color="secondary" rtlAlign="center">
+        <Text size="sm" className="text-gray-600 dark:text-gray-300" rtlAlign="center">
           اختر كلمة مرور جديدة وآمنة لحسابك.
         </Text>
       </View>
@@ -460,7 +460,7 @@ export default function ResetPasswordScreen() {
         <Text variant="heading" weight="bold" rtlAlign="center">
           تم تغيير كلمة المرور بنجاح
         </Text>
-        <Text size="sm" color="secondary" rtlAlign="center">
+        <Text size="sm" className="text-gray-600 dark:text-gray-300" rtlAlign="center">
           يمكنك الآن تسجيل الدخول باستخدام كلمة المرور الجديدة.
         </Text>
       </View>
@@ -498,7 +498,7 @@ export default function ResetPasswordScreen() {
               <Text variant="heading" weight="bold" rtlAlign="center">
                 استعادة كلمة المرور
               </Text>
-              <Text size="sm" color="secondary" rtlAlign="center">
+              <Text size="sm" className="text-gray-600 dark:text-gray-300" rtlAlign="center">
                 اتبع الخطوات التالية لإعادة تعيين كلمة المرور.
               </Text>
             </View>

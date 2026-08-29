@@ -13,17 +13,15 @@ import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
 import { useUpdateAvatar } from "@/src/features/auth/queries";
 import { useToast } from "@/src/providers/ToastProvider";
 
-const NotificationIcon = appIcons.notification;
 const SettingsIcon = appIcons.settings;
 const BioIcon = appIcons.about;
 
-const statLabels = {
-  postsCount: "المنشورات",
-  savedCount: "المحفوظات",
-  donationsCount: "تبرعاتي",
-} as const;
+type ProfileHeaderCardProps = {
+  summary: ProfileSummary;
+  followingCount?: number;
+};
 
-export function ProfileHeaderCard({ summary }: { summary: ProfileSummary }) {
+export function ProfileHeaderCard({ summary, followingCount = 0 }: ProfileHeaderCardProps) {
   const router = useRouter();
   const updateAvatarMutation = useUpdateAvatar();
   const toast = useToast();
@@ -89,12 +87,37 @@ export function ProfileHeaderCard({ summary }: { summary: ProfileSummary }) {
         ) : null}
 
         <View className="mt-4 w-full flex-row-reverse gap-2 border-t border-gray-100 pt-4 dark:border-dark-400">
-          {(Object.keys(statLabels) as (keyof typeof statLabels)[]).map((key) => (
-            <View key={key} className="flex-1 items-center rounded-2xl bg-primary-100/70 py-3 dark:bg-dark-350">
-              <Text weight="bold" size="base" className="text-primary-400">{summary.stats[key]}</Text>
-              <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">{statLabels[key]}</Text>
-            </View>
-          ))}
+          <Pressable
+            onPress={() => router.push("/following" as never)}
+            className="flex-1 items-center rounded-2xl bg-primary-100/70 py-3 dark:bg-dark-350"
+            accessibilityRole="button"
+            accessibilityLabel="عرض الحسابات التي أتابعها"
+          >
+            <Text weight="bold" size="base" className="text-primary-400">{followingCount}</Text>
+            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">المتابَعون</Text>
+          </Pressable>
+          <View className="flex-1 items-center rounded-2xl bg-primary-100/70 py-3 dark:bg-dark-350">
+            <Text weight="bold" size="base" className="text-primary-400">{summary.stats.postsCount}</Text>
+            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">المنشورات</Text>
+          </View>
+          <Pressable
+            onPress={() => router.push("/saved-posts")}
+            className="flex-1 items-center rounded-2xl bg-primary-100/70 py-3 dark:bg-dark-350"
+            accessibilityRole="button"
+            accessibilityLabel="عرض محفوظاتي"
+          >
+            <Text weight="bold" size="base" className="text-primary-400">{summary.stats.savedCount}</Text>
+            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">محفوظاتي</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => router.push("/my-donations")}
+            className="flex-1 items-center rounded-2xl bg-primary-100/70 py-3 dark:bg-dark-350"
+            accessibilityRole="button"
+            accessibilityLabel="عرض تبرعاتي"
+          >
+            <Text weight="bold" size="base" className="text-primary-400">{summary.stats.donationsCount}</Text>
+            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">تبرعاتي</Text>
+          </Pressable>
         </View>
 
         <View className="mt-3 w-full flex-row-reverse gap-2">
@@ -111,9 +134,6 @@ export function ProfileHeaderCard({ summary }: { summary: ProfileSummary }) {
           </View>
           <Pressable onPress={() => router.push("/(tabs)/settings")} className="size-11 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350" accessibilityLabel="الإعدادات">
             <SettingsIcon size={19} color={PRIMARY_COLOR_LIGHT} strokeWidth={2.2} />
-          </Pressable>
-          <Pressable onPress={() => router.push("/(tabs)/notifications")} className="size-11 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350" accessibilityLabel="الإشعارات">
-            <NotificationIcon size={19} color={PRIMARY_COLOR_LIGHT} strokeWidth={2.2} />
           </Pressable>
         </View>
       </View>

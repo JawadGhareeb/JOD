@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import { Eye, EyeOff, LockKeyhole, Mail, PhoneCall, UserRound } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { z } from "zod";
 import { FadeInUp } from "@/src/components/shared/FadeInUp";
 import Button from "@/src/components/ui/Button";
@@ -55,7 +55,7 @@ export default function RegisterScreen() {
       <Container scrollable className="bg-light-100 dark:bg-dark-300" scrollViewProps={{ contentContainerStyle: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 24, paddingBottom: 36, justifyContent: "center" } }}>
         <View className="gap-5">
           <View className="absolute -left-24 -top-20 h-52 w-52 rounded-full bg-primary-100/60 dark:bg-primary-400/10" />
-          <FadeInUp><View className="items-center gap-3"><Logo variant="medium" showName /><View className="items-center gap-2 px-4"><Text variant="heading" weight="bold" rtlAlign="center">ابدأ رحلتك مع جود</Text><Text size="sm" color="secondary" rtlAlign="center" className="leading-6">أنشئ حساباً لتطلب المساعدة أو تقدمها وتتابع الحملات.</Text></View></View></FadeInUp>
+          <FadeInUp><View className="items-center gap-3"><Logo variant="medium" showName /><View className="items-center gap-2 px-4"><Text variant="heading" weight="bold" rtlAlign="center">ابدأ رحلتك مع جود</Text><Text size="sm" rtlAlign="center" className="leading-6 text-gray-600 dark:text-gray-300">أنشئ حساباً لتطلب المساعدة أو تقدمها وتتابع الحملات.</Text></View></View></FadeInUp>
           <FadeInUp delay={90}>
             <Card padding="lg" className="gap-4 rounded-3xl border-gray-200 dark:border-dark-400">
               <Controller control={control} name="name" render={({ field: { onChange, onBlur, value } }) => <Input label="الاسم الكامل" placeholder="أحمد محمد" value={value} onChangeText={onChange} onBlur={onBlur} autoComplete="name" textContentType="name" error={errors.name?.message} leftIcon={<UserRound size={18} />} fullWidth />} />
@@ -67,7 +67,7 @@ export default function RegisterScreen() {
               <Button fullWidth loading={isSubmitting} onPress={onSubmit}>إنشاء الحساب</Button>
             </Card>
           </FadeInUp>
-          <FadeInUp delay={150}><View className="items-center gap-3"><Text size="sm" color="secondary" rtlAlign="center">لديك حساب بالفعل؟ <Text size="sm" weight="semibold" color="primary" onPress={() => router.push("/(auth)/login")}>تسجيل الدخول</Text></Text><Pressable onPress={() => router.replace("/(tabs)/home")} className="py-1"><Text size="xs" weight="semibold" className="text-gray-500 dark:text-gray-300">التصفح كزائر</Text></Pressable></View></FadeInUp>
+          <FadeInUp delay={150}><View className="items-center gap-3"><Text size="sm" rtlAlign="center" className="text-gray-600 dark:text-gray-300">لديك حساب بالفعل؟ <Text size="sm" weight="semibold" color="primary" onPress={() => router.push("/(auth)/login")}>تسجيل الدخول</Text></Text></View></FadeInUp>
         </View>
       </Container>
     </KeyboardAvoider>
