@@ -5,7 +5,10 @@ import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
+import { FollowButton } from "@/src/components/shared/FollowButton";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
+import { useAuthStatus } from "@/src/features/auth/queries";
+import type { FollowTargetType } from "@/src/features/follows/types";
 import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
 import { HomePostCardSkeleton } from "@/src/components/pages/home/HomePostCardSkeleton";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
@@ -41,12 +44,17 @@ export function AuthorProfileScreen() {
   const authorId = Array.isArray(id) ? id[0] : id;
   const { colorScheme } = useColorScheme();
   const primaryColor = getPrimaryColor(colorScheme === "dark");
+  const { user: currentUser } = useAuthStatus();
   const [activeTab, setActiveTab] = useState<OrganizationProfileTab>("posts");
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
 
   const publisherQuery = usePublisher(authorId);
   const author = publisherQuery.data;
   const isOrganization = author?.publisherType === "organization";
+  const followTargetType: FollowTargetType = isOrganization ? "organization" : "user";
+  // Never offer to follow yourself — the backend rejects it with 422 anyway.
+  const isOwnProfile = !isOrganization && Boolean(author && currentUser && author.id === currentUser.id);
+  const canFollow = Boolean(author) && !isOwnProfile;
 
   const postsQuery = usePublisherPosts(authorId, { perPage: 20 });
   const campaignsQuery = useCampaigns(
@@ -76,11 +84,6 @@ export function AuthorProfileScreen() {
     () => posts.reduce((sum, post) => sum + post.stats.likes, 0),
     [posts],
   );
-  const totalShares = useMemo(
-    () => posts.reduce((sum, post) => sum + post.stats.shares, 0),
-    [posts],
-  );
-
   const listItems = useMemo<ProfileListItem[]>(() => {
     if (!isOrganization || activeTab === "posts") {
       return posts.map((value) => ({ kind: "post" as const, value }));
@@ -261,10 +264,22 @@ export function AuthorProfileScreen() {
                 <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">الإعجابات</Text>
               </View>
               <View className="flex-1 items-center rounded-xl bg-primary-100/70 py-2 dark:bg-dark-350">
-                <Text weight="semibold" size="sm" className="text-primary-400">{totalShares}</Text>
-                <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">المشاركات</Text>
+                <Text weight="semibold" size="sm" className="text-primary-400">{author.followersCount ?? 0}</Text>
+                <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">المتابعون</Text>
               </View>
             </View>
+
+            {canFollow ? (
+              <View className="mt-3">
+                <FollowButton
+                  targetType={followTargetType}
+                  targetId={author.id}
+                  isFollowing={Boolean(author.isFollowing)}
+                  size="medium"
+                  fullWidth
+                />
+              </View>
+            ) : null}
           </Card>
 
           {isOrganization ? (

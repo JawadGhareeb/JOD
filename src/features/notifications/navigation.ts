@@ -40,6 +40,16 @@ export function normalizeJodReferencePath(
   const campaign = idRoute(path, /^\/campaigns\/([^/]+)$/, "/campaigns/[id]");
   if (campaign) return campaign;
 
+  // Follow-based media events deep link to /media/{videoId}; the reels screen
+  // scrolls to that video via its `videoId` param.
+  const mediaMatch = path.match(/^\/media\/([^/]+)$/);
+  if (mediaMatch?.[1]) {
+    return {
+      pathname: "/(tabs)/reels",
+      params: { videoId: decodeURIComponent(mediaMatch[1]) },
+    } as Href;
+  }
+
   const application = idRoute(path, /^\/(?:applications|me\/applications)\/([^/]+)$/, "/applications/[id]");
   if (application) return application;
 

@@ -14,6 +14,7 @@ const PROTECTED_EXACT_PATHS = new Set([
   "/my-applications",
   "/my-donations",
   "/saved-posts",
+  "/following",
 ]);
 const PROTECTED_PREFIXES = ["/applications/", "/apply/", "/donate/", "/donations/", "/help-offers/", "/notifications/"];
 

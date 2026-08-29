@@ -28,6 +28,9 @@ export interface Publisher {
   city?: string;
   phoneNumber?: string;
   whatsappNumber?: string;
+  /** Present on publisher profiles. Feed-embedded publishers may omit these. */
+  followersCount?: number;
+  isFollowing?: boolean;
 }
 
 export interface ActiveHelpOfferSummary {
