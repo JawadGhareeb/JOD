@@ -9,6 +9,7 @@ import {
 import type { ApiEnvelope, ApiErrorBody, ApiValidationDetails } from "@/src/types/api";
 
 const DEFAULT_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
+const API_REQUEST_TIMEOUT_MS = 12_000;
 const ANONYMOUS_ENDPOINTS = [
   "/auth/register",
   "/auth/login",
@@ -105,6 +106,7 @@ async function refreshAccessToken(): Promise<string | null> {
         { refreshToken },
         {
           baseURL: getApiBaseUrl(),
+          timeout: API_REQUEST_TIMEOUT_MS,
           headers: { Accept: "application/json", "Content-Type": "application/json" },
         },
       );
@@ -123,6 +125,7 @@ async function refreshAccessToken(): Promise<string | null> {
 
 function createApiClient(): AxiosInstance {
   const instance = axios.create({
+    timeout: API_REQUEST_TIMEOUT_MS,
     headers: { Accept: "application/json", "Content-Type": "application/json" },
   });
 

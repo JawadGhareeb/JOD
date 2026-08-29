@@ -1,6 +1,5 @@
-import { useRouter } from "expo-router";
-import { useEffect } from "react";
-import { Pressable, View } from "react-native";
+import { Redirect, useRouter } from "expo-router";
+import { ActivityIndicator, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FadeInUp } from "@/src/components/shared/FadeInUp";
 import Button from "@/src/components/ui/Button";
@@ -13,13 +12,15 @@ export default function Index() {
   const insets = useSafeAreaInsets();
   const { isAuthenticated, isLoading } = useAuthStatus();
 
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) router.replace("/(tabs)/home");
-  }, [isAuthenticated, isLoading, router]);
-
-  if (isLoading || isAuthenticated) {
-    return <View className="flex-1 items-center justify-center bg-light-100 dark:bg-dark-300"><Logo variant="large" showName /></View>;
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-light-100 dark:bg-dark-300">
+        <ActivityIndicator size="small" color="#4A9782" />
+      </View>
+    );
   }
+
+  if (isAuthenticated) return <Redirect href="/(tabs)/home" />;
 
   return (
     <View style={{ paddingTop: Math.max(insets.top, 24), paddingBottom: Math.max(insets.bottom, 24) }} className="flex-1 overflow-hidden bg-light-100 px-6 dark:bg-dark-300">
@@ -28,7 +29,7 @@ export default function Index() {
       <View className="flex-1 items-center justify-center">
         <FadeInUp>
           <View className="items-center">
-            <View className="rounded-[36px] bg-white/70 px-7 py-5 shadow-sm dark:bg-dark-500/70"><Logo variant="x-large" showName width={180} height={180} /></View>
+            <Logo variant="x-large" showName width={180} height={180} />
             <View className="mt-5 items-center gap-2 px-3">
               <Text variant="heading" weight="bold" rtlAlign="center" className="text-primary-400">جود</Text>
               <Text size="base" weight="medium" rtlAlign="center" className="leading-8 text-dark-100 dark:text-light-50">حيث يلتقي الخير بمن يستحقه</Text>

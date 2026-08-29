@@ -3,12 +3,16 @@ import { donationsApi } from "./api";
 import { donationKeys } from "./query-keys";
 import type { DonationInput, DonationParams } from "./types";
 
-export function useDonations(params: Omit<DonationParams, "page"> = {}) {
+export function useDonations(
+  params: Omit<DonationParams, "page"> = {},
+  options: { enabled?: boolean } = {},
+) {
   return useInfiniteQuery({
     queryKey: donationKeys.list(params),
     queryFn: ({ pageParam }) => donationsApi.list({ ...params, flow: params.flow ?? "contributed", page: pageParam, perPage: params.perPage ?? 20 }),
     initialPageParam: 1,
     getNextPageParam: (last) => last.meta.currentPage < last.meta.lastPage ? last.meta.currentPage + 1 : undefined,
+    enabled: options.enabled ?? true,
   });
 }
 

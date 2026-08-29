@@ -2,7 +2,6 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import {
-  Image,
   Modal,
   Pressable,
   useWindowDimensions,
@@ -18,6 +17,7 @@ import SelectionModal, { type SelectionOption } from "@/src/components/ui/Select
 import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
+import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
 import { HomePostTypeEnum } from "@/src/constants/global";
 import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
 import { openPostContact } from "@/src/features/posts/contact";
@@ -128,7 +128,6 @@ export function HomePostCard({
     if (expanded || !shouldTruncate) return post.content;
     return `${post.content.slice(0, MAX_CONTENT).trim()}...`;
   }, [expanded, shouldTruncate, post.content]);
-  const previewImages = useMemo(() => post.images.slice(0, 4), [post.images]);
 
   const BookmarkIcon = appIcons.savedPosts;
   const HeartIcon = appIcons.myDonations;
@@ -439,26 +438,10 @@ export function HomePostCard({
         </View>
       ) : null}
 
-      {previewImages.length > 0 ? (
-        <View className="mt-3 flex-row-reverse flex-wrap justify-between gap-y-2">
-          {previewImages.map((imageUri, index) => (
-            <View
-              key={`${imageUri}-${index}`}
-              style={{ width: index === 0 || previewImages.length === 1 ? "100%" : "48%" }}
-              className={`${index === 0 ? "h-44" : "h-28"} overflow-hidden rounded-xl bg-gray-200 dark:bg-dark-350`}
-            >
-              <Image source={{ uri: imageUri }} className="h-full w-full" resizeMode="cover" />
-              {post.images.length > 4 && index === 3 ? (
-                <View className="absolute inset-0 items-center justify-center bg-gray-900/60">
-                  <Text size="sm" weight="bold" className="text-light-50">
-                    +{post.images.length - 4}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-          ))}
-        </View>
-      ) : null}
+      <FeedMediaGrid
+        images={post.images}
+        onPress={() => router.push({ pathname: "/posts/[id]", params: { id: post.id } })}
+      />
 
       <View className="mt-3 flex-row-reverse items-center justify-between border-t border-gray-100 pt-2 dark:border-dark-400">
         <View className={`${actionItemClassName} items-center gap-2`}>

@@ -15,7 +15,7 @@
 
 @layer components {
   .card {
-    @apply rounded-2xl border bg-background dark:bg-background-dark border-border dark:border-border-dark shadow-sm;
+    @apply rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-dark-400 dark:bg-dark-500;
   }
 
   /* Automatic RTL utilities - these will work globally */
