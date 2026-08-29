@@ -55,7 +55,7 @@ export default function LoginScreen() {
       <Container scrollable className="bg-light-100 dark:bg-dark-300" scrollViewProps={{ contentContainerStyle: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 24, paddingBottom: 36, justifyContent: "center" } }}>
         <View className="gap-5">
           <View className="absolute -right-24 -top-20 h-52 w-52 rounded-full bg-primary-100/60 dark:bg-primary-400/10" />
-          <FadeInUp><View className="items-center gap-3"><View className="rounded-3xl bg-white/80 px-5 py-3 shadow-sm dark:bg-dark-500/80"><Logo variant="medium" showName /></View><View className="items-center gap-2 px-4"><Text variant="heading" weight="bold" rtlAlign="center">أهلاً بعودتك</Text><Text size="sm" color="secondary" rtlAlign="center" className="leading-6">سجّل دخولك للوصول إلى حسابك والتفاعل مع مجتمع جود.</Text></View></View></FadeInUp>
+          <FadeInUp><View className="items-center gap-3"><Logo variant="medium" showName /><View className="items-center gap-2 px-4"><Text variant="heading" weight="bold" rtlAlign="center">أهلاً بعودتك</Text><Text size="sm" color="secondary" rtlAlign="center" className="leading-6">سجّل دخولك للوصول إلى حسابك والتفاعل مع مجتمع جود.</Text></View></View></FadeInUp>
           <FadeInUp delay={90}>
             <Card padding="lg" className="gap-4 rounded-3xl border-gray-200 dark:border-dark-400">
               <Controller control={control} name="email" render={({ field: { onChange, onBlur, value } }) => <Input label="البريد الإلكتروني" placeholder="ahmad@example.com" value={value} onChangeText={onChange} onBlur={onBlur} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" error={errors.email?.message} leftIcon={<Mail size={18} />} fullWidth />} />

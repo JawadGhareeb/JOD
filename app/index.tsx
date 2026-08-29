@@ -1,5 +1,5 @@
 import { Redirect, useRouter } from "expo-router";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FadeInUp } from "@/src/components/shared/FadeInUp";
 import Button from "@/src/components/ui/Button";
@@ -14,8 +14,8 @@ export default function Index() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-light-100 dark:bg-dark-300">
-        <ActivityIndicator size="small" color="#4A9782" />
+      <View className="flex-1 items-center justify-center bg-white dark:bg-dark-300">
+        <Logo variant="large" />
       </View>
     );
   }

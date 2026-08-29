@@ -55,7 +55,7 @@ export default function RegisterScreen() {
       <Container scrollable className="bg-light-100 dark:bg-dark-300" scrollViewProps={{ contentContainerStyle: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 24, paddingBottom: 36, justifyContent: "center" } }}>
         <View className="gap-5">
           <View className="absolute -left-24 -top-20 h-52 w-52 rounded-full bg-primary-100/60 dark:bg-primary-400/10" />
-          <FadeInUp><View className="items-center gap-3"><View className="rounded-3xl bg-white/80 px-5 py-3 shadow-sm dark:bg-dark-500/80"><Logo variant="medium" showName /></View><View className="items-center gap-2 px-4"><Text variant="heading" weight="bold" rtlAlign="center">ابدأ رحلتك مع جود</Text><Text size="sm" color="secondary" rtlAlign="center" className="leading-6">أنشئ حساباً لتطلب المساعدة أو تقدمها وتتابع الحملات.</Text></View></View></FadeInUp>
+          <FadeInUp><View className="items-center gap-3"><Logo variant="medium" showName /><View className="items-center gap-2 px-4"><Text variant="heading" weight="bold" rtlAlign="center">ابدأ رحلتك مع جود</Text><Text size="sm" color="secondary" rtlAlign="center" className="leading-6">أنشئ حساباً لتطلب المساعدة أو تقدمها وتتابع الحملات.</Text></View></View></FadeInUp>
           <FadeInUp delay={90}>
             <Card padding="lg" className="gap-4 rounded-3xl border-gray-200 dark:border-dark-400">
               <Controller control={control} name="name" render={({ field: { onChange, onBlur, value } }) => <Input label="الاسم الكامل" placeholder="أحمد محمد" value={value} onChangeText={onChange} onBlur={onBlur} autoComplete="name" textContentType="name" error={errors.name?.message} leftIcon={<UserRound size={18} />} fullWidth />} />
