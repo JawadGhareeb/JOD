@@ -4,6 +4,7 @@ export default function TabsLayout() {
   return (
     <Tabs screenOptions={{ headerShown: false }} tabBar={() => null}>
       <Tabs.Screen name="home" options={{ title: "الرئيسية" }} />
+      <Tabs.Screen name="groups" options={{ title: "المجموعات" }} />
       <Tabs.Screen name="student-assistance" options={{ title: "مساعدات طلابية" }} />
       <Tabs.Screen name="reels" options={{ title: "ريلز" }} />
       <Tabs.Screen name="notifications" options={{ title: "الإشعارات" }} />
