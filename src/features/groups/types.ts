@@ -18,4 +18,6 @@ export interface Group {
   /** Set when the group is run by a verified organization. */
   organizationName: string | null;
   isVerifiedOrganization: boolean;
+  /** Shown for acknowledgement before joining. Moderators rely on this record. */
+  rules: string[];
 }

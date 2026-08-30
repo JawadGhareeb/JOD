@@ -7,17 +7,36 @@ import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import type { Group } from "@/src/features/groups/types";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
+import { useToast } from "@/src/providers/ToastProvider";
+import { GroupJoinDialog } from "./GroupJoinDialog";
 
 const formatCount = (value: number) => value.toLocaleString("ar-SY");
 
 export function GroupCard({ group, showJoin = true }: { group: Group; showJoin?: boolean }) {
   const { requireAuth } = useAuthGuard();
+  const toast = useToast();
   // Local-only until the join endpoint exists.
   const [isMember, setIsMember] = useState(group.isMember);
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
 
-  const toggleMembership = () => {
+  const handlePress = () => {
     if (!requireAuth()) return;
-    setIsMember((current) => !current);
+    // Leaving needs no rules acknowledgement — only joining does.
+    if (isMember) {
+      setIsMember(false);
+      return;
+    }
+    setIsJoinDialogOpen(true);
+  };
+
+  const confirmJoin = () => {
+    setIsJoinDialogOpen(false);
+    setIsMember(true);
+    toast.success(
+      group.visibility === "private"
+        ? "تم إرسال طلب الانضمام. بانتظار موافقة المشرفين."
+        : `انضممت إلى ${group.name}.`,
+    );
   };
 
   return (
@@ -74,7 +93,7 @@ export function GroupCard({ group, showJoin = true }: { group: Group; showJoin?:
           <Button
             size="small"
             variant={isMember ? "tertiary" : "primary"}
-            onPress={toggleMembership}
+            onPress={handlePress}
             accessibilityLabel={isMember ? `مغادرة ${group.name}` : `الانضمام إلى ${group.name}`}
             accessibilityState={{ selected: isMember }}
           >
@@ -88,6 +107,13 @@ export function GroupCard({ group, showJoin = true }: { group: Group; showJoin?:
           </View>
         )}
       </View>
+
+      <GroupJoinDialog
+        group={group}
+        visible={isJoinDialogOpen}
+        onClose={() => setIsJoinDialogOpen(false)}
+        onConfirm={confirmJoin}
+      />
     </Card>
   );
 }

@@ -17,6 +17,11 @@ const GROUPS: Group[] = [
     isMember: true,
     organizationName: "جمعية البركة",
     isVerifiedOrganization: true,
+    rules: [
+      "احترم جميع الأعضاء وتجنّب أي إساءة أو تنمّر.",
+      "لا تنشر طلبات تبرع مالي شخصية داخل المجموعة.",
+      "التزم بمواعيد الحملات التي تسجّل فيها.",
+    ],
   },
   {
     id: "grp-002",
@@ -30,6 +35,11 @@ const GROUPS: Group[] = [
     isMember: true,
     organizationName: null,
     isVerifiedOrganization: false,
+    rules: [
+      "المحتوى المسموح: مواد دراسية وفرص سكن ودعم طلابي فقط.",
+      "لا تشارك بيانات طلاب آخرين دون إذنهم.",
+      "ممنوع بيع الكتب بأسعار مضاعفة.",
+    ],
   },
   {
     id: "grp-003",
@@ -43,6 +53,11 @@ const GROUPS: Group[] = [
     isMember: false,
     organizationName: "مؤسسة عطاء",
     isVerifiedOrganization: true,
+    rules: [
+      "التوزيع يتم عبر المنظمة حصراً — لا تنسيق فردي.",
+      "لا تنشر صور المستفيدين أو أسماءهم.",
+      "بلّغ عن أي طلب تبرع مشبوه فوراً.",
+    ],
   },
   {
     id: "grp-004",
@@ -56,6 +71,11 @@ const GROUPS: Group[] = [
     isMember: false,
     organizationName: null,
     isVerifiedOrganization: false,
+    rules: [
+      "المنشورات مخصّصة للمنتجات المنزلية فقط.",
+      "اذكر السعر بوضوح ولا تبالغ في الوصف.",
+      "ممنوع التسويق لجهات تجارية كبيرة.",
+    ],
   },
   {
     id: "grp-005",
@@ -69,6 +89,11 @@ const GROUPS: Group[] = [
     isMember: false,
     organizationName: "الهلال الطبي",
     isVerifiedOrganization: true,
+    rules: [
+      "حافظ على سرّية أي معلومة صحية تطّلع عليها.",
+      "لا تقدّم استشارات طبية إن لم تكن مختصاً.",
+      "ممنوع نشر أسماء المرضى أو صورهم.",
+    ],
   },
   {
     id: "grp-006",
@@ -82,6 +107,11 @@ const GROUPS: Group[] = [
     isMember: false,
     organizationName: "جمعية البركة",
     isVerifiedOrganization: true,
+    rules: [
+      "بيانات الأطفال والأسر سرّية ولا تُنشر خارج المجموعة.",
+      "التواصل مع الأسر يتم عبر المشرفين فقط.",
+      "الكفالة التزام طويل — لا تسجّل إن لم تكن قادراً على الاستمرار.",
+    ],
   },
   {
     id: "grp-007",
@@ -95,6 +125,11 @@ const GROUPS: Group[] = [
     isMember: false,
     organizationName: null,
     isVerifiedOrganization: false,
+    rules: [
+      "انشر إعلانات وظائف حقيقية فقط مع تفاصيل واضحة.",
+      "ممنوع طلب أي رسوم من المتقدمين.",
+      "لا تنشر بيانات التواصل الشخصية للآخرين.",
+    ],
   },
 ];
 
