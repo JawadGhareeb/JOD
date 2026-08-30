@@ -1,14 +1,19 @@
 import { useState } from "react";
+import { useRouter } from "expo-router";
 import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { useColorScheme } from "nativewind";
+import { Plus } from "lucide-react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
+import Button from "@/src/components/ui/Button";
+import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Text from "@/src/components/ui/Text";
 import {
-  mockDiscoverGroups,
-  mockMyGroups,
-  mockSuggestedGroups,
-} from "@/src/features/groups/mock-data";
+  useDiscoverGroups,
+  useMyGroups,
+  useSuggestedGroups,
+} from "@/src/features/groups/queries";
 import type { Group } from "@/src/features/groups/types";
+import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { getPrimaryColor } from "@/src/theme";
 import { GroupCard } from "./GroupCard";
 
@@ -22,33 +27,34 @@ const TABS: { key: GroupsTab; label: string }[] = [
   { key: "discover", label: "اكتشف" },
 ];
 
-type TabContent = { intro: string; groups: Group[]; showJoin: boolean; emptyMessage: string };
-
-// TODO: replace the mock sources with the groups API once the endpoints exist.
-const TAB_CONTENT: Record<GroupsTab, TabContent> = {
+const TAB_META: Record<GroupsTab, { intro: string; empty: string; showJoin: boolean }> = {
   forYou: {
     intro: "مجموعات مقترحة لك",
-    groups: mockSuggestedGroups,
+    empty: "لا توجد اقتراحات حالياً.",
     showJoin: true,
-    emptyMessage: "لا توجد اقتراحات حالياً.",
   },
   myGroups: {
     intro: "المجموعات التي انضممت إليها",
-    groups: mockMyGroups,
+    empty: "لم تنضم إلى أي مجموعة بعد.",
     showJoin: false,
-    emptyMessage: "لم تنضم إلى أي مجموعة بعد.",
   },
   discover: {
     intro: "تصفّح المجموعات",
-    groups: mockDiscoverGroups,
+    empty: "لا توجد مجموعات لعرضها.",
     showJoin: true,
-    emptyMessage: "لا توجد مجموعات لعرضها.",
   },
 };
 
 export function GroupsScreen() {
   const [activeTab, setActiveTab] = useState<GroupsTab>("forYou");
-  const { intro, groups, showJoin, emptyMessage } = TAB_CONTENT[activeTab];
+
+  const suggested = useSuggestedGroups();
+  const mine = useMyGroups();
+  const discover = useDiscoverGroups();
+
+  const query = activeTab === "forYou" ? suggested : activeTab === "myGroups" ? mine : discover;
+  const { intro, empty, showJoin } = TAB_META[activeTab];
+  const groups: Group[] = query.data ?? [];
 
   return (
     <View className="flex-1 bg-light-100 dark:bg-dark-300">
@@ -63,16 +69,64 @@ export function GroupsScreen() {
         renderItem={({ item }) => <GroupCard group={item} showJoin={showJoin} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 12, paddingBottom: 24 }}
+        refreshing={query.isRefetching}
+        onRefresh={() => void query.refetch()}
         ListHeaderComponent={
-          groups.length > 0 ? (
-            <Text size="2xs" className="mb-2 text-gray-500 dark:text-gray-300">
-              {intro}
-            </Text>
-          ) : null
+          <View className="gap-2">
+            {activeTab === "myGroups" ? <CreateGroupCta /> : null}
+            {groups.length > 0 ? (
+              <Text size="2xs" className="mb-1 text-gray-500 dark:text-gray-300">
+                {intro}
+              </Text>
+            ) : null}
+          </View>
         }
-        ListEmptyComponent={<GroupsEmptyState message={emptyMessage} />}
+        ListEmptyComponent={
+          query.isLoading ? (
+            <View className="gap-3 pt-1">
+              {[0, 1, 2].map((key) => (
+                <CardSkeleton key={key} height={150} margin={0} />
+              ))}
+            </View>
+          ) : (
+            <GroupsEmptyState message={empty} showCreate={activeTab === "myGroups"} />
+          )
+        }
       />
     </View>
+  );
+}
+
+function CreateGroupCta() {
+  const router = useRouter();
+  const { requireAuth } = useAuthGuard();
+  const { colorScheme } = useColorScheme();
+  const primaryColor = getPrimaryColor(colorScheme === "dark");
+
+  const open = () => {
+    if (!requireAuth()) return;
+    router.push("/groups/create" as never);
+  };
+
+  return (
+    <Pressable
+      onPress={open}
+      accessibilityRole="button"
+      accessibilityLabel="إنشاء مجموعة جديدة"
+      className="mb-1 flex-row-reverse items-center gap-3 rounded-xl border border-dashed border-primary-400/40 p-3"
+    >
+      <View className="size-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350">
+        <Plus size={18} color={primaryColor} strokeWidth={2.5} />
+      </View>
+      <View className="flex-1">
+        <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
+          إنشاء مجموعة جديدة
+        </Text>
+        <Text size="2xs" className="mt-0.5 text-gray-500 dark:text-gray-300">
+          تُراجعها الإدارة قبل النشر
+        </Text>
+      </View>
+    </Pressable>
   );
 }
 
@@ -125,18 +179,31 @@ function GroupsTabBar({
   );
 }
 
-function GroupsEmptyState({ message }: { message: string }) {
+function GroupsEmptyState({ message, showCreate }: { message: string; showCreate: boolean }) {
+  const router = useRouter();
+  const { requireAuth } = useAuthGuard();
   const { colorScheme } = useColorScheme();
   const primaryColor = getPrimaryColor(colorScheme === "dark");
 
   return (
-    <View className="items-center gap-3 py-16">
+    <View className="items-center gap-3 py-14">
       <View className="size-16 items-center justify-center rounded-2xl bg-primary-100 dark:bg-dark-350">
         <GroupsIcon size={28} color={primaryColor} strokeWidth={2} />
       </View>
       <Text size="sm" rtlAlign="center" className="text-gray-500 dark:text-gray-300">
         {message}
       </Text>
+      {showCreate ? (
+        <Button
+          size="small"
+          onPress={() => {
+            if (!requireAuth()) return;
+            router.push("/groups/create" as never);
+          }}
+        >
+          أنشئ مجموعتك الأولى
+        </Button>
+      ) : null}
     </View>
   );
 }

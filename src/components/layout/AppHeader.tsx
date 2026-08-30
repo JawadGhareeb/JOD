@@ -6,7 +6,7 @@ import { useRTL } from "@/src/providers/RTLProvider";
 import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
 import { usePathname, useRouter, useSegments } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Animated,
   Pressable,
@@ -15,6 +15,11 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppTopNav, getActiveTabTitle } from "./AppTopNav";
+import {
+  EMPTY_CREATE_MENU_ANCHOR,
+  HeaderCreateMenu,
+  type CreateMenuAnchor,
+} from "./HeaderCreateMenu";
 import { appIcons } from "./iconMap";
 
 const SearchIcon = appIcons.search;
@@ -33,6 +38,11 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
   const { isRTL } = useRTL();
   const { colorScheme } = useColorScheme();
   const { requireAuth } = useAuthGuard();
+  const createButtonRef = useRef<View>(null);
+  const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
+  const [createMenuAnchor, setCreateMenuAnchor] = useState<CreateMenuAnchor>(
+    EMPTY_CREATE_MENU_ANCHOR,
+  );
   const [navBarHeight, setNavBarHeight] = useState(MIN_NAV_HEIGHT);
   const isDark = colorScheme === "dark";
   const actionBgClass = isDark ? "bg-dark-350" : "bg-primary-100";
@@ -64,9 +74,24 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
     }
   };
 
-  const openCreatePost = () => {
+  // "+" opens a menu so the choice is explicit and available from every screen,
+  // rather than silently changing meaning depending on the active tab.
+  const openCreateMenu = () => {
     if (!requireAuth()) return;
-    router.push("/(tabs)/create-post");
+    const anchorNode = createButtonRef.current;
+    if (!anchorNode) {
+      setIsCreateMenuOpen(true);
+      return;
+    }
+    anchorNode.measureInWindow((x, y, width, height) => {
+      setCreateMenuAnchor({ x, y, width, height });
+      setIsCreateMenuOpen(true);
+    });
+  };
+
+  const handleCreateSelect = (key: "post" | "group") => {
+    setIsCreateMenuOpen(false);
+    router.push(key === "group" ? ("/groups/create" as never) : "/(tabs)/create-post");
   };
 
   return (
@@ -100,10 +125,12 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
 
             <View className={`${rowClassName} items-center gap-2`}>
               <Pressable
-                onPress={openCreatePost}
+                ref={createButtonRef}
+                onPress={openCreateMenu}
                 className={`h-10 w-10 items-center justify-center rounded-xl ${actionBgClass}`}
                 accessibilityRole="button"
-                accessibilityLabel="إضافة بوست"
+                accessibilityLabel="إنشاء"
+                accessibilityState={{ expanded: isCreateMenuOpen }}
               >
                 <CreatePostIcon size={21} color={iconColor} strokeWidth={2.4} />
               </Pressable>
@@ -141,6 +168,13 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
           </Animated.View>
         </Animated.View>
       ) : null}
+
+      <HeaderCreateMenu
+        visible={isCreateMenuOpen}
+        anchor={createMenuAnchor}
+        onClose={() => setIsCreateMenuOpen(false)}
+        onSelect={handleCreateSelect}
+      />
     </View>
   );
 }

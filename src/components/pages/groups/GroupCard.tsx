@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { View } from "react-native";
-import { Lock, MapPin } from "lucide-react-native";
+import { Clock3, Lock, MapPin } from "lucide-react-native";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
+import { useJoinGroup, useLeaveGroup } from "@/src/features/groups/queries";
 import type { Group } from "@/src/features/groups/types";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
@@ -15,15 +16,19 @@ const formatCount = (value: number) => value.toLocaleString("ar-SY");
 export function GroupCard({ group, showJoin = true }: { group: Group; showJoin?: boolean }) {
   const { requireAuth } = useAuthGuard();
   const toast = useToast();
-  // Local-only until the join endpoint exists.
-  const [isMember, setIsMember] = useState(group.isMember);
+  const join = useJoinGroup();
+  const leave = useLeaveGroup();
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
 
+  const isMember = group.isMember;
+  const isPending = group.status === "pending";
+  const isBusy = join.isPending || leave.isPending;
+
   const handlePress = () => {
-    if (!requireAuth()) return;
+    if (!requireAuth() || isBusy) return;
     // Leaving needs no rules acknowledgement — only joining does.
     if (isMember) {
-      setIsMember(false);
+      leave.mutate(group.id);
       return;
     }
     setIsJoinDialogOpen(true);
@@ -31,12 +36,15 @@ export function GroupCard({ group, showJoin = true }: { group: Group; showJoin?:
 
   const confirmJoin = () => {
     setIsJoinDialogOpen(false);
-    setIsMember(true);
-    toast.success(
-      group.visibility === "private"
-        ? "تم إرسال طلب الانضمام. بانتظار موافقة المشرفين."
-        : `انضممت إلى ${group.name}.`,
-    );
+    join.mutate(group.id, {
+      onSuccess: () =>
+        toast.success(
+          group.visibility === "private"
+            ? "تم إرسال طلب الانضمام. بانتظار موافقة المشرفين."
+            : `انضممت إلى ${group.name}.`,
+        ),
+      onError: () => toast.error("تعذر إتمام الانضمام. حاول مرة أخرى."),
+    });
   };
 
   return (
@@ -54,6 +62,14 @@ export function GroupCard({ group, showJoin = true }: { group: Group; showJoin?:
               {group.name}
             </Text>
             {group.isVerifiedOrganization ? <VerifiedBadge /> : null}
+            {isPending ? (
+              <View className="flex-row-reverse items-center gap-1 rounded-full bg-warning-100/60 px-2 py-0.5 dark:bg-dark-350">
+                <Clock3 size={10} color="#B45309" strokeWidth={2.5} />
+                <Text size="2xs" className="text-warning-300">
+                  بانتظار الموافقة
+                </Text>
+              </View>
+            ) : null}
           </View>
 
           <View className="mt-1 flex-row-reverse items-center gap-2">
@@ -86,16 +102,20 @@ export function GroupCard({ group, showJoin = true }: { group: Group; showJoin?:
 
       <View className="flex-row-reverse items-center justify-between gap-3 border-t border-gray-100 pt-3 dark:border-dark-400">
         <Text size="2xs" className="flex-1 text-gray-500 dark:text-gray-300">
-          {formatCount(group.membersCount)} عضو · {formatCount(group.postsThisWeek)} منشور هذا الأسبوع
+          {isPending
+            ? "لن تظهر المجموعة للآخرين قبل موافقة الإدارة."
+            : `${formatCount(group.membersCount)} عضو · ${formatCount(group.postsThisWeek)} منشور هذا الأسبوع`}
         </Text>
 
-        {showJoin ? (
+        {isPending ? null : showJoin ? (
           <Button
             size="small"
             variant={isMember ? "tertiary" : "primary"}
+            loading={isBusy}
+            disabled={isBusy}
             onPress={handlePress}
             accessibilityLabel={isMember ? `مغادرة ${group.name}` : `الانضمام إلى ${group.name}`}
-            accessibilityState={{ selected: isMember }}
+            accessibilityState={{ selected: isMember, disabled: isBusy }}
           >
             {isMember ? "عضو" : group.visibility === "private" ? "طلب انضمام" : "انضمام"}
           </Button>

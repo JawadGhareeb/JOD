@@ -4,7 +4,7 @@ import type { Group } from "./types";
  * TEMPORARY — replace with the real API once the groups endpoints land.
  * Keep the shape in sync with `Group` so only this file needs deleting.
  */
-const GROUPS: Group[] = [
+export const mockGroups: Group[] = [
   {
     id: "grp-001",
     name: "متطوعو دمشق",
@@ -22,6 +22,8 @@ const GROUPS: Group[] = [
       "لا تنشر طلبات تبرع مالي شخصية داخل المجموعة.",
       "التزم بمواعيد الحملات التي تسجّل فيها.",
     ],
+    status: "active",
+    rejectionReason: null,
   },
   {
     id: "grp-002",
@@ -40,6 +42,8 @@ const GROUPS: Group[] = [
       "لا تشارك بيانات طلاب آخرين دون إذنهم.",
       "ممنوع بيع الكتب بأسعار مضاعفة.",
     ],
+    status: "active",
+    rejectionReason: null,
   },
   {
     id: "grp-003",
@@ -58,6 +62,8 @@ const GROUPS: Group[] = [
       "لا تنشر صور المستفيدين أو أسماءهم.",
       "بلّغ عن أي طلب تبرع مشبوه فوراً.",
     ],
+    status: "active",
+    rejectionReason: null,
   },
   {
     id: "grp-004",
@@ -76,6 +82,8 @@ const GROUPS: Group[] = [
       "اذكر السعر بوضوح ولا تبالغ في الوصف.",
       "ممنوع التسويق لجهات تجارية كبيرة.",
     ],
+    status: "active",
+    rejectionReason: null,
   },
   {
     id: "grp-005",
@@ -94,6 +102,8 @@ const GROUPS: Group[] = [
       "لا تقدّم استشارات طبية إن لم تكن مختصاً.",
       "ممنوع نشر أسماء المرضى أو صورهم.",
     ],
+    status: "active",
+    rejectionReason: null,
   },
   {
     id: "grp-006",
@@ -112,6 +122,8 @@ const GROUPS: Group[] = [
       "التواصل مع الأسر يتم عبر المشرفين فقط.",
       "الكفالة التزام طويل — لا تسجّل إن لم تكن قادراً على الاستمرار.",
     ],
+    status: "active",
+    rejectionReason: null,
   },
   {
     id: "grp-007",
@@ -130,15 +142,7 @@ const GROUPS: Group[] = [
       "ممنوع طلب أي رسوم من المتقدمين.",
       "لا تنشر بيانات التواصل الشخصية للآخرين.",
     ],
+    status: "active",
+    rejectionReason: null,
   },
 ];
-
-export const mockMyGroups = GROUPS.filter((group) => group.isMember);
-
-/** Suggested: not joined yet, most active first. */
-export const mockSuggestedGroups = GROUPS.filter((group) => !group.isMember)
-  .slice()
-  .sort((a, b) => b.postsThisWeek - a.postsThisWeek);
-
-/** Discover: everything browsable, largest communities first. */
-export const mockDiscoverGroups = GROUPS.slice().sort((a, b) => b.membersCount - a.membersCount);
