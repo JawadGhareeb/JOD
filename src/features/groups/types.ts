@@ -1,3 +1,5 @@
+import type { MediaUploadFile } from "@/src/features/media/types";
+
 export type GroupVisibility = "public" | "private";
 
 /**
@@ -131,6 +133,8 @@ export interface CreateGroupInput {
    * the owner and is never part of this list.
    */
   proposedAdmins: GroupAdminCandidate[];
+  /** Square group picture picked from the library. `null` keeps the letter avatar. */
+  image: MediaUploadFile | null;
 }
 
 export const GROUP_CATEGORIES = [
@@ -143,3 +147,31 @@ export const GROUP_CATEGORIES = [
   "تمكين اقتصادي",
   "أخرى",
 ] as const;
+
+/**
+ * A comment on a group post. Threads are one level deep — a reply carries the
+ * root comment's id in `parentId`, and replies to replies are flattened onto
+ * that same root.
+ */
+export interface GroupComment {
+  id: string;
+  postId: string;
+  parentId: string | null;
+  author: GroupMember;
+  body: string;
+  createdAtLabel: string;
+  likesCount: number;
+  isLiked: boolean;
+}
+
+/** A root comment with its replies attached, which is how the sheet renders. */
+export interface GroupCommentThread extends GroupComment {
+  replies: GroupComment[];
+}
+
+export interface AddGroupCommentInput {
+  postId: string;
+  /** `null` posts a new root comment; otherwise the root being replied to. */
+  parentId: string | null;
+  body: string;
+}

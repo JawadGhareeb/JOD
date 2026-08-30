@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { groupsMockStore } from "./mock-store";
 import { groupKeys } from "./query-keys";
-import type { CreateGroupInput } from "./types";
+import type { AddGroupCommentInput, CreateGroupInput } from "./types";
 
 // TODO: swap `groupsMockStore` for the real groups API. Nothing outside this
 // file should need to change when that happens.
@@ -71,3 +71,31 @@ export const useGroupRecommendations = (groupId?: string, enabled = true) =>
     queryFn: () => groupsMockStore.recommendations(groupId!),
     enabled: Boolean(groupId) && enabled,
   });
+
+/** Comment threads on a group post. */
+export const useGroupComments = (postId?: string, enabled = true) =>
+  useQuery({
+    queryKey: groupKeys.comments(postId),
+    queryFn: () => groupsMockStore.comments(postId!),
+    enabled: Boolean(postId) && enabled,
+  });
+
+/** Posts a comment or a reply, then refreshes the thread and the post counter. */
+export function useAddGroupComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: AddGroupCommentInput) => groupsMockStore.addComment(input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: groupKeys.comments(variables.postId) });
+      queryClient.invalidateQueries({ queryKey: groupKeys.all });
+    },
+  });
+}
+
+export function useToggleGroupCommentLike(postId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (commentId: string) => groupsMockStore.toggleCommentLike(commentId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: groupKeys.comments(postId) }),
+  });
+}

@@ -1,9 +1,11 @@
-import { View } from "react-native";
+import { useState } from "react";
+import { Pressable, View } from "react-native";
 import { Heart, MessageCircle } from "lucide-react-native";
 import { Avatar } from "@/src/components/shared/Avatar";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import { GROUP_ROLE_LABELS, type GroupPost } from "@/src/features/groups/types";
+import { GroupCommentsSheet } from "./GroupCommentsSheet";
 
 const MUTED = "#9CA3AF";
 
@@ -14,6 +16,7 @@ type GroupPostCardProps = {
 };
 
 export function GroupPostCard({ post }: GroupPostCardProps) {
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const isStaff = post.author.role !== "member";
 
   return (
@@ -50,13 +53,29 @@ export function GroupPostCard({ post }: GroupPostCardProps) {
             {formatCount(post.likesCount)}
           </Text>
         </View>
-        <View className="flex-row-reverse items-center gap-1">
+
+        <Pressable
+          onPress={() => setIsCommentsOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`عرض تعليقات منشور ${post.author.name}`}
+          hitSlop={8}
+          className="flex-row-reverse items-center gap-1"
+        >
           <MessageCircle size={13} color={MUTED} strokeWidth={2.25} />
           <Text size="2xs" className="text-gray-500 dark:text-gray-300">
             {formatCount(post.commentsCount)}
           </Text>
-        </View>
+          <Text size="2xs" weight="medium" className="text-primary-400">
+            التعليقات
+          </Text>
+        </Pressable>
       </View>
+
+      <GroupCommentsSheet
+        post={post}
+        visible={isCommentsOpen}
+        onClose={() => setIsCommentsOpen(false)}
+      />
     </Card>
   );
 }

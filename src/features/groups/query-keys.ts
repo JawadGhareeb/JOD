@@ -6,5 +6,6 @@ export const groupKeys = {
   detail: (groupId?: string) => [...groupKeys.all, "detail", groupId] as const,
   posts: (groupId?: string) => [...groupKeys.all, "posts", groupId] as const,
   recommendations: (groupId?: string) => [...groupKeys.all, "recommendations", groupId] as const,
+  comments: (postId?: string) => [...groupKeys.all, "comments", postId] as const,
   adminCandidates: (search: string) => [...groupKeys.all, "admin-candidates", search] as const,
 };

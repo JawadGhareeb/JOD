@@ -11,13 +11,13 @@ const member = (index: number, role: GroupMemberRole): GroupMember => ({
   role,
 });
 
-/** The signed-in user, as they appear inside a group they own. */
+/** The signed-in user, as they appear in a group they are simply a member of. */
 export const mockCurrentMember: GroupMember = {
   id: "usr-me",
   name: "أنت",
   username: "me",
   avatarUrl: null,
-  role: "owner",
+  role: "member",
 };
 
 export const mockGroupMembers: Record<string, GroupMember[]> = {
@@ -32,3 +32,6 @@ export const mockGroupMembers: Record<string, GroupMember[]> = {
 
 /** Used for groups with no seeded roster — locally created ones, mainly. */
 export const fallbackGroupMembers = (owner: GroupMember): GroupMember[] => [owner];
+
+/** The same user in a group they created — used when seeding a new roster. */
+export const mockCurrentOwner: GroupMember = { ...mockCurrentMember, role: "owner" };

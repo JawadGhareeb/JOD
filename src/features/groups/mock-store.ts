@@ -1,12 +1,21 @@
+import { mockGroupComments } from "./mock-comments";
 import { mockGroupCreatedAt, mockGroups } from "./mock-data";
-import { fallbackGroupMembers, mockCurrentMember, mockGroupMembers } from "./mock-members";
+import {
+  fallbackGroupMembers,
+  mockCurrentMember,
+  mockCurrentOwner,
+  mockGroupMembers,
+} from "./mock-members";
 import { mockGroupPosts } from "./mock-posts";
 import { fallbackRecommendations, mockRecommendationsByCategory } from "./mock-recommendations";
 import { mockAdminCandidates } from "./mock-users";
 import type {
+  AddGroupCommentInput,
   CreateGroupInput,
   Group,
   GroupAdminCandidate,
+  GroupComment,
+  GroupCommentThread,
   GroupMember,
   GroupPost,
   GroupProfile,
@@ -23,9 +32,14 @@ import type {
  * Resets on app reload, which is fine for a mock.
  */
 let groups: Group[] = mockGroups.map((group) => ({ ...group }));
+let posts: GroupPost[] = mockGroupPosts.map((post) => ({ ...post }));
+let comments: GroupComment[] = mockGroupComments.map((comment) => ({ ...comment }));
 
 /** Rosters for groups created in-session, which have no seeded membership. */
 let localRosters: Record<string, GroupMember[]> = {};
+
+/** Ids for comments added in-session. */
+let commentSequence = 0;
 
 const delay = <T,>(value: T, ms = 250): Promise<T> =>
   new Promise((resolve) => setTimeout(() => resolve(value), ms));
@@ -38,7 +52,7 @@ const formatCount = (value: number) => value.toLocaleString("ar-SY");
 
 /** Seeded roster first, then anything built at creation time, then just the owner. */
 const rosterFor = (groupId: string): GroupMember[] =>
-  localRosters[groupId] ?? mockGroupMembers[groupId] ?? fallbackGroupMembers(mockCurrentMember);
+  localRosters[groupId] ?? mockGroupMembers[groupId] ?? fallbackGroupMembers(mockCurrentOwner);
 
 /** Same-city items are the better match, so they lead the list. */
 const byLocalityFirst = (location: string) => (a: GroupRecommendation, b: GroupRecommendation) =>
@@ -63,16 +77,27 @@ const similarGroupsFor = (group: Group): GroupRecommendation[] =>
 
 const toProfile = (group: Group): GroupProfile => {
   const roster = rosterFor(group.id);
-  const owner = roster.find((person) => person.role === "owner") ?? mockCurrentMember;
+  const owner = roster.find((person) => person.role === "owner") ?? mockCurrentOwner;
   return {
     ...group,
     coverImageUrl: null,
     createdAtLabel: mockGroupCreatedAt[group.id] ?? "أُنشئت حديثاً",
-    postsCount: mockGroupPosts.filter((post) => post.groupId === group.id).length,
+    postsCount: posts.filter((post) => post.groupId === group.id).length,
     owner,
     admins: roster.filter((person) => person.role === "admin" || person.role === "moderator"),
     membersPreview: roster.slice(0, 5),
   };
+};
+
+/** Roots in order, each carrying its own replies. */
+const toThreads = (postId: string): GroupCommentThread[] => {
+  const forPost = comments.filter((comment) => comment.postId === postId);
+  return forPost
+    .filter((comment) => comment.parentId === null)
+    .map((root) => ({
+      ...root,
+      replies: forPost.filter((comment) => comment.parentId === root.id).map((reply) => ({ ...reply })),
+    }));
 };
 
 export const groupsMockStore = {
@@ -105,7 +130,54 @@ export const groupsMockStore = {
 
   /** The group's own feed. Empty for groups with nothing seeded. */
   posts: (groupId: string): Promise<GroupPost[]> =>
-    delay(mockGroupPosts.filter((post) => post.groupId === groupId).map((post) => ({ ...post }))),
+    delay(posts.filter((post) => post.groupId === groupId).map((post) => ({ ...post }))),
+
+  /** Comment threads on one post, roots in order with replies attached. */
+  comments: (postId: string): Promise<GroupCommentThread[]> => delay(toThreads(postId)),
+
+  /**
+   * Adds a comment or a reply. Replies never nest deeper than one level — a
+   * reply to a reply is attached to the same root, which is what the sheet
+   * renders and what most social feeds do.
+   */
+  addComment: (input: AddGroupCommentInput): Promise<GroupComment> => {
+    commentSequence += 1;
+    const parent = input.parentId
+      ? comments.find((comment) => comment.id === input.parentId)
+      : undefined;
+
+    const created: GroupComment = {
+      id: `gc-local-${commentSequence}`,
+      postId: input.postId,
+      parentId: parent?.parentId ?? parent?.id ?? null,
+      author: mockCurrentMember,
+      body: input.body,
+      createdAtLabel: "الآن",
+      likesCount: 0,
+      isLiked: false,
+    };
+
+    comments = [...comments, created];
+    posts = posts.map((post) =>
+      post.id === input.postId ? { ...post, commentsCount: post.commentsCount + 1 } : post,
+    );
+    return delay(created, 350);
+  },
+
+  toggleCommentLike: (commentId: string): Promise<boolean> => {
+    comments = comments.map((comment) =>
+      comment.id === commentId
+        ? {
+            ...comment,
+            isLiked: !comment.isLiked,
+            likesCount: comment.isLiked
+              ? Math.max(0, comment.likesCount - 1)
+              : comment.likesCount + 1,
+          }
+        : comment,
+    );
+    return delay(true, 150);
+  },
 
   /**
    * Content proposed *because of this group* — matched on its category, then
@@ -176,7 +248,8 @@ export const groupsMockStore = {
       membersCount: 1,
       postsThisWeek: 0,
       isMember: true,
-      imageUrl: null,
+      // A real upload would return a hosted URL; the local file uri stands in.
+      imageUrl: input.image?.uri ?? null,
       organizationName: null,
       isVerifiedOrganization: false,
       status: "pending",
@@ -189,7 +262,7 @@ export const groupsMockStore = {
     localRosters = {
       ...localRosters,
       [id]: [
-        mockCurrentMember,
+        mockCurrentOwner,
         ...input.proposedAdmins.map((admin) => ({ ...admin, role: "admin" as const })),
       ],
     };

@@ -17,7 +17,9 @@ import {
   type GroupAdminCandidate,
   type GroupVisibility,
 } from "@/src/features/groups/types";
+import type { MediaUploadFile } from "@/src/features/media/types";
 import { AdminsPickerModal } from "./AdminsPickerModal";
+import { GroupImagePicker } from "./GroupImagePicker";
 import { useCities } from "@/src/features/lookups/queries";
 import { useToast } from "@/src/providers/ToastProvider";
 import { getPrimaryColor } from "@/src/theme";
@@ -42,6 +44,7 @@ export function CreateGroupScreen() {
   const citiesQuery = useCities();
 
   const [name, setName] = useState("");
+  const [image, setImage] = useState<MediaUploadFile | null>(null);
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
@@ -89,6 +92,7 @@ export function CreateGroupScreen() {
         rules,
         purpose: purpose.trim(),
         proposedAdmins,
+        image,
       },
       {
         onSuccess: () => {
@@ -124,6 +128,8 @@ export function CreateGroupScreen() {
             <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
               معلومات المجموعة
             </Text>
+
+            <GroupImagePicker image={image} onChange={setImage} />
 
             <Input
               fullWidth
