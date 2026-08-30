@@ -96,7 +96,7 @@ export function MyPostCard({ post, authorName, authorUsername, onDelete }: Props
 
           <View className="flex-row-reverse items-center gap-1">
             {canEdit ? (
-              <Pressable onPress={() => router.push({ pathname: "/(tabs)/create-post", params: { postId: post.id } } as never)} className="size-9 items-center justify-center rounded-full bg-primary-100 dark:bg-dark-350" accessibilityLabel="تعديل المنشور">
+              <Pressable onPress={() => router.push({ pathname: "/create-post", params: { postId: post.id } } as never)} className="size-9 items-center justify-center rounded-full bg-primary-100 dark:bg-dark-350" accessibilityLabel="تعديل المنشور">
                 <Pencil size={17} color={PRIMARY_COLOR_LIGHT} />
               </Pressable>
             ) : null}

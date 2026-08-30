@@ -91,7 +91,7 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
 
   const handleCreateSelect = (key: "post" | "group") => {
     setIsCreateMenuOpen(false);
-    router.push(key === "group" ? ("/groups/create" as never) : "/(tabs)/create-post");
+    router.push(key === "group" ? ("/groups/create" as never) : "/create-post");
   };
 
   return (

@@ -306,7 +306,7 @@ export function HomePostCard({
     }
 
     router.push({
-      pathname: "/(tabs)/create-post",
+      pathname: "/create-post",
       params: {
         mode: "edit",
         postId: post.id,

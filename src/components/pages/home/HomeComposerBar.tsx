@@ -18,7 +18,7 @@ export function HomeComposerBar() {
 
   const openComposer = () => {
     if (!requireAuth()) return;
-    router.push("/(tabs)/create-post");
+    router.push("/create-post");
   };
 
   const openProfile = () => {

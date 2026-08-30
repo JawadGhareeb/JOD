@@ -32,7 +32,7 @@ export function normalizeJodReferencePath(
   const ownPostMatch = path.match(/^\/(?:my-posts|me\/posts)\/([^/]+)$/);
   if (ownPostMatch?.[1]) {
     return {
-      pathname: "/(tabs)/create-post",
+      pathname: "/create-post",
       params: { mode: "edit", postId: decodeURIComponent(ownPostMatch[1]) },
     } as Href;
   }

@@ -88,6 +88,7 @@ export default function RootLayout() {
                     <Stack.Screen name="blogs/[id]" />
                     <Stack.Screen name="blogs/index" />
                     <Stack.Screen name="groups/create" />
+                    <Stack.Screen name="create-post" />
                     <Stack.Screen name="following/index" />
                     <Stack.Screen name="about" />
                     <Stack.Screen name="account-settings" />
