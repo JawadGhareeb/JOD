@@ -42,6 +42,8 @@ export interface Group {
   /** Activity hint shown on cards — posts published in the last 7 days. */
   postsThisWeek: number;
   isMember: boolean;
+  /** Square group picture. `null` falls back to the first letter of the name. */
+  imageUrl: string | null;
   /** Set when the group is run by a verified organization. */
   organizationName: string | null;
   isVerifiedOrganization: boolean;
@@ -52,6 +54,66 @@ export interface Group {
   rejectionReason: string | null;
   /** The viewer's role in this group, or null when not a member. */
   myRole: GroupMemberRole | null;
+}
+
+/** A member row rendered on the group profile. */
+export interface GroupMember extends GroupAdminCandidate {
+  role: GroupMemberRole;
+}
+
+/**
+ * Everything the profile screen needs on top of the card-level `Group`. Kept as
+ * a separate type so list endpoints stay cheap and only the detail view pays for
+ * members and counters.
+ */
+export interface GroupProfile extends Group {
+  /** Wide banner behind the header. `null` renders the tinted placeholder. */
+  coverImageUrl: string | null;
+  /** Pre-formatted on purpose — the mock has no real timestamps to format. */
+  createdAtLabel: string;
+  postsCount: number;
+  owner: GroupMember;
+  /** Owner excluded — it is carried separately above. */
+  admins: GroupMember[];
+  /** A short slice of the membership, for the avatar row. */
+  membersPreview: GroupMember[];
+}
+
+/** A post published inside a group. */
+export interface GroupPost {
+  id: string;
+  groupId: string;
+  author: GroupMember;
+  body: string;
+  createdAtLabel: string;
+  likesCount: number;
+  commentsCount: number;
+}
+
+/**
+ * What a recommendation points at. `group` rows are navigable; the rest are
+ * inert until the matching real features are wired to groups.
+ */
+export type GroupRecommendationKind = "group" | "opportunity" | "campaign";
+
+/**
+ * Content proposed to a member *because of the group they are in* — matched on
+ * the group's own category and location, never on personal history.
+ */
+export interface GroupRecommendation {
+  id: string;
+  kind: GroupRecommendationKind;
+  title: string;
+  /** Who is behind it — organization or publisher name. */
+  subtitle: string;
+  category: string;
+  location: string;
+  /** Explains the match to the member, e.g. "لأن المجموعة في مجال تطوع". */
+  reason: string;
+  /** Right-hand stat: remaining days, member count, seats left… */
+  metaLabel: string | null;
+  /** Set only for `kind: "group"`, so the card can navigate to that profile. */
+  targetGroupId?: string;
 }
 
 /** Payload the create form submits. */

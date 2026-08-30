@@ -47,3 +47,27 @@ export function useCreateGroup() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: groupKeys.all }),
   });
 }
+
+/** Group profile detail. Resolves to `null` when the id is unknown. */
+export const useGroup = (groupId?: string) =>
+  useQuery({
+    queryKey: groupKeys.detail(groupId),
+    queryFn: () => groupsMockStore.getById(groupId!),
+    enabled: Boolean(groupId),
+  });
+
+/** The group's own feed. Gated by `enabled` so private groups skip the fetch. */
+export const useGroupPosts = (groupId?: string, enabled = true) =>
+  useQuery({
+    queryKey: groupKeys.posts(groupId),
+    queryFn: () => groupsMockStore.posts(groupId!),
+    enabled: Boolean(groupId) && enabled,
+  });
+
+/** Content recommended from the group's own category and location. */
+export const useGroupRecommendations = (groupId?: string, enabled = true) =>
+  useQuery({
+    queryKey: groupKeys.recommendations(groupId),
+    queryFn: () => groupsMockStore.recommendations(groupId!),
+    enabled: Boolean(groupId) && enabled,
+  });

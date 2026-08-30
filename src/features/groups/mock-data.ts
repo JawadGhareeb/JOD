@@ -15,6 +15,7 @@ export const mockGroups: Group[] = [
     membersCount: 2431,
     postsThisWeek: 18,
     isMember: true,
+    imageUrl: null,
     organizationName: "جمعية البركة",
     isVerifiedOrganization: true,
     rules: [
@@ -36,6 +37,7 @@ export const mockGroups: Group[] = [
     membersCount: 1876,
     postsThisWeek: 24,
     isMember: true,
+    imageUrl: null,
     organizationName: null,
     isVerifiedOrganization: false,
     rules: [
@@ -57,6 +59,7 @@ export const mockGroups: Group[] = [
     membersCount: 5209,
     postsThisWeek: 41,
     isMember: false,
+    imageUrl: null,
     organizationName: "مؤسسة عطاء",
     isVerifiedOrganization: true,
     rules: [
@@ -78,6 +81,7 @@ export const mockGroups: Group[] = [
     membersCount: 934,
     postsThisWeek: 7,
     isMember: false,
+    imageUrl: null,
     organizationName: null,
     isVerifiedOrganization: false,
     rules: [
@@ -99,6 +103,7 @@ export const mockGroups: Group[] = [
     membersCount: 1425,
     postsThisWeek: 12,
     isMember: false,
+    imageUrl: null,
     organizationName: "الهلال الطبي",
     isVerifiedOrganization: true,
     rules: [
@@ -120,6 +125,7 @@ export const mockGroups: Group[] = [
     membersCount: 3102,
     postsThisWeek: 9,
     isMember: false,
+    imageUrl: null,
     organizationName: "جمعية البركة",
     isVerifiedOrganization: true,
     rules: [
@@ -141,6 +147,7 @@ export const mockGroups: Group[] = [
     membersCount: 612,
     postsThisWeek: 15,
     isMember: false,
+    imageUrl: null,
     organizationName: null,
     isVerifiedOrganization: false,
     rules: [
@@ -153,3 +160,18 @@ export const mockGroups: Group[] = [
     myRole: null,
   },
 ];
+
+/**
+ * Pre-formatted creation dates. The mock has no real timestamps and the profile
+ * only ever displays this as a label, so formatting here keeps date handling out
+ * of the screen entirely.
+ */
+export const mockGroupCreatedAt: Record<string, string> = {
+  "grp-001": "أُنشئت في آذار ٢٠٢٤",
+  "grp-002": "أُنشئت في أيلول ٢٠٢٣",
+  "grp-003": "أُنشئت في تشرين الثاني ٢٠٢٢",
+  "grp-004": "أُنشئت في حزيران ٢٠٢٤",
+  "grp-005": "أُنشئت في كانون الثاني ٢٠٢٣",
+  "grp-006": "أُنشئت في أيار ٢٠٢١",
+  "grp-007": "أُنشئت في شباط ٢٠٢٥",
+};

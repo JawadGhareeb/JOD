@@ -1,60 +1,34 @@
-import { useState } from "react";
+import { useRouter } from "expo-router";
 import { View } from "react-native";
 import { Clock3, Lock, MapPin } from "lucide-react-native";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
-import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
-import { useJoinGroup, useLeaveGroup } from "@/src/features/groups/queries";
 import type { Group } from "@/src/features/groups/types";
-import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
-import { useToast } from "@/src/providers/ToastProvider";
-import { GroupJoinDialog } from "./GroupJoinDialog";
+import { GroupAvatar } from "./GroupAvatar";
+import { GroupJoinButton } from "./GroupJoinButton";
 
 const formatCount = (value: number) => value.toLocaleString("ar-SY");
 
-export function GroupCard({ group, showJoin = true }: { group: Group; showJoin?: boolean }) {
-  const { requireAuth } = useAuthGuard();
-  const toast = useToast();
-  const join = useJoinGroup();
-  const leave = useLeaveGroup();
-  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
+type GroupCardProps = {
+  readonly group: Group;
+  readonly showJoin?: boolean;
+};
 
-  const isMember = group.isMember;
+export function GroupCard({ group, showJoin = true }: GroupCardProps) {
+  const router = useRouter();
   const isPending = group.status === "pending";
-  const isBusy = join.isPending || leave.isPending;
-
-  const handlePress = () => {
-    if (!requireAuth() || isBusy) return;
-    // Leaving needs no rules acknowledgement — only joining does.
-    if (isMember) {
-      leave.mutate(group.id);
-      return;
-    }
-    setIsJoinDialogOpen(true);
-  };
-
-  const confirmJoin = () => {
-    setIsJoinDialogOpen(false);
-    join.mutate(group.id, {
-      onSuccess: () =>
-        toast.success(
-          group.visibility === "private"
-            ? "تم إرسال طلب الانضمام. بانتظار موافقة المشرفين."
-            : `انضممت إلى ${group.name}.`,
-        ),
-      onError: () => toast.error("تعذر إتمام الانضمام. حاول مرة أخرى."),
-    });
-  };
 
   return (
-    <Card padding="md" className="mb-3 gap-3 border-gray-200 dark:border-dark-400">
+    <Card
+      padding="md"
+      className="mb-3 gap-3 border-gray-200 dark:border-dark-400"
+      onPress={() => router.push(`/groups/${group.id}` as never)}
+      accessibilityRole="button"
+      accessibilityLabel={`فتح ملف ${group.name}`}
+    >
       <View className="flex-row-reverse items-start gap-3">
-        <View className="size-12 items-center justify-center rounded-xl bg-primary-100 dark:bg-dark-350">
-          <Text weight="bold" size="base" className="text-primary-400">
-            {group.name.charAt(0)}
-          </Text>
-        </View>
+        <GroupAvatar name={group.name} imageUrl={group.imageUrl} />
 
         <View className="flex-1">
           <View className="flex-row-reverse items-center gap-1">
@@ -107,33 +81,11 @@ export function GroupCard({ group, showJoin = true }: { group: Group; showJoin?:
             : `${formatCount(group.membersCount)} عضو · ${formatCount(group.postsThisWeek)} منشور هذا الأسبوع`}
         </Text>
 
-        {isPending ? null : showJoin ? (
-          <Button
-            size="small"
-            variant={isMember ? "tertiary" : "primary"}
-            loading={isBusy}
-            disabled={isBusy}
-            onPress={handlePress}
-            accessibilityLabel={isMember ? `مغادرة ${group.name}` : `الانضمام إلى ${group.name}`}
-            accessibilityState={{ selected: isMember, disabled: isBusy }}
-          >
-            {isMember ? "عضو" : group.visibility === "private" ? "طلب انضمام" : "انضمام"}
-          </Button>
-        ) : (
-          <View className="rounded-full bg-primary-400/10 px-3 py-1">
-            <Text size="2xs" weight="medium" className="text-primary-400">
-              عضو
-            </Text>
-          </View>
+        {isPending ? null : (
+          <GroupJoinButton group={group} readOnlyWhenMember={!showJoin} />
         )}
       </View>
-
-      <GroupJoinDialog
-        group={group}
-        visible={isJoinDialogOpen}
-        onClose={() => setIsJoinDialogOpen(false)}
-        onConfirm={confirmJoin}
-      />
     </Card>
   );
 }
+
