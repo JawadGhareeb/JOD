@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "expo-router";
-import { Lock, MapPin, Users } from "lucide-react-native";
+import { Lock, MapPin, Users, X } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 import Button from "@/src/components/ui/Button";
@@ -12,7 +12,12 @@ import SelectionModal, { type SelectionOption } from "@/src/components/ui/Select
 import Text from "@/src/components/ui/Text";
 import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useCreateGroup } from "@/src/features/groups/queries";
-import { GROUP_CATEGORIES, type GroupVisibility } from "@/src/features/groups/types";
+import {
+  GROUP_CATEGORIES,
+  type GroupAdminCandidate,
+  type GroupVisibility,
+} from "@/src/features/groups/types";
+import { AdminsPickerModal } from "./AdminsPickerModal";
 import { useCities } from "@/src/features/lookups/queries";
 import { useToast } from "@/src/providers/ToastProvider";
 import { getPrimaryColor } from "@/src/theme";
@@ -43,9 +48,10 @@ export function CreateGroupScreen() {
   const [visibility, setVisibility] = useState<GroupVisibility>("public");
   const [rulesText, setRulesText] = useState("");
   const [purpose, setPurpose] = useState("");
-  const [proposedAdmins, setProposedAdmins] = useState("");
+  const [proposedAdmins, setProposedAdmins] = useState<GroupAdminCandidate[]>([]);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isCityOpen, setIsCityOpen] = useState(false);
+  const [isAdminsOpen, setIsAdminsOpen] = useState(false);
 
   const categoryOptions: SelectionOption[] = useMemo(
     () => GROUP_CATEGORIES.map((item) => ({ label: item, value: item })),
@@ -69,7 +75,6 @@ export function CreateGroupScreen() {
     location.length > 0 &&
     rules.length >= MIN_RULES &&
     purpose.trim().length >= 10 &&
-    proposedAdmins.trim().length > 0 &&
     !createMutation.isPending;
 
   const submit = () => {
@@ -83,7 +88,7 @@ export function CreateGroupScreen() {
         visibility,
         rules,
         purpose: purpose.trim(),
-        proposedAdmins: proposedAdmins.trim(),
+        proposedAdmins,
       },
       {
         onSuccess: () => {
@@ -244,15 +249,52 @@ export function CreateGroupScreen() {
               placeholder="لماذا تريد إنشاء هذه المجموعة؟"
               maxLength={500}
             />
-            <Input
-              fullWidth
-              multiline
-              showStatusIcon={false}
-              value={proposedAdmins}
-              onChangeText={setProposedAdmins}
-              placeholder="من سيدير المجموعة معك؟ (أسماء أو صفات)"
-              maxLength={300}
-            />
+            <View className="gap-2 border-t border-gray-100 pt-3 dark:border-dark-400">
+              <Text size="2xs" weight="semibold" className="text-dark-100 dark:text-light-50">
+                المشرفون
+              </Text>
+              <Text size="2xs" className="leading-5 text-gray-500 dark:text-gray-300">
+                أنت <Text size="2xs" weight="semibold" className="text-primary-400">مالك</Text> المجموعة.
+                يمكنك اختيار مشرفين يساعدونك في إدارتها.
+              </Text>
+
+              <Pressable
+                onPress={() => setIsAdminsOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel="اختر المشرفين"
+                className="flex-row-reverse items-center justify-between rounded-xl border border-gray-200 p-3 dark:border-dark-400"
+              >
+                <Text size="xs" className="text-gray-500 dark:text-gray-300">
+                  {proposedAdmins.length > 0
+                    ? `${proposedAdmins.length} مشرف مُختار`
+                    : "اختر المشرفين (اختياري)"}
+                </Text>
+                <Users size={16} color={primaryColor} strokeWidth={2.25} />
+              </Pressable>
+
+              {proposedAdmins.length > 0 ? (
+                <View className="flex-row-reverse flex-wrap gap-2">
+                  {proposedAdmins.map((admin) => (
+                    <Pressable
+                      key={admin.id}
+                      onPress={() =>
+                        setProposedAdmins((current) =>
+                          current.filter((item) => item.id !== admin.id),
+                        )
+                      }
+                      accessibilityRole="button"
+                      accessibilityLabel={`إزالة ${admin.name}`}
+                      className="flex-row-reverse items-center gap-1.5 rounded-full bg-primary-400/10 px-3 py-1.5"
+                    >
+                      <Text size="2xs" className="text-primary-400">
+                        {admin.name}
+                      </Text>
+                      <X size={11} color={primaryColor} strokeWidth={2.5} />
+                    </Pressable>
+                  ))}
+                </View>
+              ) : null}
+            </View>
           </Card>
 
           <Button
@@ -288,6 +330,16 @@ export function CreateGroupScreen() {
           setIsCityOpen(false);
         }}
         onClose={() => setIsCityOpen(false)}
+      />
+
+      <AdminsPickerModal
+        visible={isAdminsOpen}
+        selected={proposedAdmins}
+        onClose={() => setIsAdminsOpen(false)}
+        onConfirm={(next) => {
+          setProposedAdmins(next);
+          setIsAdminsOpen(false);
+        }}
       />
     </KeyboardAvoider>
   );

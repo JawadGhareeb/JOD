@@ -15,6 +15,15 @@ export const useSuggestedGroups = () =>
 export const useDiscoverGroups = () =>
   useQuery({ queryKey: groupKeys.discover(), queryFn: groupsMockStore.discover });
 
+/** Account search for the admins picker. Swap for the real endpoint later. */
+export const useAdminCandidates = (search: string, enabled = true) =>
+  useQuery({
+    queryKey: groupKeys.adminCandidates(search),
+    queryFn: () => groupsMockStore.searchAdminCandidates(search),
+    enabled,
+    placeholderData: (previous) => previous,
+  });
+
 export function useJoinGroup() {
   const queryClient = useQueryClient();
   return useMutation({

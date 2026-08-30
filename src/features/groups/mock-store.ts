@@ -1,5 +1,6 @@
 import { mockGroups } from "./mock-data";
-import type { CreateGroupInput, Group } from "./types";
+import { mockAdminCandidates } from "./mock-users";
+import type { CreateGroupInput, Group, GroupAdminCandidate } from "./types";
 
 /**
  * TEMPORARY in-memory store standing in for the groups API.
@@ -59,6 +60,19 @@ export const groupsMockStore = {
     return delay(true);
   },
 
+  /** Stands in for account search when picking group admins. */
+  searchAdminCandidates: (query: string): Promise<GroupAdminCandidate[]> => {
+    const term = query.trim().toLowerCase();
+    const matches = term
+      ? mockAdminCandidates.filter(
+          (user) =>
+            user.name.toLowerCase().includes(term) ||
+            user.username.toLowerCase().includes(term),
+        )
+      : mockAdminCandidates;
+    return delay(matches.map((user) => ({ ...user })));
+  },
+
   /**
    * Creates a *pending* group. It deliberately does not enter discovery — a
    * platform admin has to approve it first.
@@ -79,6 +93,9 @@ export const groupsMockStore = {
       isVerifiedOrganization: false,
       status: "pending",
       rejectionReason: null,
+      // The creator owns the group; proposed admins are granted their role only
+      // after the platform approves the request.
+      myRole: "owner",
     };
     groups = [created, ...groups];
     return delay(created, 600);

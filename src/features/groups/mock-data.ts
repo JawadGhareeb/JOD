@@ -24,6 +24,7 @@ export const mockGroups: Group[] = [
     ],
     status: "active",
     rejectionReason: null,
+    myRole: "member",
   },
   {
     id: "grp-002",
@@ -44,6 +45,7 @@ export const mockGroups: Group[] = [
     ],
     status: "active",
     rejectionReason: null,
+    myRole: "admin",
   },
   {
     id: "grp-003",
@@ -64,6 +66,7 @@ export const mockGroups: Group[] = [
     ],
     status: "active",
     rejectionReason: null,
+    myRole: null,
   },
   {
     id: "grp-004",
@@ -84,6 +87,7 @@ export const mockGroups: Group[] = [
     ],
     status: "active",
     rejectionReason: null,
+    myRole: null,
   },
   {
     id: "grp-005",
@@ -104,6 +108,7 @@ export const mockGroups: Group[] = [
     ],
     status: "active",
     rejectionReason: null,
+    myRole: null,
   },
   {
     id: "grp-006",
@@ -124,6 +129,7 @@ export const mockGroups: Group[] = [
     ],
     status: "active",
     rejectionReason: null,
+    myRole: null,
   },
   {
     id: "grp-007",
@@ -144,5 +150,6 @@ export const mockGroups: Group[] = [
     ],
     status: "active",
     rejectionReason: null,
+    myRole: null,
   },
 ];
