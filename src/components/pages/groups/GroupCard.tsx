@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { View } from "react-native";
-import { Clock3, Lock, MapPin } from "lucide-react-native";
+import { Clock3, MapPin } from "lucide-react-native";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
@@ -18,6 +18,8 @@ type GroupCardProps = {
 export function GroupCard({ group, showJoin = true }: GroupCardProps) {
   const router = useRouter();
   const isPending = group.status === "pending";
+  const isRejected = group.status === "rejected";
+  const isInactive = group.status !== "active";
 
   return (
     <Card
@@ -43,6 +45,12 @@ export function GroupCard({ group, showJoin = true }: GroupCardProps) {
                   بانتظار الموافقة
                 </Text>
               </View>
+            ) : isRejected ? (
+              <View className="rounded-full bg-error-100/60 px-2 py-0.5 dark:bg-dark-350">
+                <Text size="2xs" className="text-error-300">
+                  مرفوض
+                </Text>
+              </View>
             ) : null}
           </View>
 
@@ -58,14 +66,6 @@ export function GroupCard({ group, showJoin = true }: GroupCardProps) {
                 {group.location}
               </Text>
             </View>
-            {group.visibility === "private" ? (
-              <View className="flex-row-reverse items-center gap-1">
-                <Lock size={11} color="#9CA3AF" strokeWidth={2.25} />
-                <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-                  خاصة
-                </Text>
-              </View>
-            ) : null}
           </View>
         </View>
       </View>
@@ -77,11 +77,15 @@ export function GroupCard({ group, showJoin = true }: GroupCardProps) {
       <View className="flex-row-reverse items-center justify-between gap-3 border-t border-gray-100 pt-3 dark:border-dark-400">
         <Text size="2xs" className="flex-1 text-gray-500 dark:text-gray-300">
           {isPending
-            ? "لن تظهر المجموعة للآخرين قبل موافقة الإدارة."
-            : `${formatCount(group.membersCount)} عضو · ${formatCount(group.postsThisWeek)} منشور هذا الأسبوع`}
+            ? "لن يظهر الفريق للآخرين قبل موافقة الإدارة."
+            : isRejected
+              ? group.rejectionReason
+                ? `سبب الرفض: ${group.rejectionReason}`
+                : "تم رفض طلب إنشاء الفريق."
+              : `${formatCount(group.membersCount)} عضو · ${formatCount(group.postsThisWeek)} منشور هذا الأسبوع`}
         </Text>
 
-        {isPending ? null : (
+        {isInactive ? null : (
           <GroupJoinButton group={group} readOnlyWhenMember={!showJoin} />
         )}
       </View>

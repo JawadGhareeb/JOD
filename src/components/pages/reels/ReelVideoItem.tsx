@@ -141,7 +141,7 @@ export function ReelVideoItem({
 
         <View className="min-h-0 flex-1 bg-dark-500">
           <VideoPlayer
-            url={video.url}
+            url={video.streamUrl || video.url}
             active={active}
             onRequestPlay={onPlayRequest}
             loop

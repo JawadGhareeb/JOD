@@ -82,9 +82,9 @@ export function GroupCommentsSheet({ post, visible, onClose }: GroupCommentsShee
     );
   };
 
-  const like = (commentId: string) => {
+  const like = (comment: GroupComment) => {
     if (!requireAuth()) return;
-    toggleLike.mutate(commentId);
+    toggleLike.mutate({ commentId: comment.id, liked: !comment.isLiked });
   };
 
   return (
@@ -183,7 +183,7 @@ function CommentsBody({
   readonly threads: GroupCommentThread[];
   readonly isLoading: boolean;
   readonly primaryColor: string;
-  readonly onLike: (commentId: string) => void;
+  readonly onLike: (comment: GroupComment) => void;
   readonly onReply: (comment: GroupComment) => void;
 }) {
   if (isLoading) {
@@ -231,7 +231,7 @@ function CommentRow({
   onReply,
 }: {
   readonly comment: GroupComment;
-  readonly onLike: (commentId: string) => void;
+  readonly onLike: (comment: GroupComment) => void;
   readonly onReply: (comment: GroupComment) => void;
 }) {
   const isStaff = comment.author.role !== "member";
@@ -265,7 +265,7 @@ function CommentRow({
           </Text>
 
           <Pressable
-            onPress={() => onLike(comment.id)}
+            onPress={() => onLike(comment)}
             accessibilityRole="button"
             accessibilityLabel={comment.isLiked ? "إلغاء الإعجاب" : "إعجاب"}
             accessibilityState={{ selected: comment.isLiked }}

@@ -29,18 +29,18 @@ const TABS: { key: GroupsTab; label: string }[] = [
 
 const TAB_META: Record<GroupsTab, { intro: string; empty: string; showJoin: boolean }> = {
   forYou: {
-    intro: "مجموعات مقترحة لك",
+    intro: "فرق تطوعية مقترحة لك",
     empty: "لا توجد اقتراحات حالياً.",
     showJoin: true,
   },
   myGroups: {
-    intro: "المجموعات التي انضممت إليها",
-    empty: "لم تنضم إلى أي مجموعة بعد.",
+    intro: "الفرق التطوعية التي انضممت إليها",
+    empty: "لم تنضم إلى أي فريق تطوعي بعد.",
     showJoin: false,
   },
   discover: {
-    intro: "تصفّح المجموعات",
-    empty: "لا توجد مجموعات لعرضها.",
+    intro: "تصفّح الفرق التطوعية",
+    empty: "لا توجد فرق تطوعية لعرضها.",
     showJoin: true,
   },
 };
@@ -120,7 +120,7 @@ function CreateGroupCta() {
       </View>
       <View className="flex-1">
         <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-          إنشاء مجموعة جديدة
+          إنشاء فريق تطوعي جديد
         </Text>
         <Text size="2xs" className="mt-0.5 text-gray-500 dark:text-gray-300">
           تُراجعها الإدارة قبل النشر
@@ -201,7 +201,7 @@ function GroupsEmptyState({ message, showCreate }: { message: string; showCreate
             router.push("/groups/create" as never);
           }}
         >
-          أنشئ مجموعتك الأولى
+          أنشئ فريقك التطوعي الأول
         </Button>
       ) : null}
     </View>

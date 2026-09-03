@@ -1,6 +1,6 @@
 import { useColorScheme } from "nativewind";
-import { useEffect, useMemo, useState } from "react";
-import { Animated, RefreshControl, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, RefreshControl, View, type NativeScrollEvent, type NativeSyntheticEvent, type ViewToken } from "react-native";
 import Button from "@/src/components/ui/Button";
 import Text from "@/src/components/ui/Text";
 import { useArticles } from "@/src/features/articles/queries";
@@ -54,21 +54,18 @@ function composeHomeFeed(posts: HomePost[], campaigns: Campaign[], seed: number)
 
     if (postsSinceModule < nextGap) return;
 
-    if (random() < 0.5) {
-      result.push({
-        kind: "reels",
-        key: `reels-${reelsOccurrence}-${index}`,
-        occurrence: reelsOccurrence,
-      });
-      reelsOccurrence += 1;
-    } else {
-      result.push({
-        kind: "blogs",
-        key: `blogs-${blogsOccurrence}-${index}`,
-        occurrence: blogsOccurrence,
-      });
-      blogsOccurrence += 1;
-    }
+    result.push({
+      kind: "reels",
+      key: `reels-${reelsOccurrence}-${index}`,
+      occurrence: reelsOccurrence,
+    });
+    reelsOccurrence += 1;
+    result.push({
+      kind: "blogs",
+      key: `blogs-${blogsOccurrence}-${index}`,
+      occurrence: blogsOccurrence,
+    });
+    blogsOccurrence += 1;
 
     postsSinceModule = 0;
     nextGap = randomGap(random);
@@ -77,6 +74,9 @@ function composeHomeFeed(posts: HomePost[], campaigns: Campaign[], seed: number)
   campaigns.slice(campaignIndex).forEach((campaign) => {
     result.push({ kind: "campaign", key: `campaign-${campaign.id}`, campaign });
   });
+
+  if (reelsOccurrence === 0) result.push({ kind: "reels", key: "reels-0-fallback", occurrence: 0 });
+  if (blogsOccurrence === 0) result.push({ kind: "blogs", key: "blogs-0-fallback", occurrence: 0 });
 
   return result;
 }
@@ -98,6 +98,12 @@ export function HomeFeed({ audience, listHeaderComponent, onScroll, onRefresh }:
   const { colorScheme } = useColorScheme();
   const primaryColor = getPrimaryColor(colorScheme === "dark");
   const [compositionSeed, setCompositionSeed] = useState(() => Math.floor(Math.random() * 2_000_000_000));
+  const [activeReelsKey, setActiveReelsKey] = useState<string | null>(null);
+  const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken<HomeFeedItem>[] }) => {
+    const visibleReels = viewableItems.find((entry) => entry.isViewable && entry.item.kind === "reels");
+    setActiveReelsKey(visibleReels?.item.key ?? null);
+  }, []);
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
 
   const {
     data,
@@ -203,6 +209,7 @@ export function HomeFeed({ audience, listHeaderComponent, onScroll, onRefresh }:
               <HomeReelsSection
                 items={media.slice(start, start + 5)}
                 loading={mediaQuery.isLoading && media.length === 0}
+                active={item.key === activeReelsKey}
               />
             );
           }
@@ -220,6 +227,8 @@ export function HomeFeed({ audience, listHeaderComponent, onScroll, onRefresh }:
         onEndReachedThreshold={0.35}
         onScroll={onScroll}
         scrollEventThrottle={16}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching || campaignsQuery.isRefetching || articlesQuery.isRefetching || mediaQuery.isRefetching}

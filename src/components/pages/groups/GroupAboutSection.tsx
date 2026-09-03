@@ -19,7 +19,7 @@ export function GroupAboutSection({ group }: GroupAboutSectionProps) {
     <View className="gap-3">
       <Card padding="lg" className="gap-2 border-gray-200 dark:border-dark-400">
         <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-          عن المجموعة
+          عن الفريق التطوعي
         </Text>
         <Text size="xs" className="leading-6 text-gray-600 dark:text-gray-200">
           {group.description}
@@ -28,7 +28,7 @@ export function GroupAboutSection({ group }: GroupAboutSectionProps) {
 
       <Card padding="lg" className="gap-3 border-gray-200 dark:border-dark-400">
         <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-          قوانين المجموعة
+          قوانين الفريق
         </Text>
         <View className="gap-2">
           {group.rules.map((rule, index) => (

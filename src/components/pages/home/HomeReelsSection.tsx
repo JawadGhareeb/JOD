@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { SectionHeader } from "@/src/components/shared/SectionHeader";
+import { VideoPlayer } from "@/src/components/shared/VideoPlayer";
 import Text from "@/src/components/ui/Text";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import type { PublicMediaItem } from "@/src/features/media/types";
@@ -11,18 +13,41 @@ import { getPrimaryColor } from "@/src/theme";
 const ReelsIcon = appIcons.reels;
 const PlayIcon = appIcons.play;
 const ArrowIcon = appIcons.chevronLeft;
+const CARD_WIDTH = 180;
+const CARD_GAP = 12;
+const PREVIEW_HEIGHT = 300;
 
 type Props = {
   items: PublicMediaItem[];
   loading?: boolean;
+  active?: boolean;
 };
 
-export function HomeReelsSection({ items, loading = false }: Props) {
+export function HomeReelsSection({ items, loading = false, active = false }: Props) {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const primaryColor = getPrimaryColor(colorScheme === "dark");
+  const firstItemId = items[0]?.id ?? null;
+  const [activePreviewId, setActivePreviewId] = useState<string | null>(firstItemId);
+
+  useEffect(() => {
+    setActivePreviewId(firstItemId);
+  }, [firstItemId]);
 
   if (!loading && items.length === 0) return null;
+
+  const openVideo = (videoId: string) => {
+    router.push({ pathname: "/(tabs)/reels", params: { videoId } });
+  };
+
+  const updateHorizontalPreview = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (items.length === 0) return;
+    const index = Math.max(
+      0,
+      Math.min(items.length - 1, Math.round(event.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_GAP))),
+    );
+    setActivePreviewId(items[index]?.id ?? null);
+  };
 
   return (
     <View className="mb-4 rounded-2xl bg-white py-3 dark:bg-dark-500">
@@ -33,31 +58,62 @@ export function HomeReelsSection({ items, loading = false }: Props) {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 10, paddingHorizontal: 16, paddingBottom: 4 }}
+        decelerationRate="fast"
+        snapToInterval={CARD_WIDTH + CARD_GAP}
+        onMomentumScrollEnd={updateHorizontalPreview}
+        onScrollEndDrag={updateHorizontalPreview}
+        contentContainerStyle={{ gap: CARD_GAP, paddingHorizontal: 16, paddingBottom: 4 }}
       >
         {loading
-          ? [0, 1, 2].map((key) => <CardSkeleton key={key} width={150} height={220} margin={0} />)
-          : items.map((video) => (
-              <Pressable
-                key={video.id}
-                onPress={() => router.push({ pathname: "/(tabs)/reels", params: { videoId: video.id } })}
-                accessibilityRole="button"
-                accessibilityLabel="تشغيل الفيديو"
-                className="w-[150px] overflow-hidden rounded-2xl bg-dark-500"
-              >
-                <View className="h-[170px] items-center justify-center bg-dark-350">
-                  <ReelsIcon size={30} color="#D1D5DB" strokeWidth={2} />
-                  <View className="mt-3 h-11 w-11 items-center justify-center rounded-full bg-white/15">
-                    <PlayIcon size={20} color="#FFFFFF" fill="#FFFFFF" />
+          ? [0, 1, 2].map((key) => (
+              <CardSkeleton key={key} width={CARD_WIDTH} height={PREVIEW_HEIGHT + 64} margin={0} />
+            ))
+          : items.map((video) => {
+              const canPlayPreview = video.previewStatus === "ready" && Boolean(video.previewUrl);
+              const shouldPlayPreview = active && activePreviewId === video.id && canPlayPreview;
+
+              return (
+                <View
+                  key={video.id}
+                  style={{ width: CARD_WIDTH }}
+                  className="overflow-hidden rounded-2xl bg-dark-500"
+                >
+                  <View style={{ height: PREVIEW_HEIGHT }} className="items-center justify-center bg-dark-350">
+                    {shouldPlayPreview ? (
+                      <VideoPlayer
+                        url={video.previewUrl!}
+                        active
+                        loop
+                        muted
+                        style={{ width: "100%", height: "100%" }}
+                      />
+                    ) : (
+                      <View className="items-center justify-center">
+                        <ReelsIcon size={34} color="#D1D5DB" strokeWidth={2} />
+                        <View className="mt-3 h-12 w-12 items-center justify-center rounded-full bg-white/15">
+                          <PlayIcon size={21} color="#FFFFFF" fill="#FFFFFF" />
+                        </View>
+                        {video.previewStatus === "pending" || video.previewStatus === "processing" ? (
+                          <Text size="2xs" className="mt-3 text-gray-300">المعاينة قيد التجهيز</Text>
+                        ) : null}
+                      </View>
+                    )}
+                    <Pressable
+                      onPress={() => openVideo(video.id)}
+                      accessibilityRole="button"
+                      accessibilityLabel="فتح الفيديو الكامل"
+                      className="absolute inset-0"
+                    />
                   </View>
+
+                  <Pressable onPress={() => openVideo(video.id)} className="min-h-[64px] px-3 py-2">
+                    <Text numberOfLines={2} size="2xs" className="leading-5 text-light-50">
+                      {video.description || video.originalName}
+                    </Text>
+                  </Pressable>
                 </View>
-                <View className="min-h-[54px] px-3 py-2">
-                  <Text numberOfLines={2} size="2xs" className="leading-5 text-light-50">
-                    {video.description || video.originalName}
-                  </Text>
-                </View>
-              </Pressable>
-            ))}
+              );
+            })}
       </ScrollView>
 
       {!loading ? (
@@ -67,9 +123,7 @@ export function HomeReelsSection({ items, loading = false }: Props) {
           accessibilityLabel="مشاهدة كل الريلز"
           className="mx-4 mt-3 flex-row-reverse items-center justify-center gap-2 rounded-xl border border-primary-400/30 bg-primary-400/10 px-4 py-3"
         >
-          <Text size="xs" weight="semibold" className="text-primary-400">
-            مشاهدة كل الريلز
-          </Text>
+          <Text size="xs" weight="semibold" className="text-primary-400">مشاهدة كل الريلز</Text>
           <ArrowIcon size={16} color={primaryColor} strokeWidth={2.25} />
         </Pressable>
       ) : null}

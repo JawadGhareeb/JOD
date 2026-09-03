@@ -23,7 +23,7 @@ type CreateMenuItem = {
 
 const ITEMS: CreateMenuItem[] = [
   { key: "post", title: "منشور", hint: "شارك طلباً أو فرصة أو تحديثاً", Icon: FileText },
-  { key: "group", title: "مجموعة", hint: "تُراجعها الإدارة قبل النشر", Icon: UsersRound },
+  { key: "group", title: "فريق تطوعي", hint: "يُراجع من الإدارة قبل النشر", Icon: UsersRound },
 ];
 
 type HeaderCreateMenuProps = {

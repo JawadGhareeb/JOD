@@ -1,5 +1,5 @@
 import { Image, View } from "react-native";
-import { CalendarDays, Globe2, Lock, MapPin, Users } from "lucide-react-native";
+import { CalendarDays, Globe2, MapPin, Users } from "lucide-react-native";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import Text from "@/src/components/ui/Text";
@@ -17,6 +17,7 @@ type GroupProfileHeaderProps = {
 
 export function GroupProfileHeader({ group }: GroupProfileHeaderProps) {
   const isPending = group.status === "pending";
+  const isRejected = group.status === "rejected";
 
   return (
     <View className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-dark-400 dark:bg-dark-500">
@@ -58,14 +59,8 @@ export function GroupProfileHeader({ group }: GroupProfileHeaderProps) {
           </View>
           <MetaChip icon={<MapPin size={11} color={MUTED} strokeWidth={2.25} />} label={group.location} />
           <MetaChip
-            icon={
-              group.visibility === "private" ? (
-                <Lock size={11} color={MUTED} strokeWidth={2.25} />
-              ) : (
-                <Globe2 size={11} color={MUTED} strokeWidth={2.25} />
-              )
-            }
-            label={group.visibility === "private" ? "مجموعة خاصة" : "مجموعة عامة"}
+            icon={<Globe2 size={11} color={MUTED} strokeWidth={2.25} />}
+            label="فريق تطوعي عام"
           />
           <MetaChip
             icon={<CalendarDays size={11} color={MUTED} strokeWidth={2.25} />}
@@ -84,11 +79,17 @@ export function GroupProfileHeader({ group }: GroupProfileHeaderProps) {
         {isPending ? (
           <View className="rounded-xl bg-warning-100/50 p-3 dark:bg-dark-350">
             <Text size="2xs" className="leading-5 text-warning-300">
-              طلب إنشاء هذه المجموعة قيد المراجعة. لن تظهر للآخرين قبل موافقة الإدارة.
+              طلب إنشاء هذا الفريق التطوعي قيد المراجعة. لن يظهر للآخرين قبل موافقة الإدارة.
+            </Text>
+          </View>
+        ) : isRejected ? (
+          <View className="rounded-xl bg-error-100/50 p-3 dark:bg-dark-350">
+            <Text size="2xs" className="leading-5 text-error-300">
+              {group.rejectionReason ? `تم رفض الطلب: ${group.rejectionReason}` : "تم رفض طلب إنشاء الفريق التطوعي."}
             </Text>
           </View>
         ) : (
-          <GroupJoinButton group={group} size="medium" fullWidth memberLabel="مغادرة المجموعة" />
+          <GroupJoinButton group={group} size="medium" fullWidth memberLabel="مغادرة الفريق" />
         )}
       </View>
     </View>

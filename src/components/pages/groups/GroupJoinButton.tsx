@@ -18,8 +18,6 @@ type GroupJoinButtonProps = {
   readonly readOnlyWhenMember?: boolean;
 };
 
-const joinLabel = (group: Group) => (group.visibility === "private" ? "طلب انضمام" : "انضمام");
-
 /**
  * Shared by the group card and the group profile so joining behaves identically
  * in both places — rules must be acknowledged before joining, never before
@@ -54,12 +52,7 @@ export function GroupJoinButton({
   const confirmJoin = () => {
     setIsJoinDialogOpen(false);
     join.mutate(group.id, {
-      onSuccess: () =>
-        toast.success(
-          group.visibility === "private"
-            ? "تم إرسال طلب الانضمام. بانتظار موافقة المشرفين."
-            : `انضممت إلى ${group.name}.`,
-        ),
+      onSuccess: () => toast.success(`انضممت إلى ${group.name}.`),
       onError: () => toast.error("تعذر إتمام الانضمام. حاول مرة أخرى."),
     });
   };
@@ -86,7 +79,7 @@ export function GroupJoinButton({
         accessibilityLabel={isMember ? `مغادرة ${group.name}` : `الانضمام إلى ${group.name}`}
         accessibilityState={{ selected: isMember, disabled: isBusy }}
       >
-        {isMember ? memberLabel : joinLabel(group)}
+        {isMember ? memberLabel : "انضمام"}
       </Button>
 
       <GroupJoinDialog

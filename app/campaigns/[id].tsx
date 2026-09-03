@@ -1,5 +1,9 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { View } from "react-native";
+import { MapPin, Tag } from "lucide-react-native";
+import { Pressable, View } from "react-native";
+import { Avatar } from "@/src/components/shared/Avatar";
+import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
+import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
@@ -17,5 +21,79 @@ export default function CampaignDetailsPage() {
   if (query.isLoading) return <Container className="bg-light-100 px-4 pt-6 dark:bg-dark-300"><Text>جارِ تحميل الحملة...</Text></Container>;
   if (!campaign || !id) return <Container className="bg-light-100 px-4 pt-6 dark:bg-dark-300"><Text>تعذر العثور على الحملة.</Text></Container>;
   const progress = campaign.goalAmount > 0 ? Math.min(100, (campaign.raisedAmount / campaign.goalAmount) * 100) : 0;
-  return <Container scrollable className="bg-light-100 px-4 pt-6 dark:bg-dark-300"><View className="gap-4"><Text variant="heading" weight="bold" rtlAlign="right">{campaign.title}</Text><Card padding="md" className="gap-2 border-gray-200 dark:border-dark-400"><Text size="xs" className="text-gray-500 dark:text-gray-300">{campaign.organizationName || campaign.publisher.name}</Text><Text size="sm">{campaign.content || campaign.summary || ""}</Text></Card><Card padding="md" className="gap-2 border-gray-200 dark:border-dark-400"><Text size="xs" weight="semibold">تقدم الحملة</Text><Text size="sm" className="text-primary-400">{campaign.raisedAmount.toLocaleString("ar-SY")} / {campaign.goalAmount.toLocaleString("ar-SY")}</Text><Text size="2xs" className="text-gray-500 dark:text-gray-300">{progress.toFixed(0)}% • {campaign.donorsCount} متبرع</Text></Card>{campaign.status === "active" ? <Button fullWidth onPress={() => { if (!requireAuth()) return; router.push({ pathname: "/donate/[id]", params: { id } }); }}>إرسال طلب تبرع</Button> : <Button fullWidth disabled>الحملة غير متاحة للتبرع</Button>}</View></Container>;
+  const categoryName = typeof campaign.category === "string" ? campaign.category : campaign.category?.name;
+  const publisherName = campaign.organizationName || campaign.publisher.name;
+  return (
+    <Container scrollable className="bg-light-100 px-4 pt-6 dark:bg-dark-300">
+      <View className="gap-4 pb-8">
+        <Text variant="heading" weight="bold" rtlAlign="right">تفاصيل الحملة</Text>
+
+        <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
+          <Pressable
+            onPress={() => campaign.publisher.id && router.push({ pathname: "/author/[id]", params: { id: campaign.publisher.id } })}
+            disabled={!campaign.publisher.id}
+            className="flex-row-reverse items-center gap-3"
+            accessibilityRole={campaign.publisher.id ? "button" : undefined}
+          >
+            <Avatar name={publisherName} imageUrl={campaign.publisher.avatarUrl} size={52} />
+            <View className="flex-1 items-end">
+              <View className="flex-row-reverse items-center gap-1">
+                <Text size="sm" weight="semibold">{publisherName}</Text>
+                {campaign.publisher.verified ? <VerifiedBadge /> : null}
+              </View>
+              {campaign.publisher.username ? (
+                <Text size="xs" className="text-gray-500 dark:text-gray-300">@{campaign.publisher.username}</Text>
+              ) : null}
+            </View>
+          </Pressable>
+        </Card>
+
+        <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
+          <Text variant="heading" weight="bold" rtlAlign="right">{campaign.title}</Text>
+          <View className="flex-row-reverse flex-wrap gap-2">
+            {categoryName ? (
+              <View className="flex-row-reverse items-center gap-1 rounded-full bg-primary-100 px-3 py-1 dark:bg-primary-400/15">
+                <Tag size={12} color="#4A9782" />
+                <Text size="2xs" className="text-primary-400">{categoryName}</Text>
+              </View>
+            ) : null}
+            {campaign.location ? (
+              <View className="flex-row-reverse items-center gap-1 rounded-full bg-gray-100 px-3 py-1 dark:bg-dark-350">
+                <MapPin size={12} color="#6B7280" />
+                <Text size="2xs" className="text-gray-600 dark:text-gray-200">{campaign.location}</Text>
+              </View>
+            ) : null}
+          </View>
+          {campaign.summary ? <Text size="sm" weight="medium" className="leading-7">{campaign.summary}</Text> : null}
+          {campaign.content ? <Text size="sm" className="leading-7">{campaign.content}</Text> : null}
+          <FeedMediaGrid images={campaign.images} />
+        </Card>
+
+        <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
+          <View className="flex-row-reverse items-center justify-between">
+            <Text size="xs" weight="semibold">تقدم الحملة</Text>
+            <Text size="sm" weight="bold" className="text-primary-400">{progress.toFixed(0)}%</Text>
+          </View>
+          <View className="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-dark-350">
+            <View className="h-full rounded-full bg-primary-400" style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
+          </View>
+          <Text size="sm" className="text-primary-400">
+            {campaign.raisedAmount.toLocaleString("ar-SY")} / {campaign.goalAmount.toLocaleString("ar-SY")}
+          </Text>
+          <Text size="2xs" className="text-gray-500 dark:text-gray-300">
+            {campaign.donorsCount} متبرع
+            {campaign.beneficiariesCount > 0 ? ` • ${campaign.beneficiariesCount} مستفيد` : ""}
+          </Text>
+        </Card>
+
+        {campaign.status === "active" ? (
+          <Button fullWidth onPress={() => { if (!requireAuth()) return; router.push({ pathname: "/donate/[id]", params: { id } }); }}>
+            تبرع للحملة
+          </Button>
+        ) : (
+          <Button fullWidth disabled>الحملة غير متاحة للتبرع</Button>
+        )}
+      </View>
+    </Container>
+  );
 }

@@ -20,7 +20,6 @@ import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
 import { HomePostTypeEnum } from "@/src/constants/global";
 import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
-import { openPostContact } from "@/src/features/posts/contact";
 import { useLikePost, useReportPost, useSavePost } from "@/src/features/posts/queries";
 import { useReportReasons } from "@/src/features/lookups/queries";
 import type { CreatePostType, HomePost } from "@/src/features/posts/types";
@@ -135,12 +134,6 @@ export function HomePostCard({
   const ShieldIcon = appIcons.shield;
 
   const canOpenAuthorProfile = enableAuthorNavigation && Boolean(post.publisher.id);
-  const hasCta = post.cta.type !== "none";
-  const isSubmitted = post.cta.state === "submitted";
-  const isClosed = post.cta.state === "closed";
-  const ctaLabel = isSubmitted ? "تم التقديم" : post.cta.label;
-  const ctaVariant =
-    post.cta.type === "apply" || post.cta.type === "donate" ? "primary" : "secondary";
   const isOwnPost = mode === "own";
   const isSavedPostList = mode === "saved";
   const canEditRejectedPost = isOwnPost && ownPostStatus === "unposted";
@@ -189,43 +182,12 @@ export function HomePostCard({
     };
   };
 
-  const handlePrimaryAction = async () => {
-    if (isSubmitted || isClosed) {
-      return;
-    }
-
+  const handleOpenDetails = () => {
     closeOptionsMenu();
-
-    if (post.cta.type === "donate") {
-      if (!requireAuth()) return;
-      router.push({
-        pathname: "/donate/[id]",
-        params: { id: post.cta.targetId ?? post.campaignId ?? post.id },
-      });
-      return;
-    }
-
-    if (post.cta.type === "apply") {
-      if (!requireAuth()) return;
-      router.push({
-        pathname: "/apply/[id]",
-        params: { id: post.cta.targetId ?? post.campaignId ?? post.id },
-      });
-      return;
-    }
-
-    if (post.cta.type === "details") {
-      router.push({
-        pathname: "/posts/[id]",
-        params: { id: post.id },
-      });
-      return;
-    }
-
-    if (post.cta.type === "contact") {
-      if (!requireAuth()) return;
-      await openPostContact(post);
-    }
+    router.push({
+      pathname: "/posts/[id]",
+      params: { id: post.id },
+    });
   };
 
   const handleOpenAuthorProfile = () => {
@@ -560,18 +522,10 @@ export function HomePostCard({
         </View>
       </View>
 
-      {showCta && hasCta ? (
+      {showCta ? (
         <View className="mt-3">
-          <Button
-            fullWidth
-            size="small"
-            variant={ctaVariant}
-            disabled={isSubmitted || isClosed}
-            onPress={() => {
-              void handlePrimaryAction();
-            }}
-          >
-            {isClosed ? "مغلق" : ctaLabel}
+          <Button fullWidth size="small" variant="primary" onPress={handleOpenDetails}>
+            عرض التفاصيل
           </Button>
         </View>
       ) : null}

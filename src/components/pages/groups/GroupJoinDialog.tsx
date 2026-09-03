@@ -14,7 +14,6 @@ type GroupJoinDialogProps = {
 
 export function GroupJoinDialog({ group, visible, onClose, onConfirm }: GroupJoinDialogProps) {
   const [agreed, setAgreed] = useState(false);
-  const isPrivate = group.visibility === "private";
 
   // Consent must be re-given every time — a stale `true` from a previous group
   // would let someone join without seeing these rules at all.
@@ -25,13 +24,13 @@ export function GroupJoinDialog({ group, visible, onClose, onConfirm }: GroupJoi
   return (
     <Dialog
       visible={visible}
-      title={isPrivate ? "طلب الانضمام" : "الانضمام إلى المجموعة"}
+      title="الانضمام إلى الفريق التطوعي"
       onClose={onClose}
       cancelable
       buttons={[
         { text: "إلغاء", variant: "tertiary", onPress: onClose },
         {
-          text: isPrivate ? "إرسال الطلب" : "انضمام",
+          text: "انضمام",
           variant: "primary",
           onPress: () => {
             if (!agreed) return;
@@ -44,7 +43,7 @@ export function GroupJoinDialog({ group, visible, onClose, onConfirm }: GroupJoi
       <View className="gap-3">
         <Text size="xs" rtlAlign="right" className="text-gray-600 dark:text-gray-200">
           قبل الانضمام إلى <Text weight="semibold" className="text-primary-400">{group.name}</Text>،
-          اطّلع على قوانين المجموعة:
+          اطّلع على قوانين الفريق:
         </Text>
 
         <ScrollView className="max-h-44" showsVerticalScrollIndicator={false}>
@@ -66,7 +65,7 @@ export function GroupJoinDialog({ group, visible, onClose, onConfirm }: GroupJoi
           onPress={() => setAgreed((current) => !current)}
           accessibilityRole="checkbox"
           accessibilityState={{ checked: agreed }}
-          accessibilityLabel="أوافق على قوانين المجموعة"
+          accessibilityLabel="أوافق على قوانين الفريق"
           className="flex-row-reverse items-center gap-2 py-1"
         >
           <View
@@ -77,15 +76,10 @@ export function GroupJoinDialog({ group, visible, onClose, onConfirm }: GroupJoi
             {agreed ? <Check size={14} color="#FFFFFF" strokeWidth={3} /> : null}
           </View>
           <Text size="xs" className="flex-1 text-dark-100 dark:text-light-50">
-            أوافق على قوانين المجموعة
+            أوافق على قوانين الفريق
           </Text>
         </Pressable>
 
-        {isPrivate ? (
-          <Text size="2xs" className="leading-5 text-gray-500 dark:text-gray-300">
-            هذه مجموعة خاصة — سيراجع المشرفون طلبك قبل قبوله.
-          </Text>
-        ) : null}
       </View>
     </Dialog>
   );

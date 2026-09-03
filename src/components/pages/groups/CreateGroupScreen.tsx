@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "expo-router";
-import { Lock, MapPin, Users, X } from "lucide-react-native";
+import { MapPin, Users, X } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 import Button from "@/src/components/ui/Button";
@@ -15,7 +15,6 @@ import { useCreateGroup } from "@/src/features/groups/queries";
 import {
   GROUP_CATEGORIES,
   type GroupAdminCandidate,
-  type GroupVisibility,
 } from "@/src/features/groups/types";
 import type { MediaUploadFile } from "@/src/features/media/types";
 import { AdminsPickerModal } from "./AdminsPickerModal";
@@ -23,15 +22,6 @@ import { GroupImagePicker } from "./GroupImagePicker";
 import { useCities } from "@/src/features/lookups/queries";
 import { useToast } from "@/src/providers/ToastProvider";
 import { getPrimaryColor } from "@/src/theme";
-
-const VISIBILITY_OPTIONS: {
-  value: GroupVisibility;
-  label: string;
-  hint: string;
-}[] = [
-  { value: "public", label: "عامة", hint: "يمكن لأي شخص رؤية المحتوى والانضمام فوراً." },
-  { value: "private", label: "خاصة", hint: "المحتوى للأعضاء فقط، والانضمام بموافقة المشرفين." },
-];
 
 const MIN_RULES = 1;
 
@@ -48,7 +38,6 @@ export function CreateGroupScreen() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
-  const [visibility, setVisibility] = useState<GroupVisibility>("public");
   const [rulesText, setRulesText] = useState("");
   const [purpose, setPurpose] = useState("");
   const [proposedAdmins, setProposedAdmins] = useState<GroupAdminCandidate[]>([]);
@@ -88,7 +77,6 @@ export function CreateGroupScreen() {
         description: description.trim(),
         category,
         location,
-        visibility,
         rules,
         purpose: purpose.trim(),
         proposedAdmins,
@@ -96,7 +84,7 @@ export function CreateGroupScreen() {
       },
       {
         onSuccess: () => {
-          toast.success("تم إرسال طلب إنشاء المجموعة. بانتظار موافقة الإدارة.", "تم الإرسال");
+          toast.success("تم إرسال طلب إنشاء الفريق التطوعي. بانتظار موافقة الإدارة.", "تم الإرسال");
           router.back();
         },
         onError: () => toast.error("تعذر إرسال الطلب. حاول مرة أخرى."),
@@ -111,7 +99,7 @@ export function CreateGroupScreen() {
         className="bg-light-100 dark:bg-dark-300"
         scrollViewProps={{ contentContainerStyle: { paddingBottom: 36 } }}
       >
-        <MenuPageHeader title="إنشاء مجموعة" />
+        <MenuPageHeader title="إنشاء فريق تطوعي" />
 
         <View className="gap-3 px-4">
           <Card padding="md" className="gap-1 border-gray-200 dark:border-dark-400">
@@ -178,42 +166,13 @@ export function CreateGroupScreen() {
             </Pressable>
           </Card>
 
-          <Card padding="lg" className="gap-3 border-gray-200 dark:border-dark-400">
+          <Card padding="md" className="gap-1 border-gray-200 dark:border-dark-400">
             <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-              من يمكنه الانضمام؟
+              فريق تطوعي عام
             </Text>
-            {VISIBILITY_OPTIONS.map((option) => {
-              const isSelected = visibility === option.value;
-              return (
-                <Pressable
-                  key={option.value}
-                  onPress={() => setVisibility(option.value)}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: isSelected }}
-                  accessibilityLabel={option.label}
-                  className={`gap-1 rounded-xl border p-3 ${isSelected ? "border-primary-400 bg-primary-400/5" : "border-gray-200 dark:border-dark-400"}`}
-                >
-                  <View className="flex-row-reverse items-center gap-2">
-                    <View
-                      className={`size-4 rounded-full border-2 ${isSelected ? "border-primary-400 bg-primary-400" : "border-gray-300 dark:border-dark-400"}`}
-                    />
-                    <Text
-                      size="xs"
-                      weight="semibold"
-                      className={isSelected ? "text-primary-400" : "text-dark-100 dark:text-light-50"}
-                    >
-                      {option.label}
-                    </Text>
-                    {option.value === "private" ? (
-                      <Lock size={12} color="#9CA3AF" strokeWidth={2.25} />
-                    ) : null}
-                  </View>
-                  <Text size="2xs" className="leading-5 text-gray-500 dark:text-gray-300">
-                    {option.hint}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            <Text size="2xs" className="leading-5 text-gray-500 dark:text-gray-300">
+              جميع الفرق التطوعية في جود عامة بعد موافقة الإدارة، والانضمام إليها مباشر للمستخدم المسجل بعد الموافقة على القوانين.
+            </Text>
           </Card>
 
           <Card padding="lg" className="gap-2 border-gray-200 dark:border-dark-400">

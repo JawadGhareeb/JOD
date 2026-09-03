@@ -13,7 +13,7 @@ import { getPrimaryColor } from "@/src/theme";
 const MUTED = "#9CA3AF";
 
 const KIND_LABELS: Record<GroupRecommendationKind, string> = {
-  group: "مجموعة",
+  group: "فريق تطوعي",
   opportunity: "فرصة",
   campaign: "حملة",
 };

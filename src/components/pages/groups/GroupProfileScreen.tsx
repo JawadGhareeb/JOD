@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { RefreshControl, View } from "react-native";
 import { useColorScheme } from "nativewind";
-import { Lock } from "lucide-react-native";
 import Container from "@/src/components/ui/Container";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Tabs from "@/src/components/ui/Tabs";
@@ -55,7 +54,7 @@ export function GroupProfileScreen() {
         ),
       }}
     >
-      <MenuPageHeader title="المجموعة" />
+      <MenuPageHeader title="الفريق التطوعي" />
       <GroupProfileHeader group={group} />
       <Tabs
         tabs={PROFILE_TABS}
@@ -74,12 +73,8 @@ function GroupProfileTabBody({
   readonly group: GroupProfile;
   readonly activeTab: GroupProfileTab;
 }) {
-  // Rules stay readable to everyone — people acknowledge them before joining —
-  // but the feed and its recommendations are members-only in a private group.
-  const isLocked = group.visibility === "private" && !group.isMember;
-
+  if (group.status !== "active") return <GroupAboutSection group={group} />;
   if (activeTab === "about") return <GroupAboutSection group={group} />;
-  if (isLocked) return <LockedNotice />;
   if (activeTab === "posts") return <GroupPostsTab groupId={group.id} />;
   return <GroupRecommendationsTab groupId={group.id} />;
 }
@@ -125,22 +120,6 @@ function GroupRecommendationsTab({ groupId }: { readonly groupId: string }) {
   );
 }
 
-function LockedNotice() {
-  return (
-    <View className="items-center gap-3 rounded-2xl border border-dashed border-gray-200 py-12 dark:border-dark-400">
-      <View className="size-14 items-center justify-center rounded-2xl bg-primary-100 dark:bg-dark-350">
-        <Lock size={22} color="#9CA3AF" strokeWidth={2} />
-      </View>
-      <Text size="sm" rtlAlign="center" className="text-gray-500 dark:text-gray-300">
-        هذه مجموعة خاصة
-      </Text>
-      <Text size="2xs" rtlAlign="center" className="px-8 leading-5 text-gray-500 dark:text-gray-300">
-        انضم إلى المجموعة لتتمكن من رؤية منشوراتها والمحتوى المقترح لها.
-      </Text>
-    </View>
-  );
-}
-
 function EmptyNotice({ message }: { readonly message: string }) {
   return (
     <View className="items-center py-12">
@@ -164,7 +143,7 @@ function ListSkeleton({ height }: { readonly height: number }) {
 function GroupProfileSkeleton() {
   return (
     <Container className="px-4">
-      <MenuPageHeader title="المجموعة" />
+      <MenuPageHeader title="الفريق التطوعي" />
       <View className="gap-3">
         <CardSkeleton height={280} margin={0} />
         <CardSkeleton height={140} margin={0} />
@@ -176,7 +155,7 @@ function GroupProfileSkeleton() {
 function GroupNotFound() {
   return (
     <Container className="px-4">
-      <MenuPageHeader title="المجموعة" />
+      <MenuPageHeader title="الفريق التطوعي" />
       <View className="items-center py-16">
         <Text size="sm" rtlAlign="center" className="text-gray-500 dark:text-gray-300">
           لم نعثر على هذه المجموعة. قد تكون حُذفت أو لم تعد متاحة.

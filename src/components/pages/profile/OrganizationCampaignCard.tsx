@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "expo-router";
 import { MapPin, Tag } from "lucide-react-native";
 import { Pressable, View, type GestureResponderEvent } from "react-native";
@@ -8,36 +8,15 @@ import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
-import { useAuthStatus } from "@/src/features/auth/queries";
-import { useDonations } from "@/src/features/donations/queries";
-import type { Donation } from "@/src/features/donations/types";
 import type { Campaign } from "@/src/features/posts/types";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 
 const MAX_CONTENT = 180;
 
-function donationButtonLabel(donation: Donation | undefined, campaignActive: boolean) {
-  if (!campaignActive) return "الحملة مغلقة";
-  if (!donation || donation.status === "cancelled") return "تبرع الآن";
-  if (donation.status === "pending") return "تم إرسال طلب التبرع";
-  if (donation.status === "contacting") return "جارٍ التواصل";
-  if (donation.status === "agreed") return "تم الاتفاق على التبرع";
-  return "تم التبرع";
-}
-
 export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
   const router = useRouter();
   const { requireAuth } = useAuthGuard();
-  const { isAuthenticated } = useAuthStatus();
   const [expanded, setExpanded] = useState(false);
-  const donationsQuery = useDonations(
-    { campaignId: campaign.id, perPage: 5, flow: "contributed" },
-    { enabled: isAuthenticated },
-  );
-  const donation = useMemo(
-    () => donationsQuery.data?.pages.flatMap((page) => page.items).find((item) => item.status !== "cancelled"),
-    [donationsQuery.data],
-  );
   const progress = campaign.goalAmount > 0
     ? Math.min(100, Math.max(0, (campaign.raisedAmount / campaign.goalAmount) * 100))
     : 0;
@@ -47,8 +26,6 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
     ? content
     : `${content.slice(0, MAX_CONTENT).trim()}...`;
   const categoryName = typeof campaign.category === "string" ? campaign.category : campaign.category?.name;
-  const campaignActive = campaign.status === "active";
-  const hasLockedDonation = Boolean(donation && donation.status !== "cancelled");
 
   const openPublisherProfile = (event: GestureResponderEvent) => {
     event.stopPropagation();
@@ -56,14 +33,9 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
     router.push({ pathname: "/author/[id]", params: { id: campaign.publisher.id } });
   };
 
-  const handleDonation = (event: GestureResponderEvent) => {
+  const handleDetails = (event: GestureResponderEvent) => {
     event.stopPropagation();
-    if (!campaignActive || !requireAuth()) return;
-    if (hasLockedDonation && donation) {
-      router.push({ pathname: "/donations/[id]", params: { id: donation.id } });
-      return;
-    }
-    router.push({ pathname: "/donate/[id]", params: { id: campaign.id } });
+    router.push(`/campaigns/${campaign.id}` as never);
   };
 
   return (
@@ -154,14 +126,8 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
       ) : null}
 
       <View className="mt-3">
-        <Button
-          fullWidth
-          size="small"
-          variant={hasLockedDonation ? "outline" : "primary"}
-          disabled={!campaignActive}
-          onPress={handleDonation}
-        >
-          {donationButtonLabel(donation, campaignActive)}
+        <Button fullWidth size="small" variant="primary" onPress={handleDetails}>
+          عرض التفاصيل
         </Button>
       </View>
     </Card>

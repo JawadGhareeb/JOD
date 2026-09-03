@@ -105,11 +105,11 @@ export interface Campaign {
 export interface Category { id: string; name: string; target: "post" | "campaign"; description: string | null; usageCount: number; status: string; createdAt: string | null; updatedAt: string | null }
 
 export interface CreatePostInput {
-  type: ApiPostType; title?: string | null; details?: string | null; city?: string | null; categoryId?: string | null; saveAsDraft?: boolean;
+  type: ApiPostType; title?: string | null; details?: string | null; cityId?: string | null; categoryId?: string | null; saveAsDraft?: boolean;
   audience?: ContentAudience;
 }
 export interface UpdatePostInput {
-  type?: ApiPostType; title?: string | null; details?: string | null; city?: string | null; categoryId?: string | null;
+  type?: ApiPostType; title?: string | null; details?: string | null; cityId?: string | null; categoryId?: string | null;
   audience?: ContentAudience;
 }
 export type PostInput = CreatePostInput;
@@ -117,7 +117,7 @@ export type PostInput = CreatePostInput;
 export type MyPostStatus = "draft" | "pending" | "published" | "blocked";
 export interface PostImageMedia { id: string; url: string; position: number }
 export interface MyPost {
-  id: string; ownerId: string | null; title: string | null; details: string | null; city: string | null; type: string; categoryId: string | null;
+  id: string; ownerId: string | null; title: string | null; details: string | null; cityId: string | null; city: string | null; type: string; categoryId: string | null;
   images: string[]; imageMedia: PostImageMedia[]; viewsCount: number; reactionsCount: number; commentsCount: number; sharesCount: number;
   stats: { likes: number; comments: number; shares: number }; status: MyPostStatus; blockReason: string | null;
   submittedAt: string | null; reviewedAt: string | null; blockedAt?: string | null; createdAt: string | null; updatedAt: string | null; publishedAt: string | null;

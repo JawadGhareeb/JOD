@@ -1,5 +1,6 @@
 export type MediaModel = "organization" | "campaign" | "post";
 export type MediaProp = "logo" | "images" | "videos";
+export type VideoPreviewStatus = "pending" | "processing" | "ready" | "failed" | "disabled" | null;
 
 export interface MediaUploadFile {
   uri: string;
@@ -35,6 +36,11 @@ export interface PublicMediaItem {
   modelId: string;
   prop: "videos";
   url: string;
+  streamUrl: string;
+  previewUrl: string | null;
+  previewStatus: VideoPreviewStatus;
+  previewMimeType: string | null;
+  previewSize: number | null;
   originalName: string;
   description: string | null;
   mimeType: string | null;

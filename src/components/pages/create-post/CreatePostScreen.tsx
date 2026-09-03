@@ -67,7 +67,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const [postType, setPostType] = useState<CreatePostType>("volunteer");
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
-  const [city, setCity] = useState("");
+  const [cityId, setCityId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [audience, setAudience] = useState<ContentAudience>("general");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
@@ -95,13 +95,19 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     if (isCreateType(post.type)) setPostType(API_TYPE_TO_POST_TYPE[post.type]);
     setTitle(post.title ?? "");
     setDetails(post.details ?? "");
-    setCity(post.city ?? "");
+    setCityId(post.cityId ?? "");
     setCategoryId(post.categoryId ?? "");
     setAudience(post.audience ?? "general");
     setSelectedImages(post.images ?? []);
     setActivePostId(post.id);
     setInitializedPostId(post.id);
   }, [editMode, initializedPostId, myPostQuery.data]);
+
+  useEffect(() => {
+    if (!editMode || cityId || !myPostQuery.data?.city || !citiesQuery.data?.length) return;
+    const match = citiesQuery.data.find((item) => item.name === myPostQuery.data?.city);
+    if (match) setCityId(match.id);
+  }, [cityId, citiesQuery.data, editMode, myPostQuery.data?.city]);
 
   const postTypeOptions = useMemo(
     () => (postTypesQuery.data ?? [])
@@ -110,7 +116,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     [postTypesQuery.data],
   );
   const cityOptions: SelectionOption[] = useMemo(
-    () => (citiesQuery.data ?? []).map((item) => ({ label: item.name, value: item.name })),
+    () => (citiesQuery.data ?? []).map((item) => ({ label: item.name, value: item.id })),
     [citiesQuery.data],
   );
   const categoryOptions: SelectionOption[] = useMemo(
@@ -119,8 +125,9 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   );
 
   const typeHint = postTypeOptions.find((item) => item.key === postType)?.hint;
+  const selectedCityLabel = cityOptions.find((item) => item.value === cityId)?.label ?? "";
   const selectedCategoryLabel = categoryOptions.find((item) => item.value === categoryId)?.label ?? "";
-  const canPublish = title.trim().length >= 4 && details.trim().length >= 10 && city.trim().length >= 2 && categoryId.length > 0;
+  const canPublish = title.trim().length >= 4 && details.trim().length >= 10 && cityId.length > 0 && categoryId.length > 0;
   const isBusy = isSavingDraft || isPublishing || uploadImageMutation.isPending || reorderImageMutation.isPending || deleteImageMutation.isPending;
   const pageTitle = editMode ? "تعديل المنشور" : "إنشاء منشور";
 
@@ -128,7 +135,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     type: POST_TYPE_TO_API_TYPE[postType],
     title: title.trim() || null,
     details: details.trim() || null,
-    city: city.trim() || null,
+    cityId: cityId || null,
     categoryId: categoryId || null,
     audience,
     saveAsDraft,
@@ -137,7 +144,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     type: POST_TYPE_TO_API_TYPE[postType],
     title: title.trim() || null,
     details: details.trim() || null,
-    city: city.trim() || null,
+    cityId: cityId || null,
     categoryId: categoryId || null,
     audience,
   });
@@ -350,7 +357,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">تفاصيل المنشور</Text>
           <Input fullWidth showStatusIcon={false} rightIcon={<TitleIcon size={16} strokeWidth={2.25} />} value={title} onChangeText={setTitle} placeholder="عنوان المنشور" placeholderTextColor="#9CA3AF" />
 
-          <Pressable onPress={() => setIsCityModalOpen(true)}><View pointerEvents="none"><Input fullWidth editable={false} showStatusIcon={false} rightIcon={<MapPin size={16} strokeWidth={2.25} />} value={city} placeholder="اختر المحافظة *" placeholderTextColor="#9CA3AF" /></View></Pressable>
+          <Pressable onPress={() => setIsCityModalOpen(true)}><View pointerEvents="none"><Input fullWidth editable={false} showStatusIcon={false} rightIcon={<MapPin size={16} strokeWidth={2.25} />} value={selectedCityLabel} placeholder="اختر المحافظة *" placeholderTextColor="#9CA3AF" /></View></Pressable>
 
           <Pressable onPress={() => setIsCategoryModalOpen(true)}><View pointerEvents="none"><Input fullWidth editable={false} showStatusIcon={false} value={selectedCategoryLabel} placeholder="اختر التصنيف *" placeholderTextColor="#9CA3AF" /></View></Pressable>
 
@@ -391,7 +398,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         </View>
       </Animated.ScrollView>
 
-      <SelectionModal visible={isCityModalOpen} title="اختر المحافظة السورية" options={cityOptions} selectedValue={city} onSelect={(value) => { setCity(value); setIsCityModalOpen(false); }} onClose={() => setIsCityModalOpen(false)} />
+      <SelectionModal visible={isCityModalOpen} title="اختر المحافظة السورية" options={cityOptions} selectedValue={cityId} onSelect={(value) => { setCityId(value); setIsCityModalOpen(false); }} onClose={() => setIsCityModalOpen(false)} />
       <SelectionModal visible={isCategoryModalOpen} title="تصنيف المنشور" options={categoryOptions} selectedValue={categoryId} onSelect={(value) => { setCategoryId(value); setIsCategoryModalOpen(false); }} onClose={() => setIsCategoryModalOpen(false)} />
     </View>
   );
