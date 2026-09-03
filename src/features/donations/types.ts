@@ -2,6 +2,20 @@ export type DonationStatus = "pending" | "contacting" | "agreed" | "completed" |
 export type ContactMethod = "phone" | "whatsapp" | "email" | "other";
 export type PaymentMethod = "bank_transfer" | "cash" | "other";
 
+export interface PublicCampaignDonor {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  amount: number;
+  donatedAt: string | null;
+  isAnonymous: boolean;
+}
+
+export interface CampaignDonorsParams {
+  page?: number;
+  perPage?: number;
+}
+
 export interface DonationInput {
   amount: number;
   contactMethod: ContactMethod;

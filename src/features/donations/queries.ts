@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { donationsApi } from "./api";
 import { donationKeys } from "./query-keys";
-import type { DonationInput, DonationParams } from "./types";
+import type { CampaignDonorsParams, DonationInput, DonationParams } from "./types";
 
 export function useDonations(
   params: Omit<DonationParams, "page"> = {},
@@ -13,6 +13,19 @@ export function useDonations(
     initialPageParam: 1,
     getNextPageParam: (last) => last.meta.currentPage < last.meta.lastPage ? last.meta.currentPage + 1 : undefined,
     enabled: options.enabled ?? true,
+  });
+}
+
+export function useCampaignDonors(
+  campaignId?: string,
+  params: Omit<CampaignDonorsParams, "page"> = {},
+) {
+  return useInfiniteQuery({
+    queryKey: donationKeys.campaignDonors(campaignId ?? "", params),
+    queryFn: ({ pageParam }) => donationsApi.campaignDonors(campaignId!, { ...params, page: pageParam, perPage: params.perPage ?? 10 }),
+    initialPageParam: 1,
+    getNextPageParam: (last) => last.meta.currentPage < last.meta.lastPage ? last.meta.currentPage + 1 : undefined,
+    enabled: Boolean(campaignId),
   });
 }
 

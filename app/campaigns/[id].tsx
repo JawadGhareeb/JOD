@@ -8,6 +8,7 @@ import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
 import Text from "@/src/components/ui/Text";
+import { useCampaignDonors } from "@/src/features/donations/queries";
 import { useCampaign } from "@/src/features/posts/queries";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 
@@ -18,6 +19,8 @@ export default function CampaignDetailsPage() {
   const id = Array.isArray(raw) ? raw[0] : raw;
   const query = useCampaign(id);
   const campaign = query.data;
+  const donorsQuery = useCampaignDonors(id, { perPage: 10 });
+  const donors = donorsQuery.data?.pages.flatMap((page) => page.items) ?? [];
   if (query.isLoading) return <Container className="bg-light-100 px-4 pt-6 dark:bg-dark-300"><Text>جارِ تحميل الحملة...</Text></Container>;
   if (!campaign || !id) return <Container className="bg-light-100 px-4 pt-6 dark:bg-dark-300"><Text>تعذر العثور على الحملة.</Text></Container>;
   const progress = campaign.goalAmount > 0 ? Math.min(100, (campaign.raisedAmount / campaign.goalAmount) * 100) : 0;
@@ -84,6 +87,56 @@ export default function CampaignDetailsPage() {
             {campaign.donorsCount} متبرع
             {campaign.beneficiariesCount > 0 ? ` • ${campaign.beneficiariesCount} مستفيد` : ""}
           </Text>
+        </Card>
+
+        <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
+          <View className="flex-row-reverse items-center justify-between">
+            <Text size="sm" weight="semibold">المتبرعون بالحملة</Text>
+            <Text size="2xs" className="text-gray-500 dark:text-gray-300">{campaign.donorsCount} متبرع</Text>
+          </View>
+
+          {donorsQuery.isLoading ? (
+            <Text size="xs" className="text-gray-500 dark:text-gray-300">جارِ تحميل المتبرعين...</Text>
+          ) : donorsQuery.isError ? (
+            <View className="gap-2">
+              <Text size="xs" className="text-error-300">تعذر تحميل المتبرعين.</Text>
+              <Button size="small" variant="tertiary" onPress={() => void donorsQuery.refetch()}>إعادة المحاولة</Button>
+            </View>
+          ) : donors.length ? (
+            <View className="gap-2">
+              {donors.map((donor) => (
+                <View key={donor.id} className="flex-row-reverse items-center gap-3 rounded-xl bg-gray-50 px-3 py-3 dark:bg-dark-350">
+                  <Avatar name={donor.name} imageUrl={donor.isAnonymous ? null : donor.avatarUrl} size={40} />
+                  <View className="flex-1 items-end">
+                    <View className="flex-row-reverse items-center gap-2">
+                      <Text size="xs" weight="semibold">{donor.isAnonymous ? "مجهول" : donor.name}</Text>
+                      {donor.isAnonymous ? (
+                        <View className="rounded-full bg-gray-200 px-2 py-0.5 dark:bg-dark-400">
+                          <Text size="2xs" className="text-gray-500 dark:text-gray-300">تبرع مجهول</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
+                      {donor.amount.toLocaleString("ar-SY")} • {donor.donatedAt ? new Date(donor.donatedAt).toLocaleDateString("ar") : "-"}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+              {donorsQuery.hasNextPage ? (
+                <Button
+                  size="small"
+                  variant="tertiary"
+                  loading={donorsQuery.isFetchingNextPage}
+                  disabled={donorsQuery.isFetchingNextPage}
+                  onPress={() => void donorsQuery.fetchNextPage()}
+                >
+                  عرض المزيد من المتبرعين
+                </Button>
+              ) : null}
+            </View>
+          ) : (
+            <Text size="xs" className="text-gray-500 dark:text-gray-300">لا توجد تبرعات مكتملة بعد.</Text>
+          )}
         </Card>
 
         {campaign.status === "active" ? (
