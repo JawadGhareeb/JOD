@@ -1,322 +1,521 @@
-# JOD — متطلبات الباك إند لميزة الفرق التطوعية والمجموعات
+# JOD — متطلبات الباك إند لميزة الفرق التطوعية
 
-> هذا الملف يشرح المطلوب من الباك إند فقط. لا يتضمن أي تعديل فعلي على كود الباك إند.
+> مصدر الحقيقة للمنتج: يوجد نوع واحد فقط وهو **الفريق التطوعي العام**. اسم الكيان التقني يمكن أن يبقى `groups`.
 
-## 1. الكيانات الأساسية
+## 1. مبادئ العقد النهائي
 
-### Group / Team
+لا يجب أن يحتوي عقد الفريق على:
 
-حقول مقترحة:
+- `type` أو `kind` لاختيار `group | volunteer_team`.
+- `visibility`.
+- `private`.
+- `joinPolicy`.
+- `invite_only`.
+- `group_join_requests`.
 
-- `id`
-- `ownerId`
-- `type`: `group | volunteer_team`
-- `name`
-- `description`
-- `categoryId` أو category مناسب لبنية المشروع الحالية
-- `city` / `location`
-- `visibility`: `public | private`
-- `joinPolicy`: `open | approval | invite_only`
-- `status`: `active | suspended | archived`
-- `membersCount`
-- `postsCount`
-- `coverImage`
-- `avatar/logo`
-- `rules`
-- `createdAt`
-- `updatedAt`
+كل فريق يتم اعتماده من إدارة JOD يصبح عامًا وقابلًا للاكتشاف.
 
-يفضّل عدم تخزين العدادات كمصدر وحيد للحقيقة إلا إذا كان هناك آلية موثوقة لمزامنتها.
+## 2. الكيانات الأساسية
 
-### GroupMember
+### groups
 
-- `id`
-- `groupId`
-- `userId`
-- `role`: `owner | admin | moderator | member`
-- `status`: `active | removed | banned`
-- `joinedAt`
-- `createdAt`
-- `updatedAt`
+الحقول الأساسية:
 
-ويجب وجود Unique Constraint يمنع تكرار نفس المستخدم داخل نفس المجموعة.
+```text
+id
+owner_id
+organization_id nullable
+name
+description
+category
+location
+status: pending|active|rejected|suspended|archived
+purpose nullable
+rules json nullable
+proposed_admin_ids json nullable
+rejection_reason nullable
+suspension_reason nullable
+submitted_at nullable
+reviewed_at nullable
+reviewed_by nullable
+created_at
+updated_at
+deleted_at nullable
+```
 
-### GroupJoinRequest
+ملاحظات:
 
-- `id`
-- `groupId`
-- `userId`
-- `status`: `pending | approved | rejected | cancelled`
-- `message` اختياري
-- `reviewedBy`
-- `reviewedAt`
-- `createdAt`
-- `updatedAt`
+- لا يوجد `kind`.
+- لا يوجد `visibility`.
+- `category` حاليًا يمكن أن تكون قيمة نصية وفق البنية الحالية؛ إذا تم توحيدها لاحقًا مع lookup IDs يجب تحديث العقد على الطرفين معًا.
+- يمكن إعادة استخدام Media system للـavatar والـcover.
 
-ويجب منع وجود أكثر من طلب pending لنفس المستخدم والمجموعة.
+### group_members
 
-### GroupInvitation — مرحلة لاحقة أو ضمن MVP إذا مطلوب
+```text
+id
+group_id
+user_id
+role: owner|admin|moderator|member
+status: active|left|removed
+joined_at
+left_at nullable
+created_at
+updated_at
+```
 
-- `id`
-- `groupId`
-- `invitedUserId` أو email/phone حسب سياسة النظام
-- `invitedBy`
-- `status`: `pending | accepted | declined | expired`
-- `expiresAt`
+يجب وجود Unique Constraint على `(group_id, user_id)`.
 
-### GroupPost
+### group_posts
 
-إذا كان نظام المنشورات الحالي قابلًا للتوسعة، يفضّل إعادة استخدامه عبر relation إلى `groupId` بدل بناء نظام منشورات منفصل بالكامل. إن لم يكن ذلك مناسبًا، نحتاج كيانًا مستقلًا للمحتوى داخل المجموعة.
+```text
+id
+group_id
+author_id
+body
+is_pinned
+likes_count
+comments_count
+created_at
+updated_at
+```
 
-### VolunteerTask — للفرق التطوعية
+### group_comments
 
-يمكن إضافته بمرحلة ثانية:
+```text
+id
+post_id
+author_id
+parent_id nullable
+body
+likes_count
+created_at
+updated_at
+```
 
-- `id`
-- `groupId`
-- `createdBy`
-- `title`
-- `description`
-- `location`
-- `startsAt`
-- `endsAt`
-- `requiredVolunteers`
-- `status`: `open | full | completed | cancelled`
-- `createdAt`
-- `updatedAt`
+الردود مستوى واحد فقط؛ إذا تم الرد على Reply، يربط الباك إند الرد بالـroot comment.
 
-ويحتاج relation لتسجيل الأعضاء في المهمة وحالة كل تسجيل.
+### group_post_likes / group_comment_likes
 
-## 2. APIs المطلوبة للموبايل
+Unique Constraint على المستخدم والمورد لمنع الإعجاب المكرر.
 
-أسماء الـroutes التالية مقترحة وليست إلزامية؛ يجب مطابقتها مع naming conventions الموجودة في باك إند JOD.
+## 3. إنشاء الفريق ومراجعة الإدارة
 
-### الاستكشاف والقراءة العامة
+### إنشاء الطلب
 
-- `GET /api/mobile/groups`
-- `GET /api/mobile/groups/{groupId}`
-- فلاتر: `type`, `category`, `city`, `search`, `page`, `perPage`
+```http
+POST /api/mobile/groups
+```
 
-هذه endpoints يجب أن تسمح بالقراءة العامة للمجموعات المتاحة للعرض بدون تسجيل دخول، مع إخفاء المحتوى الخاص إذا كانت المجموعة private.
-
-### مجموعاتي
-
-- `GET /api/mobile/groups/mine`
-
-تحتاج Authentication.
-
-### إنشاء وتعديل وحذف
-
-- `POST /api/mobile/groups`
-- `PUT/PATCH /api/mobile/groups/{groupId}`
-- `DELETE /api/mobile/groups/{groupId}` أو archive حسب سياسة المشروع
-
-الصلاحيات:
-
-- الإنشاء: مستخدم مسجل فقط.
-- التعديل: Owner/Admin حسب permission model.
-- الحذف/الأرشفة: Owner فقط أو حسب قواعد المشروع.
-
-### الانضمام والمغادرة
-
-- `POST /api/mobile/groups/{groupId}/join`
-- `POST /api/mobile/groups/{groupId}/join-requests`
-- `DELETE /api/mobile/groups/{groupId}/membership`
-
-السلوك يعتمد على `joinPolicy`:
-
-- `open`: ينضم المستخدم مباشرة.
-- `approval`: ينشأ طلب pending.
-- `invite_only`: لا يسمح بطلب عادي إلا إذا قررت قواعد المنتج خلاف ذلك.
-
-### طلبات الانضمام للإدارة
-
-- `GET /api/mobile/groups/{groupId}/join-requests`
-- `POST /api/mobile/groups/{groupId}/join-requests/{requestId}/approve`
-- `POST /api/mobile/groups/{groupId}/join-requests/{requestId}/reject`
-
-يفضّل أن تكون عمليات approve/reject idempotent قدر الإمكان لتجنب مشاكل الضغط المكرر أو retries.
-
-### الأعضاء والصلاحيات
-
-- `GET /api/mobile/groups/{groupId}/members`
-- `PATCH /api/mobile/groups/{groupId}/members/{userId}/role`
-- `DELETE /api/mobile/groups/{groupId}/members/{userId}`
-- endpoint للحظر/فك الحظر إذا كانت الميزة مطلوبة.
-
-قواعد مهمة:
-
-- لا يمكن إزالة الـOwner قبل نقل الملكية.
-- لا يمكن تخفيض صلاحية آخر Owner بدون تعيين Owner بديل.
-- Admin لا يجب أن يستطيع إعطاء صلاحية أعلى من صلاحياته إذا كان permission model يمنع ذلك.
-
-## 3. Response مطلوب لتطبيق الموبايل
-
-يفضّل أن يرجع تفاصيل المجموعة معلومات كافية لبناء الشاشة بدون استدعاءات كثيرة، مثل:
+Body:
 
 ```json
 {
-  "id": "...",
-  "type": "volunteer_team",
-  "name": "...",
+  "name": "فريق جود التطوعي",
   "description": "...",
-  "visibility": "public",
-  "joinPolicy": "approval",
-  "membersCount": 25,
-  "postsCount": 12,
-  "coverImage": null,
-  "avatar": null,
-  "owner": {
-    "id": "...",
-    "name": "...",
-    "avatarUrl": "..."
-  },
-  "membership": {
-    "isMember": false,
-    "role": null,
-    "joinRequestStatus": "pending",
-    "canJoin": false,
-    "canPost": false,
-    "canManageMembers": false,
-    "canEdit": false
-  }
+  "category": "تعليم",
+  "location": "دمشق",
+  "rules": ["احترام الأعضاء"],
+  "purpose": "تنظيم مبادرات تعليمية",
+  "proposedAdminIds": ["user-1"]
 }
 ```
 
-الفكرة الأساسية أن الباك إند يرجع permissions/status واضحة بدل جعل الفرونت يحاول استنتاجها من عدة حقول.
+السلوك:
 
-## 4. Authentication وAuthorization
+1. Authentication إلزامي.
+2. إنشاء `groups` بحالة `pending`.
+3. إضافة المنشئ كـ`owner` فعال.
+4. حفظ المشرفين المقترحين مؤقتًا.
+5. الفريق لا يظهر في Public Discovery قبل الموافقة.
+6. إرسال إشعار للمنشئ بأن الطلب قيد المراجعة.
+7. إرسال إشعار للإدارة بوجود طلب جديد.
 
-القراءة العامة يجب أن تعمل للـguest عندما تكون المجموعة public.
+### البحث عن مشرفين مقترحين
 
-يجب طلب Authentication فقط عند الإجراءات، مثل:
+```http
+GET /api/mobile/groups/admin-candidates?search=
+```
 
-- إنشاء مجموعة.
-- الانضمام.
-- طلب انضمام.
-- النشر.
-- التعليق.
-- تغيير دور عضو.
-- قبول/رفض الطلبات.
-- المغادرة.
-- التسجيل في مهمة.
+يعيد مستخدمين فعالين يمكن اختيارهم عند الإنشاء، مع استبعاد المستخدم الحالي.
 
-الباك إند يجب ألا يعتمد على إخفاء الأزرار في الفرونت فقط؛ كل endpoint كتابة يجب أن يفحص الصلاحيات بنفسه.
+### مراجعة Admin Dashboard
 
-## 5. الإشعارات
+تحت `/api/v1/admin`:
 
-مطلوب Events/Notifications لـ:
+```http
+GET    /groups?status=pending
+GET    /groups/{group}
+POST   /groups/{group}/approve
+POST   /groups/{group}/reject
+DELETE /groups/{group}
+```
 
-- `group_join_request_created`
-- `group_join_request_approved`
-- `group_join_request_rejected`
-- `group_member_invited`
-- `group_member_role_changed`
-- `group_member_removed`
-- `group_announcement_created`
-- `volunteer_task_created`
-- `volunteer_task_updated`
-- `volunteer_task_cancelled`
+Approve:
 
-الأسماء الفعلية يجب أن تتبع نظام الأحداث الموجود في JOD، لكن المعاني السابقة مطلوبة.
+- مسموح للحالات القابلة للمراجعة فقط.
+- يغير الحالة إلى `active`.
+- يحفظ `reviewed_at` و`reviewed_by`.
+- يفعّل المشرفين المقترحين حسب السياسة.
+- يرسل إشعارًا للمالك.
 
-## 6. الحماية من الحالات المتعارضة
+Reject:
 
-يجب معالجة:
+```json
+{ "rejectionReason": "..." }
+```
 
-- المستخدم عضو بالفعل ثم يضغط Join مرة ثانية.
-- وجود طلب pending مسبقًا.
-- المستخدم يحاول قبول طلب غير موجود أو تم قبوله مسبقًا.
-- المستخدم المحظور يحاول الانضمام من جديد.
-- حذف مستخدم من المجموعة بينما لديه طلبات/مهام مرتبطة.
-- مغادرة Owner للمجموعة.
-- تعديل مجموعة archived/suspended.
-- وصول مستخدم لمحتوى private بدون عضوية.
+- يغير الحالة إلى `rejected`.
+- يحفظ السبب والمراجع والتاريخ.
+- يرسل إشعارًا للمالك.
 
-يفضّل Response codes واضحة مثل `already_member`, `join_request_pending`, `group_private`, `permission_denied` ضمن نمط الأخطاء الموجود في المشروع.
+## 4. القراءة العامة والاكتشاف
 
-## 7. Pagination والبحث
+Public endpoints:
 
-يجب دعم pagination في:
+```http
+GET /api/mobile/groups
+GET /api/mobile/groups/suggested
+GET /api/mobile/groups/{group}
+GET /api/mobile/groups/{group}/members
+GET /api/mobile/groups/{group}/posts
+GET /api/mobile/groups/{group}/recommendations
+GET /api/mobile/groups/posts/{post}/comments
+```
 
-- قائمة المجموعات.
-- الأعضاء.
-- طلبات الانضمام.
-- منشورات المجموعة.
-- المهام.
+قائمة الفرق العامة تعرض `active` فقط.
 
-ويُفضّل دعم البحث بالاسم والوصف، مع فلاتر النوع والتصنيف والمدينة.
+الفلاتر الأساسية:
 
-## 8. Media
+```text
+search
+category
+location
+page
+perPage
+```
 
-إذا استُخدم نظام الميديا الحالي في JOD، يجب إعادة استخدام نفس آلية رفع وربط الصور بدل إنشاء طريقة مختلفة للمجموعات.
+لا يوجد فلتر `kind` أو `visibility`.
 
-مطلوب على الأقل:
+## 5. فرقي
 
-- avatar/logo.
-- cover image.
-- media ضمن المنشورات إذا كان post system يدعم ذلك.
+Authentication:
 
-## 9. Soft Delete / Archive
+```http
+GET /api/mobile/me/groups
+```
 
-يفضّل أرشفة المجموعة بدل حذفها نهائيًا إذا كان ذلك متوافقًا مع سياسات المشروع، حتى لا تنكسر العلاقات مع المنشورات والإشعارات والمهام.
+يجب أن يعيد:
 
-## 10. Audit وModeration
+- الفرق التي يملكها المستخدم.
+- الفرق التي هو عضو فعال فيها.
+- فريق المالك حتى لو كان `pending` أو `rejected`.
 
-يُنصح بتسجيل عمليات الإدارة المهمة:
+## 6. الانضمام والمغادرة
 
-- تغيير اسم/نوع/خصوصية المجموعة.
-- تغيير الأدوار.
-- حذف/حظر عضو.
-- قبول/رفض الطلبات.
-- أرشفة المجموعة.
+```http
+POST   /api/mobile/groups/{group}/join
+DELETE /api/mobile/groups/{group}/join
+```
 
-وذلك لتسهيل المراجعة من لوحة الأدمن لاحقًا.
+القواعد:
 
-## 11. متطلبات لوحة الأدمن مستقبلًا
+- الانضمام يحتاج Authentication.
+- لا يسمح بالانضمام إلا لفريق `active`.
+- الانضمام مباشر، ولا ينشئ Join Request.
+- الضغط المتكرر لا يجب أن ينشئ عضوية مكررة.
+- المالك عضو فعال تلقائيًا.
+- لا يسمح للمالك بمغادرة فريقه عبر Leave العادي.
 
-حتى لو لم تُنفذ الآن، يجب أن يسمح تصميم الباك إند لاحقًا بـ:
+## 7. الأعضاء والأدوار
 
-- عرض جميع المجموعات والفرق.
-- إيقاف/تعليق مجموعة.
-- مراجعة البلاغات.
-- عرض المالك والمشرفين.
-- عرض عدد الأعضاء والنشاط.
-- التعامل مع المجموعات المخالفة.
+الأدوار:
 
-## 12. ترتيب تنفيذ الباك إند المقترح
+```text
+owner | admin | moderator | member
+```
 
-### المرحلة الأولى
+قراءة الأعضاء:
 
-1. Group/Team entity.
-2. Memberships + roles.
-3. Create/update/details/list.
-4. Join/leave.
-5. Join requests approve/reject.
-6. Public vs private access rules.
-7. Mobile-friendly permissions response.
-8. Notifications الأساسية.
+```http
+GET /api/mobile/groups/{group}/members
+```
 
-### المرحلة الثانية
+إدارة الأعضاء والأدوار يمكن إضافتها/إكمالها ضمن المرحلة التالية:
 
-1. Invitations.
-2. Moderation/ban/reporting.
-3. Volunteer tasks.
-4. ربط الفرق بالحملات أو احتياجات التطوع.
-5. Admin dashboard APIs.
+```http
+PATCH  /api/mobile/groups/{group}/members/{userId}/role
+DELETE /api/mobile/groups/{group}/members/{userId}
+```
 
-## 13. Contract مطلوب من الباك إند قبل بدء ربط الفرونت
+قواعد مهمة:
 
-على فريق الباك إند تسليم الفرونت:
+- لا يمكن إزالة الـOwner قبل نقل الملكية أو تنفيذ سياسة بديلة واضحة.
+- لا يمكن إعطاء صلاحيات أعلى من صلاحية المنفذ إذا كانت السياسة تمنع ذلك.
+- كل التحقق Server-side.
 
-- أسماء الـendpoints النهائية.
-- DTOs/JSON response لكل endpoint.
-- حقول pagination.
-- حالات `joinPolicy` و`membership`.
-- قائمة error codes.
-- قواعد الصلاحيات لكل role.
-- شكل media URLs.
-- notification event types.
-- هل المجموعة العامة قابلة للعرض بالكامل للـguest أم يتم إخفاء جزء من المحتوى.
+## 8. منشورات الفريق
 
-بعد تثبيت هذا العقد يمكن ربط تطبيق JOD بدون استنتاجات أو منطق متكرر على الفرونت.
+### القراءة
+
+```http
+GET /api/mobile/groups/{group}/posts
+```
+
+متاحة للعامة عندما يكون الفريق `active`.
+
+### الإنشاء
+
+```http
+POST /api/mobile/groups/{group}/posts
+```
+
+يتطلب:
+
+- Authentication.
+- عضوية فعالة.
+- فريق `active`.
+
+### إعجاب المنشور
+
+```http
+POST   /api/mobile/groups/posts/{post}/like
+DELETE /api/mobile/groups/posts/{post}/like
+```
+
+يجب أن يكون Idempotent قدر الإمكان وأن يعيد حالة الإعجاب والعداد النهائي.
+
+## 9. التعليقات
+
+```http
+GET    /api/mobile/groups/posts/{post}/comments
+POST   /api/mobile/groups/posts/{post}/comments
+POST   /api/mobile/groups/comments/{comment}/like
+DELETE /api/mobile/groups/comments/{comment}/like
+```
+
+إنشاء تعليق:
+
+```json
+{ "parentId": null, "body": "تعليق" }
+```
+
+Reply:
+
+```json
+{ "parentId": "root-comment-id", "body": "رد" }
+```
+
+القراءة عامة لفريق `active`، بينما الإنشاء والإعجاب يحتاجان Authentication + Membership.
+
+## 10. التوصيات
+
+```http
+GET /api/mobile/groups/{group}/recommendations
+```
+
+يمكن استخدام:
+
+- `group.category`.
+- `group.location`.
+
+لإعادة حملات أو فرص أو فرق مشابهة. إذا تمت مقارنة الحملات بالتصنيف، يجب استخدام علاقة Category الفعلية وعدم افتراض وجود عمود نصي غير موجود.
+
+## 11. Response contract للموبايل
+
+### List item
+
+```text
+id
+name
+description
+category
+location
+membersCount
+postsThisWeek
+postsCount
+isMember
+myRole
+imageUrl
+coverImageUrl
+organizationName
+isVerifiedOrganization
+rules
+status
+rejectionReason
+createdAt
+createdAtLabel
+```
+
+### Detail يضيف
+
+```text
+owner
+admins
+membersPreview
+purpose
+```
+
+لا يعاد `kind` أو `visibility`.
+
+## 12. Authentication / Authorization
+
+الضيف يستطيع:
+
+- اكتشاف الفرق `active`.
+- فتح التفاصيل.
+- مشاهدة الأعضاء والمنشورات والتعليقات والتوصيات العامة.
+
+Authentication مطلوب لـ:
+
+- إنشاء فريق.
+- عرض `me/groups`.
+- الانضمام والمغادرة.
+- إنشاء منشور.
+- تعليق أو إعجاب.
+- إدارة الأعضاء والأدوار.
+
+لا يعتمد الباك إند على إخفاء الأزرار في الفرونت.
+
+## 13. الإشعارات
+
+الأحداث الأساسية:
+
+```text
+group.submitted
+group.approved
+group.rejected
+group.member_role_changed
+group.member_removed
+```
+
+عند الإنشاء:
+
+- Notify Admins: طلب فريق جديد.
+- Notify Creator: الطلب قيد المراجعة.
+
+وعند approve/reject يصل قرار الإدارة لصاحب الفريق.
+
+## 14. Media
+
+استخدام Media infrastructure الحالية في JOD.
+
+مطلوب:
+
+- avatar/image.
+- cover.
+- لاحقًا media لمنشورات الفريق عند الحاجة.
+
+## 15. الحماية من الحالات المتعارضة
+
+معالجة:
+
+- مستخدم يحاول Join وهو عضو أصلًا.
+- عضو يحاول Leave مرتين.
+- Owner يحاول Leave.
+- Join لفريق `pending/rejected/suspended/archived`.
+- إنشاء Post لفريق غير `active`.
+- تفاعل مستخدم غير عضو مع Post/Comment.
+- Approve مكرر على فريق `active`.
+- Reject على حالة غير قابلة للرفض.
+- الوصول العام إلى `pending/rejected` من مستخدم ليس المالك.
+
+## 16. Pagination والأداء
+
+Pagination مطلوبة في:
+
+- Discovery.
+- Mine/Suggested.
+- Members.
+- Posts.
+- Comments.
+
+العدادات مثل `membersCount`, `postsCount`, `likesCount`, `commentsCount` تأتي من الباك إند ولا يعاد حسابها في الواجهة.
+
+## 17. Admin Dashboard
+
+لوحة الإدارة تدعم:
+
+- Pending review.
+- Active teams.
+- Rejected teams.
+- البحث والتصفية بالتصنيف والحالة.
+- فتح التفاصيل.
+- Approve.
+- Reject مع reason.
+- Delete/soft delete حسب السياسة.
+
+لا يوجد فلتر Privacy أو Type.
+
+## 18. المهام التطوعية — مرحلة لاحقة
+
+المهام تضاف فوق نفس `groups` ولا تستخدم `kind=volunteer_team`.
+
+### volunteer_tasks
+
+```text
+id
+group_id
+created_by
+title
+description
+location
+starts_at
+ends_at
+required_volunteers
+capacity nullable
+status: open|full|completed|cancelled
+campaign_id nullable
+post_id nullable
+created_at
+updated_at
+```
+
+### volunteer_task_assignments
+
+```text
+task_id
+user_id
+status: requested|accepted|declined|completed|cancelled
+checked_in_at nullable
+completed_at nullable
+```
+
+يمكن لاحقًا إضافة `skills_required` أو جداول مهارات منفصلة.
+
+## 19. ترتيب التنفيذ المعتمد
+
+### المرحلة الأساسية
+
+1. `groups` + memberships.
+2. طلب إنشاء `pending`.
+3. Admin approve/reject.
+4. Discovery / Suggested / Mine / Detail.
+5. Direct Join / Leave.
+6. Members read.
+7. Notifications.
+8. Media.
+
+### الطبقة الاجتماعية
+
+1. Group posts.
+2. Comments + one-level replies.
+3. Post likes.
+4. Comment likes.
+5. Recommendations.
+
+### الإدارة المتقدمة
+
+1. Member role management.
+2. Remove member.
+3. Edit team profile/media.
+4. Reports / suspension / audit.
+
+### التشغيل التطوعي
+
+1. Tasks.
+2. Shifts/assignments.
+3. Capacity/skills.
+4. Campaign/post linking.
+
+> مصطلحات Core/Social/Operations هي طبقات تنفيذ فقط، وليست أنواعًا مختلفة من الفرق.
