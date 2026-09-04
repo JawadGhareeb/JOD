@@ -93,6 +93,7 @@ export default function RootLayout() {
                     <Stack.Screen name="following/index" />
                     <Stack.Screen name="about" />
                     <Stack.Screen name="account-settings" />
+                    <Stack.Screen name="personalization" />
                     <Stack.Screen name="change-password" />
                     <Stack.Screen name="edit-information" />
                     <Stack.Screen name="help-center" />
