@@ -8,6 +8,13 @@ export interface UpdateProfileInput {
 
 export interface ChangePasswordInput {
   currentPassword: string;
+  code: string;
   password: string;
   password_confirmation: string;
+}
+
+export interface PasswordChangeVerificationPayload {
+  verificationRequired: true;
+  verificationCodeSent: boolean;
+  expiresIn: number;
 }

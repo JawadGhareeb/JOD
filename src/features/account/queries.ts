@@ -7,15 +7,14 @@ export function useUpdateProfile() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: UpdateProfileInput) => accountApi.updateProfile(input),
-    onSuccess: () => {
-      // The updated name/email/phone live on the cached session's user object.
-      queryClient.invalidateQueries({ queryKey: authKeys.session() });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.session() }),
   });
 }
 
+export function useRequestPasswordChangeCode() {
+  return useMutation({ mutationFn: (currentPassword: string) => accountApi.requestPasswordChangeCode(currentPassword) });
+}
+
 export function useChangePassword() {
-  return useMutation({
-    mutationFn: (input: ChangePasswordInput) => accountApi.changePassword(input),
-  });
+  return useMutation({ mutationFn: (input: ChangePasswordInput) => accountApi.changePassword(input) });
 }
