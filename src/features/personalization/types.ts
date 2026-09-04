@@ -46,6 +46,14 @@ export interface CompleteOnboardingInput {
   availabilityStatus?: AvailabilityStatus | null;
 }
 
+export interface UpdatePersonalizationInput {
+  intent: UserIntent;
+  categoryIds: string[];
+  capabilityIds: string[];
+  preferredCity: string | null;
+  availabilityStatus: AvailabilityStatus | null;
+}
+
 export interface RecommendationMeta {
   reasons: string[];
   source?: "personalized" | "exploration" | "following" | "nearby" | "urgent";

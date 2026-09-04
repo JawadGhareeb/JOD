@@ -42,6 +42,12 @@ const settingsGroups: SettingsGroup[] = [
         Icon: appIcons.shield,
         route: "/change-password",
       },
+      {
+        title: "تخصيص المحتوى",
+        hint: "الاهتمامات، نوع المساعدة، الموقع والتوفر",
+        Icon: appIcons.settings,
+        route: "/personalization-settings" as Href,
+      },
     ],
   },
   {

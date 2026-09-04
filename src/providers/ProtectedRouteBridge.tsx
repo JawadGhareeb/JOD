@@ -9,6 +9,7 @@ const PROTECTED_EXACT_PATHS = new Set([
   "/post",
   "/help-offers",
   "/account-settings",
+  "/personalization-settings",
   "/change-password",
   "/edit-information",
   "/my-applications",

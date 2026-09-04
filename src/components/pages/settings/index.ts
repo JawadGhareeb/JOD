@@ -8,3 +8,4 @@ export { HelpCenterScreen } from "./HelpCenterScreen";
 export { TermsPrivacyScreen } from "./TermsPrivacyScreen";
 export { AboutScreen } from "./AboutScreen";
 export { SettingsScreen } from "./SettingsScreen";
+export { PersonalizationSettingsScreen } from "./PersonalizationSettingsScreen";

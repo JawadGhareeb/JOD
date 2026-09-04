@@ -16,6 +16,9 @@ export const personalizationApi = {
     const response = await apiClient.post<ApiEnvelope<PersonalizationProfile>>("/me/onboarding", input);
     return response.data.data;
   },
+  skipOnboarding: async (): Promise<void> => {
+    await apiClient.post("/me/onboarding/skip");
+  },
   updatePreferences: async (input: Partial<Omit<CompleteOnboardingInput, "categoryIds" | "capabilityIds">>): Promise<PersonalizationProfile> => {
     const response = await apiClient.patch<ApiEnvelope<PersonalizationProfile>>("/me/preferences", input);
     return response.data.data;

@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { personalizationApi } from "./api";
-import type { CompleteOnboardingInput, PersonalizedFeedType } from "./types";
+import type { CompleteOnboardingInput, PersonalizedFeedType, UpdatePersonalizationInput } from "./types";
 
 export const personalizationKeys = {
   all: ["personalization"] as const,
@@ -20,6 +20,33 @@ export function usePersonalizationProfile(enabled = true) {
 export function useCompleteOnboarding() {
   const queryClient = useQueryClient();
   return useMutation({ mutationFn: (input: CompleteOnboardingInput) => personalizationApi.completeOnboarding(input), onSuccess: (data) => queryClient.setQueryData(personalizationKeys.profile(), data) });
+}
+
+export function useSkipPersonalizationOnboarding() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: personalizationApi.skipOnboarding,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: personalizationKeys.all }),
+  });
+}
+
+export function useUpdatePersonalization() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: UpdatePersonalizationInput) => {
+      await personalizationApi.updatePreferences({
+        intent: input.intent,
+        preferredCity: input.preferredCity,
+        availabilityStatus: input.availabilityStatus,
+      });
+      await personalizationApi.updateInterests(input.categoryIds);
+      return personalizationApi.updateCapabilities(input.capabilityIds);
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(personalizationKeys.profile(), data);
+      queryClient.invalidateQueries({ queryKey: personalizationKeys.all });
+    },
+  });
 }
 
 export function useRecommendationFeedback() {

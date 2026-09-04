@@ -47,7 +47,7 @@ export default function VerifyAccountScreen() {
     try {
       await verifyMutation.mutateAsync({ login, code });
       toast.success("تم تفعيل حسابك بنجاح.", "مرحباً بك في جود");
-      router.replace("/(tabs)/home");
+      router.replace("/personalization");
     } catch (caught) {
       if (caught instanceof ApiClientError) {
         if (caught.code === "verification_code_expired" || caught.code === "verification_attempts_exceeded") {
