@@ -1,4 +1,5 @@
-import type { HomePost } from "@/src/features/posts/types";
+import type { PublicMediaItem } from "@/src/features/media/types";
+import type { Campaign, HomePost } from "@/src/features/posts/types";
 
 export type UserIntent = "giver" | "receiver" | "both";
 export type AvailabilityStatus = "available" | "busy" | "weekends" | "evenings" | "remote_only";
@@ -56,5 +57,5 @@ export interface PersonalizedFeedItem {
   contentType: "post" | "campaign" | "media" | "article" | string;
   publishedAt: string | null;
   recommendation: RecommendationMeta;
-  content: HomePost & { urgency?: "normal" | "important" | "urgent" | "critical"; expiresAt?: string | null };
+  content: (HomePost | Campaign | PublicMediaItem) & { urgency?: "normal" | "important" | "urgent" | "critical"; expiresAt?: string | null };
 }

@@ -13,8 +13,8 @@ const invalidatePostLifecycle = (qc: ReturnType<typeof useQueryClient>, postId?:
   }
 };
 
-export function usePostsFeed(filters: Omit<GetDiscoveryPostsParams, "page" | "perPage"> = {}) {
-  return useInfiniteQuery({ queryKey: postKeys.feed(filters), queryFn: ({ pageParam }) => postsApi.getFeed({ ...filters, page: pageParam, perPage: 10 }), initialPageParam: 1, getNextPageParam: (last) => last.meta.currentPage < last.meta.lastPage ? last.meta.currentPage + 1 : undefined });
+export function usePostsFeed(filters: Omit<GetDiscoveryPostsParams, "page" | "perPage"> = {}, enabled = true) {
+  return useInfiniteQuery({ queryKey: postKeys.feed(filters), queryFn: ({ pageParam }) => postsApi.getFeed({ ...filters, page: pageParam, perPage: 10 }), initialPageParam: 1, enabled, getNextPageParam: (last) => last.meta.currentPage < last.meta.lastPage ? last.meta.currentPage + 1 : undefined });
 }
 export function usePostsByOrganization(organizationId?: string) { return useQuery({ queryKey: postKeys.publisherPosts(organizationId, { perPage: 50 }), queryFn: () => postsApi.getPublisherPosts(organizationId!, { perPage: 50 }), enabled: Boolean(organizationId) }); }
 export function usePublisher(id?: string) { return useQuery({ queryKey: postKeys.publisher(id), queryFn: () => postsApi.getPublisher(id!), enabled: Boolean(id) }); }
