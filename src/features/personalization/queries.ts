@@ -19,14 +19,24 @@ export function usePersonalizationProfile(enabled = true) {
 
 export function useCompleteOnboarding() {
   const queryClient = useQueryClient();
-  return useMutation({ mutationFn: (input: CompleteOnboardingInput) => personalizationApi.completeOnboarding(input), onSuccess: (data) => queryClient.setQueryData(personalizationKeys.profile(), data) });
+  return useMutation({
+    mutationFn: (input: CompleteOnboardingInput) => personalizationApi.completeOnboarding(input),
+    onSuccess: (data, input) => {
+      queryClient.setQueryData(personalizationKeys.profile(), data);
+      queryClient.invalidateQueries({ queryKey: personalizationKeys.feed("for_you") });
+      if ("preferredCity" in input) queryClient.invalidateQueries({ queryKey: personalizationKeys.feed("nearby") });
+    },
+  });
 }
 
 export function useSkipPersonalizationOnboarding() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: personalizationApi.skipOnboarding,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: personalizationKeys.all }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(personalizationKeys.profile(), data);
+      queryClient.invalidateQueries({ queryKey: personalizationKeys.feed("for_you") });
+    },
   });
 }
 
@@ -35,16 +45,17 @@ export function useUpdatePersonalization() {
   return useMutation({
     mutationFn: async (input: UpdatePersonalizationInput) => {
       await personalizationApi.updatePreferences({
-        intent: input.intent,
+        ...(input.intent ? { intent: input.intent } : {}),
         preferredCity: input.preferredCity,
-        availabilityStatus: input.availabilityStatus,
+        remoteHelpEnabled: input.remoteHelpEnabled,
       });
       await personalizationApi.updateInterests(input.categoryIds);
       return personalizationApi.updateCapabilities(input.capabilityIds);
     },
     onSuccess: (data) => {
       queryClient.setQueryData(personalizationKeys.profile(), data);
-      queryClient.invalidateQueries({ queryKey: personalizationKeys.all });
+      queryClient.invalidateQueries({ queryKey: personalizationKeys.feed("for_you") });
+      queryClient.invalidateQueries({ queryKey: personalizationKeys.feed("nearby") });
     },
   });
 }

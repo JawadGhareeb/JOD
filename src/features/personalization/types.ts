@@ -2,7 +2,7 @@ import type { PublicMediaItem } from "@/src/features/media/types";
 import type { Campaign, HomePost } from "@/src/features/posts/types";
 
 export type UserIntent = "giver" | "receiver" | "both";
-export type AvailabilityStatus = "available" | "busy" | "weekends" | "evenings" | "remote_only";
+export type PersonalizationMissingField = "intent" | "interests" | "preferredCity" | "capabilities";
 export type PersonalizedFeedType = "for_you" | "following" | "nearby" | "urgent";
 
 export interface PersonalizationOption { value: string; label: string }
@@ -12,7 +12,6 @@ export interface PersonalizationOptions {
   intents: PersonalizationOption[];
   categories: PersonalizationCategory[];
   capabilities: PersonalizationCapability[];
-  availabilityStatuses: PersonalizationOption[];
 }
 
 export interface UserInterest {
@@ -24,34 +23,28 @@ export interface UserInterest {
 
 export interface PersonalizationProfile {
   onboardingCompleted: boolean;
-  onboardingCompletedAt: string | null;
+  missingFields: PersonalizationMissingField[];
   intent: UserIntent | null;
   preferredCity: string | null;
-  preferredGovernorate: string | null;
-  preferredRadiusKm: number | null;
   remoteHelpEnabled: boolean;
-  availabilityStatus: AvailabilityStatus | null;
   interests: UserInterest[];
   capabilities: PersonalizationCapability[];
 }
 
 export interface CompleteOnboardingInput {
-  intent: UserIntent;
-  categoryIds: string[];
+  intent?: UserIntent | null;
+  categoryIds?: string[];
   capabilityIds?: string[];
   preferredCity?: string | null;
-  preferredGovernorate?: string | null;
-  preferredRadiusKm?: number | null;
   remoteHelpEnabled?: boolean;
-  availabilityStatus?: AvailabilityStatus | null;
 }
 
 export interface UpdatePersonalizationInput {
-  intent: UserIntent;
+  intent: UserIntent | null;
   categoryIds: string[];
   capabilityIds: string[];
   preferredCity: string | null;
-  availabilityStatus: AvailabilityStatus | null;
+  remoteHelpEnabled: boolean;
 }
 
 export interface RecommendationMeta {

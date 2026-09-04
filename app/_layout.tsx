@@ -14,6 +14,7 @@ import { loadStoredColorScheme, getThemeBackground } from "@/src/lib/theme";
 import { RTLProvider } from "@/src/providers/RTLProvider";
 import { AuthGuardProvider } from "@/src/providers/AuthGuardProvider";
 import { ProtectedRouteBridge } from "@/src/providers/ProtectedRouteBridge";
+import { PersonalizationRouteGate } from "@/src/providers/PersonalizationRouteGate";
 import { ToastProvider } from "@/src/providers/ToastProvider";
 import { AppShell } from "@/src/components/layout/AppShell";
 import "./global.css";
@@ -48,9 +49,7 @@ export default function RootLayout() {
         void SystemUI.setBackgroundColorAsync(getThemeBackground(stored));
       }
     });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -67,47 +66,45 @@ export default function RootLayout() {
             <ToastProvider>
               <AuthGuardProvider>
                 <ProtectedRouteBridge />
-                <NotificationRuntimeBridge />
-                <StatusBar
-                  style={isDark ? "light" : "dark"}
-                  translucent={false}
-                  backgroundColor={isDark ? "#1f222b" : "#FFFFFF"}
-                />
-                <AppShell>
-                  <Stack initialRouteName="index" screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="index" />
-                    <Stack.Screen name="(auth)" />
-                    <Stack.Screen name="(tabs)" />
-                    <Stack.Screen name="apply/[id]" />
-                    <Stack.Screen name="author/[id]" />
-                    <Stack.Screen name="donate/[id]" />
-                    <Stack.Screen name="donations/[id]" />
-                    <Stack.Screen name="campaigns/[id]" />
-                    <Stack.Screen name="help-offers/[id]" />
-                    <Stack.Screen name="help-offers/create/[postId]" />
-                    <Stack.Screen name="blogs/[id]" />
-                    <Stack.Screen name="blogs/index" />
-                    <Stack.Screen name="groups/create" />
-                    <Stack.Screen name="groups/[id]" />
-                    <Stack.Screen name="create-post" />
-                    <Stack.Screen name="following/index" />
-                    <Stack.Screen name="about" />
-                    <Stack.Screen name="account-settings" />
-                    <Stack.Screen name="personalization" />
-                    <Stack.Screen name="personalization-settings" />
-                    <Stack.Screen name="change-password" />
-                    <Stack.Screen name="edit-information" />
-                    <Stack.Screen name="help-center" />
-                    <Stack.Screen name="my-donations" />
-                    <Stack.Screen name="my-applications" />
-                    <Stack.Screen name="notifications/[id]" />
-                    <Stack.Screen name="applications/[id]" />
-                    <Stack.Screen name="posts/[id]" />
-                    <Stack.Screen name="saved-posts" />
-                    <Stack.Screen name="search" />
-                    <Stack.Screen name="terms-privacy" />
-                  </Stack>
-                </AppShell>
+                <PersonalizationRouteGate>
+                  <NotificationRuntimeBridge />
+                  <StatusBar style={isDark ? "light" : "dark"} translucent={false} backgroundColor={isDark ? "#1f222b" : "#FFFFFF"} />
+                  <AppShell>
+                    <Stack initialRouteName="index" screenOptions={{ headerShown: false }}>
+                      <Stack.Screen name="index" />
+                      <Stack.Screen name="(auth)" />
+                      <Stack.Screen name="(tabs)" />
+                      <Stack.Screen name="apply/[id]" />
+                      <Stack.Screen name="author/[id]" />
+                      <Stack.Screen name="donate/[id]" />
+                      <Stack.Screen name="donations/[id]" />
+                      <Stack.Screen name="campaigns/[id]" />
+                      <Stack.Screen name="help-offers/[id]" />
+                      <Stack.Screen name="help-offers/create/[postId]" />
+                      <Stack.Screen name="blogs/[id]" />
+                      <Stack.Screen name="blogs/index" />
+                      <Stack.Screen name="groups/create" />
+                      <Stack.Screen name="groups/[id]" />
+                      <Stack.Screen name="create-post" />
+                      <Stack.Screen name="following/index" />
+                      <Stack.Screen name="about" />
+                      <Stack.Screen name="account-settings" />
+                      <Stack.Screen name="personalization" />
+                      <Stack.Screen name="personalization-settings" />
+                      <Stack.Screen name="change-password" />
+                      <Stack.Screen name="edit-information" />
+                      <Stack.Screen name="help-center" />
+                      <Stack.Screen name="my-donations" />
+                      <Stack.Screen name="my-applications" />
+                      <Stack.Screen name="notifications/[id]" />
+                      <Stack.Screen name="applications/[id]" />
+                      <Stack.Screen name="posts/[id]" />
+                      <Stack.Screen name="saved-posts" />
+                      <Stack.Screen name="search" />
+                      <Stack.Screen name="terms-privacy" />
+                    </Stack>
+                  </AppShell>
+                </PersonalizationRouteGate>
               </AuthGuardProvider>
             </ToastProvider>
           </SafeAreaProvider>

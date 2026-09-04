@@ -12,14 +12,12 @@ export const personalizationApi = {
     const response = await apiClient.get<ApiEnvelope<PersonalizationProfile>>("/me/preferences");
     return response.data.data;
   },
-  completeOnboarding: async (input: CompleteOnboardingInput): Promise<PersonalizationProfile> => {
+  completeOnboarding: async (input: CompleteOnboardingInput = {}): Promise<PersonalizationProfile> => {
     const response = await apiClient.post<ApiEnvelope<PersonalizationProfile>>("/me/onboarding", input);
     return response.data.data;
   },
-  skipOnboarding: async (): Promise<void> => {
-    await apiClient.post("/me/onboarding/skip");
-  },
-  updatePreferences: async (input: Partial<Omit<CompleteOnboardingInput, "categoryIds" | "capabilityIds">>): Promise<PersonalizationProfile> => {
+  skipOnboarding: async (): Promise<PersonalizationProfile> => personalizationApi.completeOnboarding({}),
+  updatePreferences: async (input: { intent?: CompleteOnboardingInput["intent"]; preferredCity?: string | null; remoteHelpEnabled?: boolean }): Promise<PersonalizationProfile> => {
     const response = await apiClient.patch<ApiEnvelope<PersonalizationProfile>>("/me/preferences", input);
     return response.data.data;
   },

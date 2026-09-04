@@ -9,7 +9,7 @@ import Input from "@/src/components/ui/Input";
 import { SkeletonBlock } from "@/src/components/ui/SkeletonBlock";
 import Text from "@/src/components/ui/Text";
 import { useCompleteOnboarding, usePersonalizationOptions, useSkipPersonalizationOnboarding } from "@/src/features/personalization/queries";
-import type { AvailabilityStatus, UserIntent } from "@/src/features/personalization/types";
+import type { CompleteOnboardingInput, UserIntent } from "@/src/features/personalization/types";
 import { useToast } from "@/src/providers/ToastProvider";
 
 function Choice({ selected, label, onPress }: { selected: boolean; label: string; onPress: () => void }) {
@@ -22,25 +22,31 @@ export default function PersonalizationScreen() {
   const optionsQuery = usePersonalizationOptions();
   const completeMutation = useCompleteOnboarding();
   const skipMutation = useSkipPersonalizationOnboarding();
-  const [intent, setIntent] = useState<UserIntent>("both");
+  const [intent, setIntent] = useState<UserIntent | null>(null);
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [capabilityIds, setCapabilityIds] = useState<string[]>([]);
   const [city, setCity] = useState("");
-  const [availabilityStatus, setAvailabilityStatus] = useState<AvailabilityStatus | null>(null);
+  const [touched, setTouched] = useState({ intent: false, interests: false, capabilities: false, preferredCity: false });
   const isBusy = completeMutation.isPending || skipMutation.isPending;
-  const canSubmit = categoryIds.length > 0 && !isBusy;
   const categories = useMemo(() => optionsQuery.data?.categories ?? [], [optionsQuery.data]);
+  const showCapabilities = intent !== "receiver";
 
   const toggle = (id: string, values: string[], setter: (value: string[]) => void) => setter(values.includes(id) ? values.filter((value) => value !== id) : [...values, id]);
 
   const submit = async () => {
-    if (!canSubmit) return;
+    if (isBusy) return;
+    const payload: CompleteOnboardingInput = {};
+    if (touched.intent) payload.intent = intent;
+    if (touched.interests) payload.categoryIds = categoryIds;
+    if (touched.capabilities) payload.capabilityIds = capabilityIds;
+    if (touched.preferredCity) payload.preferredCity = city.trim() || null;
+
     try {
-      await completeMutation.mutateAsync({ intent, categoryIds, capabilityIds, preferredCity: city.trim() || null, availabilityStatus });
-      toast.success("تم حفظ تفضيلاتك وسنستخدمها لتحسين المحتوى المقترح.");
+      await completeMutation.mutateAsync(payload);
+      toast.success("تم حفظ اختياراتك وسنستخدمها لتحسين المحتوى المقترح.");
       router.replace("/(tabs)/home");
     } catch {
-      toast.error("تعذر حفظ التفضيلات. حاول مرة أخرى.");
+      toast.error("تعذر حفظ التفضيلات. بقيت اختياراتك محفوظة على الشاشة للمحاولة مجدداً.");
     }
   };
 
@@ -48,10 +54,10 @@ export default function PersonalizationScreen() {
     if (isBusy) return;
     try {
       await skipMutation.mutateAsync();
-      toast.info("يمكنك تحديد اهتماماتك لاحقاً من الإعدادات.");
+      toast.info("يمكنك تخصيص المحتوى لاحقاً من الإعدادات.");
       router.replace("/(tabs)/home");
     } catch {
-      toast.error("تعذر تخطي خطوة الاهتمامات. حاول مرة أخرى.");
+      toast.error("تعذر تخطي خطوة التخصيص. حاول مرة أخرى.");
     }
   };
 
@@ -63,5 +69,5 @@ export default function PersonalizationScreen() {
     return <Container className="bg-light-100 px-4 pt-6 dark:bg-dark-300"><View className="items-center gap-3"><Text size="sm" rtlAlign="center">تعذر تحميل خيارات التخصيص.</Text><Button onPress={() => void optionsQuery.refetch()}>إعادة المحاولة</Button></View></Container>;
   }
 
-  return <Container scrollable className="bg-light-100 px-4 pt-6 dark:bg-dark-300"><View className="gap-4 pb-10"><View className="gap-2"><Text variant="heading" weight="bold" rtlAlign="right">خصص تجربتك في جود</Text><Text size="xs" className="leading-6 text-gray-500 dark:text-gray-300">اختر اهتماماتك ونوع المساعدة التي تهمك. يمكنك تعديلها لاحقاً.</Text></View><Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400"><Text size="sm" weight="semibold">كيف تستخدم جود؟</Text><View className="gap-2">{optionsQuery.data.intents.map((item) => <Choice key={item.value} selected={intent === item.value} label={item.label} onPress={() => setIntent(item.value as UserIntent)} />)}</View></Card><Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400"><Text size="sm" weight="semibold">ما المجالات التي تهمك؟</Text><Text size="2xs" className="text-gray-500 dark:text-gray-300">اختر مجالاً واحداً على الأقل، أو تخطَّ هذه الخطوة وحدد اهتماماتك لاحقاً.</Text><View className="flex-row-reverse flex-wrap gap-2">{categories.map((item) => <Choice key={item.id} selected={categoryIds.includes(item.id)} label={item.name} onPress={() => toggle(item.id, categoryIds, setCategoryIds)} />)}</View></Card><Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400"><Text size="sm" weight="semibold">كيف يمكنك المساعدة؟</Text><View className="flex-row-reverse flex-wrap gap-2">{optionsQuery.data.capabilities.map((item) => <Choice key={item.id} selected={capabilityIds.includes(item.id)} label={item.name} onPress={() => toggle(item.id, capabilityIds, setCapabilityIds)} />)}</View></Card><Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400"><Input label="المدينة المفضلة" value={city} onChangeText={setCity} placeholder="مثال: دمشق" fullWidth /><Text size="sm" weight="semibold">وقت التوفر</Text><View className="flex-row-reverse flex-wrap gap-2">{optionsQuery.data.availabilityStatuses.map((item) => <Choice key={item.value} selected={availabilityStatus === item.value} label={item.label} onPress={() => setAvailabilityStatus(item.value as AvailabilityStatus)} />)}</View></Card><Button fullWidth disabled={!canSubmit} loading={completeMutation.isPending} onPress={submit}>حفظ ومتابعة</Button><Button fullWidth variant="tertiary" disabled={isBusy} loading={skipMutation.isPending} onPress={skip}>تخطي الآن</Button><Text size="2xs" rtlAlign="center" className="text-gray-500 dark:text-gray-300">عند التخطي سيستمر جود بتحسين المحتوى المقترح اعتماداً على تفاعلك، ويمكنك إضافة اهتماماتك لاحقاً من الإعدادات.</Text></View></Container>;
+  return <Container scrollable className="bg-light-100 px-4 pt-6 dark:bg-dark-300"><View className="gap-4 pb-10"><View className="gap-2"><Text variant="heading" weight="bold" rtlAlign="right">خصص تجربتك في جود</Text><Text size="xs" className="leading-6 text-gray-500 dark:text-gray-300">كل المعلومات اختيارية. اختر ما يناسبك الآن أو تخطَّ الخطوة وأكملها لاحقاً.</Text></View><Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400"><Text size="sm" weight="semibold">كيف تستخدم جود؟</Text><View className="gap-2">{optionsQuery.data.intents.map((item) => <Choice key={item.value} selected={intent === item.value} label={item.label} onPress={() => { setIntent(item.value as UserIntent); setTouched((value) => ({ ...value, intent: true })); }} />)}</View></Card><Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400"><Text size="sm" weight="semibold">ما المجالات التي تهمك؟</Text><View className="flex-row-reverse flex-wrap gap-2">{categories.map((item) => <Choice key={item.id} selected={categoryIds.includes(item.id)} label={item.name} onPress={() => { toggle(item.id, categoryIds, setCategoryIds); setTouched((value) => ({ ...value, interests: true })); }} />)}</View></Card>{showCapabilities ? <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400"><Text size="sm" weight="semibold">كيف يمكنك المساعدة؟</Text><Text size="2xs" className="text-gray-500 dark:text-gray-300">اختياري، ويفيد في مطابقة طلبات المساعدة المناسبة لقدراتك.</Text><View className="flex-row-reverse flex-wrap gap-2">{optionsQuery.data.capabilities.map((item) => <Choice key={item.id} selected={capabilityIds.includes(item.id)} label={item.name} onPress={() => { toggle(item.id, capabilityIds, setCapabilityIds); setTouched((value) => ({ ...value, capabilities: true })); }} />)}</View></Card> : null}<Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400"><Input label="المدينة المفضلة" value={city} onChangeText={(value) => { setCity(value); setTouched((state) => ({ ...state, preferredCity: true })); }} placeholder="مثال: دمشق" fullWidth /></Card><Button fullWidth disabled={isBusy} loading={completeMutation.isPending} onPress={submit}>حفظ ومتابعة</Button><Button fullWidth variant="tertiary" disabled={isBusy} loading={skipMutation.isPending} onPress={skip}>تخطي الآن</Button><Text size="2xs" rtlAlign="center" className="text-gray-500 dark:text-gray-300">التخصيص غير إلزامي، ويمكن لجود تحسين الاقتراحات تدريجياً من تفاعلك.</Text></View></Container>;
 }
