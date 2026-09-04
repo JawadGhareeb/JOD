@@ -3,6 +3,7 @@ import { FlatList, View, type ViewToken } from "react-native";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import Text from "@/src/components/ui/Text";
 import { usePublicMedia, usePublicMediaItem } from "@/src/features/media/queries";
+import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import { ReelVideoItem } from "./ReelVideoItem";
 import { ReelVideoItemSkeleton } from "./ReelVideoItemSkeleton";
 
@@ -25,6 +26,7 @@ export function ReelsScreen() {
   const [pageHeight, setPageHeight] = useState(1);
   const listRef = useRef<FlatList<(typeof items)[number]>>(null);
   const activeIdRef = useRef<string | null>(null);
+  const { onScroll: onHeaderScroll, resetHeader } = useCollapsibleHeaderScreen();
 
   const setActiveReel = useCallback((id: string | null) => {
     activeIdRef.current = id;
@@ -33,6 +35,7 @@ export function ReelsScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      resetHeader();
       setScreenFocused(true);
       if (selectedId) {
         setActiveReel(selectedId);
@@ -42,7 +45,7 @@ export function ReelsScreen() {
         setScreenFocused(false);
         setActiveReel(null);
       };
-    }, [selectedId, setActiveReel]),
+    }, [resetHeader, selectedId, setActiveReel]),
   );
 
   const availableHeight = Math.max(430, pageHeight);
@@ -112,6 +115,8 @@ export function ReelsScreen() {
           />
         )}
         showsVerticalScrollIndicator={false}
+        onScroll={onHeaderScroll}
+        scrollEventThrottle={16}
         snapToInterval={cardHeight + REEL_GAP}
         snapToAlignment="start"
         decelerationRate="fast"

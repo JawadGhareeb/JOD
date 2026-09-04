@@ -6,6 +6,7 @@ import { Avatar } from "@/src/components/shared/Avatar";
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
 import { FullScreenImageGallery } from "@/src/components/shared/FullScreenImageGallery";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
+import { CampaignDetailsSkeleton, CampaignDonorRowSkeleton } from "@/src/components/pages/campaigns/CampaignDetailsSkeleton";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
@@ -24,7 +25,7 @@ export default function CampaignDetailsPage() {
   const campaign = query.data;
   const donorsQuery = useCampaignDonors(id, { perPage: 10 });
   const donors = donorsQuery.data?.pages.flatMap((page) => page.items) ?? [];
-  if (query.isLoading) return <Container className="bg-light-100 px-4 pt-6 dark:bg-dark-300"><Text>جارِ تحميل الحملة...</Text></Container>;
+  if (query.isLoading) return <CampaignDetailsSkeleton />;
   if (!campaign || !id) return <Container className="bg-light-100 px-4 pt-6 dark:bg-dark-300"><Text>تعذر العثور على الحملة.</Text></Container>;
   const progress = campaign.goalAmount > 0 ? Math.min(100, (campaign.raisedAmount / campaign.goalAmount) * 100) : 0;
   const categoryName = typeof campaign.category === "string" ? campaign.category : campaign.category?.name;
@@ -99,7 +100,10 @@ export default function CampaignDetailsPage() {
           </View>
 
           {donorsQuery.isLoading ? (
-            <Text size="xs" className="text-gray-500 dark:text-gray-300">جارِ تحميل المتبرعين...</Text>
+            <View className="gap-2">
+              <CampaignDonorRowSkeleton />
+              <CampaignDonorRowSkeleton />
+            </View>
           ) : donorsQuery.isError ? (
             <View className="gap-2">
               <Text size="xs" className="text-error-300">تعذر تحميل المتبرعين.</Text>
@@ -125,11 +129,16 @@ export default function CampaignDetailsPage() {
                   </View>
                 </View>
               ))}
+              {donorsQuery.isFetchingNextPage ? (
+                <View className="gap-2">
+                  <CampaignDonorRowSkeleton />
+                  <CampaignDonorRowSkeleton />
+                </View>
+              ) : null}
               {donorsQuery.hasNextPage ? (
                 <Button
                   size="small"
                   variant="tertiary"
-                  loading={donorsQuery.isFetchingNextPage}
                   disabled={donorsQuery.isFetchingNextPage}
                   onPress={() => void donorsQuery.fetchNextPage()}
                 >
