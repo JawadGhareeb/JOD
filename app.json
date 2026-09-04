@@ -55,6 +55,13 @@
         }
       ],
       "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "اسمح لتطبيق جود بالوصول إلى الصور لاختيار صورة الملف الشخصي.",
+          "cameraPermission": "اسمح لتطبيق جود باستخدام الكاميرا لالتقاط صورة الملف الشخصي."
+        }
+      ],
       "expo-video"
     ],
     "experiments": {

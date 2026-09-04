@@ -8,23 +8,24 @@ import type {
   PublicMediaParams,
 } from "./types";
 import type { ReportReasonCode } from "@/src/features/lookups/types";
+import { normalizePublicMediaItem } from "./helpers";
 
 export const mediaApi = {
   publicList: async (params: PublicMediaParams = {}) => {
     const response = await apiClient.get<ApiEnvelope<PublicMediaItem[], PaginationMeta>>(
       `/discovery/media${buildQuery(params)}`,
     );
-    return { items: response.data.data, meta: response.data.meta };
+    return { items: response.data.data.map(normalizePublicMediaItem), meta: response.data.meta };
   },
   publicDetail: async (id: string) => {
     const response = await apiClient.get<ApiEnvelope<PublicMediaItem>>(`/discovery/media/${id}`);
-    return response.data.data;
+    return normalizePublicMediaItem(response.data.data);
   },
   organizationVideos: async (organizationId: string, params: PublicMediaParams = {}) => {
     const response = await apiClient.get<ApiEnvelope<PublicMediaItem[], PaginationMeta>>(
       `/discovery/organizations/${organizationId}/videos${buildQuery(params)}`,
     );
-    return { items: response.data.data, meta: response.data.meta };
+    return { items: response.data.data.map(normalizePublicMediaItem), meta: response.data.meta };
   },
   like: async (id: string) => {
     const response = await apiClient.post<ApiEnvelope<MediaEngagementState>>(`/media/${id}/like`);

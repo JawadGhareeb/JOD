@@ -30,6 +30,7 @@ export interface Publisher {
   whatsappNumber?: string;
   /** Present on publisher profiles. Feed-embedded publishers may omit these. */
   followersCount?: number;
+  donorsCount?: number;
   isFollowing?: boolean;
 }
 

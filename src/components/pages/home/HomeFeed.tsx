@@ -43,6 +43,7 @@ function composeHomeFeed(posts: HomePost[], campaigns: Campaign[], seed: number)
   let reelsOccurrence = 0;
   let blogsOccurrence = 0;
   let campaignIndex = 0;
+  let nextModule: "reels" | "blogs" = random() > 0.5 ? "reels" : "blogs";
 
   posts.forEach((post, index) => {
     result.push({ kind: "post", key: `post-${post.id}`, post });
@@ -54,18 +55,23 @@ function composeHomeFeed(posts: HomePost[], campaigns: Campaign[], seed: number)
 
     if (postsSinceModule < nextGap) return;
 
-    result.push({
-      kind: "reels",
-      key: `reels-${reelsOccurrence}-${index}`,
-      occurrence: reelsOccurrence,
-    });
-    reelsOccurrence += 1;
-    result.push({
-      kind: "blogs",
-      key: `blogs-${blogsOccurrence}-${index}`,
-      occurrence: blogsOccurrence,
-    });
-    blogsOccurrence += 1;
+    if (nextModule === "reels") {
+      result.push({
+        kind: "reels",
+        key: `reels-${reelsOccurrence}-${index}`,
+        occurrence: reelsOccurrence,
+      });
+      reelsOccurrence += 1;
+      nextModule = "blogs";
+    } else {
+      result.push({
+        kind: "blogs",
+        key: `blogs-${blogsOccurrence}-${index}`,
+        occurrence: blogsOccurrence,
+      });
+      blogsOccurrence += 1;
+      nextModule = "reels";
+    }
 
     postsSinceModule = 0;
     nextGap = randomGap(random);
@@ -75,8 +81,14 @@ function composeHomeFeed(posts: HomePost[], campaigns: Campaign[], seed: number)
     result.push({ kind: "campaign", key: `campaign-${campaign.id}`, campaign });
   });
 
-  if (reelsOccurrence === 0) result.push({ kind: "reels", key: "reels-0-fallback", occurrence: 0 });
-  if (blogsOccurrence === 0) result.push({ kind: "blogs", key: "blogs-0-fallback", occurrence: 0 });
+  if (reelsOccurrence === 0 && blogsOccurrence === 0 && result.length > 0) {
+    result.unshift({ kind: "reels", key: "reels-0-fallback", occurrence: 0 });
+    result.push({ kind: "blogs", key: "blogs-0-fallback", occurrence: 0 });
+  } else if (reelsOccurrence === 0) {
+    result.push({ kind: "reels", key: "reels-0-fallback", occurrence: 0 });
+  } else if (blogsOccurrence === 0) {
+    result.unshift({ kind: "blogs", key: "blogs-0-fallback", occurrence: 0 });
+  }
 
   return result;
 }
@@ -103,7 +115,7 @@ export function HomeFeed({ audience, listHeaderComponent, onScroll, onRefresh }:
     const visibleReels = viewableItems.find((entry) => entry.isViewable && entry.item.kind === "reels");
     setActiveReelsKey(visibleReels?.item.key ?? null);
   }, []);
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 15 }).current;
 
   const {
     data,

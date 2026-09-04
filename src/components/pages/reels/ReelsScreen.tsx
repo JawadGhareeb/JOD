@@ -41,8 +41,18 @@ export function ReelsScreen() {
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken<(typeof items)[number]>[] }) => {
-      const visibleIds = new Set(viewableItems.filter((entry) => entry.isViewable).map((entry) => entry.item.id));
-      if (activeIdRef.current && !visibleIds.has(activeIdRef.current)) setActiveReel(null);
+      const visibleEntries = viewableItems.filter((entry) => entry.isViewable);
+      const visibleIds = new Set(visibleEntries.map((entry) => entry.item.id));
+      const primaryVisible = visibleEntries.reduce<(typeof visibleEntries)[number] | null>((current, entry) => {
+        if (!current) return entry;
+        return (entry.index ?? Number.MAX_SAFE_INTEGER) < (current.index ?? Number.MAX_SAFE_INTEGER) ? entry : current;
+      }, null);
+
+      if (primaryVisible && activeIdRef.current !== primaryVisible.item.id) {
+        setActiveReel(primaryVisible.item.id);
+      } else if (activeIdRef.current && !visibleIds.has(activeIdRef.current)) {
+        setActiveReel(null);
+      }
 
       const furthestVisibleIndex = Math.max(-1, ...viewableItems.map((entry) => entry.index ?? -1));
       if (furthestVisibleIndex >= items.length - 3 && query.hasNextPage && !query.isFetchingNextPage) {

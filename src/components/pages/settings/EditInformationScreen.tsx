@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
-import { FileText, Mail, MapPin, Phone } from "lucide-react-native";
+import { FileText, Mail, MapPin, Pencil, Phone } from "lucide-react-native";
 import { Pressable, ScrollView, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
+import { ImageSourceDialog } from "@/src/components/shared/ImageSourceDialog";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Input from "@/src/components/ui/Input";
@@ -32,6 +33,7 @@ export function EditInformationScreen() {
   const [city, setCity] = useState("");
   const [bio, setBio] = useState("");
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
+  const [isAvatarSourceDialogOpen, setIsAvatarSourceDialogOpen] = useState(false);
   const citiesQuery = useCities();
   const cityOptions: SelectionOption[] = useMemo(
     () => (citiesQuery.data ?? []).map((item) => ({ label: item.name, value: item.name })),
@@ -51,7 +53,21 @@ export function EditInformationScreen() {
   const isPhoneValid = phoneNumber.trim().length === 0 || phoneNumber.trim().length >= 8;
   const canSave = fullName.trim().length > 2 && isEmailValid && isPhoneValid && !updateProfileMutation.isPending;
 
-  const changeAvatar = async () => {
+  const uploadAvatarAsset = async (asset: ImagePicker.ImagePickerAsset) => {
+    try {
+      await updateAvatarMutation.mutateAsync({
+        uri: asset.uri,
+        name: asset.fileName ?? `avatar-${Date.now()}.jpg`,
+        type: asset.mimeType ?? "image/jpeg",
+      });
+      toast.success("تم تحديث صورة الملف الشخصي.");
+    } catch {
+      toast.error("تعذر تحديث صورة الملف الشخصي.");
+    }
+  };
+
+  const chooseAvatarFromGallery = async () => {
+    setIsAvatarSourceDialogOpen(false);
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permission.status !== "granted") {
       toast.error("اسمح للتطبيق بالوصول إلى الصور لتغيير صورة الملف الشخصي.");
@@ -63,18 +79,23 @@ export function EditInformationScreen() {
       aspect: [1, 1],
       quality: 0.85,
     });
-    if (result.canceled || !result.assets[0]) return;
-    const asset = result.assets[0];
-    try {
-      await updateAvatarMutation.mutateAsync({
-        uri: asset.uri,
-        name: asset.fileName ?? `avatar-${Date.now()}.jpg`,
-        type: asset.mimeType ?? "image/jpeg",
-      });
-      toast.success("تم تحديث صورة الملف الشخصي.");
-    } catch {
-      toast.error("تعذر تحديث صورة الملف الشخصي.");
+    if (!result.canceled && result.assets[0]) await uploadAvatarAsset(result.assets[0]);
+  };
+
+  const takeAvatarPhoto = async () => {
+    setIsAvatarSourceDialogOpen(false);
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (permission.status !== "granted") {
+      toast.error("اسمح للتطبيق باستخدام الكاميرا لالتقاط صورة الملف الشخصي.");
+      return;
     }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
+    if (!result.canceled && result.assets[0]) await uploadAvatarAsset(result.assets[0]);
   };
 
   const removeAvatar = async () => {
@@ -117,15 +138,22 @@ export function EditInformationScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 28 }}>
         <Card padding="lg" className="mb-3 overflow-hidden rounded-3xl border-primary-200 bg-primary-100/50 dark:border-dark-400 dark:bg-dark-500">
           <View className="items-center">
-            <View className="rounded-full border-4 border-white bg-white p-1 shadow-sm dark:border-dark-350 dark:bg-dark-350">
-              <Avatar name={user?.name ?? "مستخدم"} imageUrl={user?.avatarUrl} size={92} />
+            <View className="relative">
+              <View className="rounded-full border-4 border-white bg-white p-1 shadow-sm dark:border-dark-350 dark:bg-dark-350">
+                <Avatar name={user?.name ?? "مستخدم"} imageUrl={user?.avatarUrl} size={92} />
+              </View>
+              <Pressable
+                onPress={() => setIsAvatarSourceDialogOpen(true)}
+                disabled={updateAvatarMutation.isPending || removeAvatarMutation.isPending}
+                accessibilityRole="button"
+                accessibilityLabel="تعديل صورة الملف الشخصي"
+                className="absolute bottom-0 right-0 h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-primary-400 shadow-sm dark:border-dark-350"
+              >
+                <Pencil size={16} color="#FFFFFF" strokeWidth={2.5} />
+              </Pressable>
             </View>
             <Text weight="bold" size="base" className="mt-3 text-dark-100 dark:text-light-50">{user?.name ?? "مستخدم جود"}</Text>
-            <Text size="2xs" rtlAlign="center" className="mt-1 text-gray-500 dark:text-gray-300">حدّث صورتك لتسهيل التعرف على حسابك داخل مجتمع جود.</Text>
-            <View className="mt-4 w-full flex-row-reverse gap-2">
-              <View className="flex-1"><Button fullWidth size="small" loading={updateAvatarMutation.isPending} disabled={removeAvatarMutation.isPending} onPress={() => void changeAvatar()}>تغيير الصورة</Button></View>
-              {user?.avatarUrl ? <View className="flex-1"><Button fullWidth size="small" variant="tertiary" loading={removeAvatarMutation.isPending} disabled={updateAvatarMutation.isPending} onPress={() => void removeAvatar()}>حذف الصورة</Button></View> : null}
-            </View>
+            <Text size="2xs" rtlAlign="center" className="mt-1 text-gray-500 dark:text-gray-300">اضغط على أيقونة القلم لتحديث صورة حسابك.</Text>
           </View>
         </Card>
 
@@ -153,6 +181,18 @@ export function EditInformationScreen() {
         {!isEmailValid ? <Text size="2xs" className="mt-2 text-center text-error-300">البريد الإلكتروني غير صالح.</Text> : null}
         {!isPhoneValid ? <Text size="2xs" className="mt-2 text-center text-error-300">رقم الجوال قصير جداً.</Text> : null}
       </ScrollView>
+      <ImageSourceDialog
+        visible={isAvatarSourceDialogOpen}
+        title="تعديل صورة الملف الشخصي"
+        onClose={() => setIsAvatarSourceDialogOpen(false)}
+        onChooseGallery={() => void chooseAvatarFromGallery()}
+        onTakePhoto={() => void takeAvatarPhoto()}
+        disabled={updateAvatarMutation.isPending || removeAvatarMutation.isPending}
+        onRemove={user?.avatarUrl ? () => {
+          setIsAvatarSourceDialogOpen(false);
+          void removeAvatar();
+        } : undefined}
+      />
       <SelectionModal visible={isCityModalOpen} title="اختر المحافظة السورية" options={cityOptions} selectedValue={city} onSelect={(value) => { setCity(value); setIsCityModalOpen(false); }} onClose={() => setIsCityModalOpen(false)} />
     </View>
   );

@@ -7,6 +7,7 @@ import { SectionHeader } from "@/src/components/shared/SectionHeader";
 import { VideoPlayer } from "@/src/components/shared/VideoPlayer";
 import Text from "@/src/components/ui/Text";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
+import { getReelPlaybackUrl } from "@/src/features/media/helpers";
 import type { PublicMediaItem } from "@/src/features/media/types";
 import { getPrimaryColor } from "@/src/theme";
 
@@ -22,6 +23,49 @@ type Props = {
   loading?: boolean;
   active?: boolean;
 };
+
+function HomeReelStreamCard({
+  video,
+  sectionActive,
+  playing,
+  onOpen,
+}: {
+  video: PublicMediaItem;
+  sectionActive: boolean;
+  playing: boolean;
+  onOpen: () => void;
+}) {
+  const playbackUrl = getReelPlaybackUrl(video);
+
+  return (
+    <View style={{ width: CARD_WIDTH }} className="overflow-hidden rounded-2xl bg-dark-500">
+      <View style={{ height: PREVIEW_HEIGHT }} className="items-center justify-center bg-dark-350">
+        {sectionActive ? (
+          <VideoPlayer
+            url={playbackUrl}
+            active={playing}
+            loop
+            muted
+            style={{ width: "100%", height: "100%" }}
+          />
+        ) : (
+          <View className="items-center justify-center">
+            <ReelsIcon size={34} color="#D1D5DB" strokeWidth={2} />
+            <View className="mt-3 h-12 w-12 items-center justify-center rounded-full bg-white/15">
+              <PlayIcon size={21} color="#FFFFFF" fill="#FFFFFF" />
+            </View>
+          </View>
+        )}
+        <Pressable
+          onPress={onOpen}
+          accessibilityRole="button"
+          accessibilityLabel="فتح الفيديو الكامل"
+          className="absolute inset-0"
+        />
+      </View>
+    </View>
+  );
+}
 
 export function HomeReelsSection({ items, loading = false, active = false }: Props) {
   const router = useRouter();
@@ -66,54 +110,17 @@ export function HomeReelsSection({ items, loading = false, active = false }: Pro
       >
         {loading
           ? [0, 1, 2].map((key) => (
-              <CardSkeleton key={key} width={CARD_WIDTH} height={PREVIEW_HEIGHT + 64} margin={0} />
+              <CardSkeleton key={key} width={CARD_WIDTH} height={PREVIEW_HEIGHT} margin={0} />
             ))
-          : items.map((video) => {
-              const canPlayPreview = video.previewStatus === "ready" && Boolean(video.previewUrl);
-              const shouldPlayPreview = active && activePreviewId === video.id && canPlayPreview;
-
-              return (
-                <View
-                  key={video.id}
-                  style={{ width: CARD_WIDTH }}
-                  className="overflow-hidden rounded-2xl bg-dark-500"
-                >
-                  <View style={{ height: PREVIEW_HEIGHT }} className="items-center justify-center bg-dark-350">
-                    {shouldPlayPreview ? (
-                      <VideoPlayer
-                        url={video.previewUrl!}
-                        active
-                        loop
-                        muted
-                        style={{ width: "100%", height: "100%" }}
-                      />
-                    ) : (
-                      <View className="items-center justify-center">
-                        <ReelsIcon size={34} color="#D1D5DB" strokeWidth={2} />
-                        <View className="mt-3 h-12 w-12 items-center justify-center rounded-full bg-white/15">
-                          <PlayIcon size={21} color="#FFFFFF" fill="#FFFFFF" />
-                        </View>
-                        {video.previewStatus === "pending" || video.previewStatus === "processing" ? (
-                          <Text size="2xs" className="mt-3 text-gray-300">المعاينة قيد التجهيز</Text>
-                        ) : null}
-                      </View>
-                    )}
-                    <Pressable
-                      onPress={() => openVideo(video.id)}
-                      accessibilityRole="button"
-                      accessibilityLabel="فتح الفيديو الكامل"
-                      className="absolute inset-0"
-                    />
-                  </View>
-
-                  <Pressable onPress={() => openVideo(video.id)} className="min-h-[64px] px-3 py-2">
-                    <Text numberOfLines={2} size="2xs" className="leading-5 text-light-50">
-                      {video.description || video.originalName}
-                    </Text>
-                  </Pressable>
-                </View>
-              );
-            })}
+          : items.map((video) => (
+              <HomeReelStreamCard
+                key={video.id}
+                video={video}
+                sectionActive={active}
+                playing={active && activePreviewId === video.id}
+                onOpen={() => openVideo(video.id)}
+              />
+            ))}
       </ScrollView>
 
       {!loading ? (

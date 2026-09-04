@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Animated, Image, Pressable, View } from "react-native";
 
 import { appIcons } from "@/src/components/layout/iconMap";
+import { ImageSourceDialog } from "@/src/components/shared/ImageSourceDialog";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Input from "@/src/components/ui/Input";
@@ -74,6 +75,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const [activePostId, setActivePostId] = useState(editingPostId);
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isImageSourceDialogOpen, setIsImageSourceDialogOpen] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [initializedPostId, setInitializedPostId] = useState<string | null>(null);
@@ -189,6 +191,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   };
 
   const handlePickImages = async () => {
+    setIsImageSourceDialogOpen(false);
     const remaining = MAX_POST_IMAGES - selectedImages.length;
     if (remaining <= 0) {
       Alert.alert("الحد الأقصى للصور", "يمكن إرفاق 10 صور كحد أقصى لكل منشور.");
@@ -221,6 +224,38 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
 
     setSelectedImages((current) => [...new Set([...current, ...accepted])].slice(0, MAX_POST_IMAGES));
     if (rejected.length) Alert.alert("بعض الصور لم تُضف", `تحقق من الصيغة والحجم (5MB): ${rejected.join("، ")}`);
+  };
+
+  const handleTakePhoto = async () => {
+    setIsImageSourceDialogOpen(false);
+    const remaining = MAX_POST_IMAGES - selectedImages.length;
+    if (remaining <= 0) {
+      Alert.alert("الحد الأقصى للصور", "يمكن إرفاق 10 صور كحد أقصى لكل منشور.");
+      return;
+    }
+
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (permission.status !== "granted") {
+      Alert.alert("إذن الكاميرا مطلوب", "اسمح للتطبيق باستخدام الكاميرا حتى تتمكن من إرفاق صورة بالمنشور.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.85,
+    });
+    if (result.canceled || !result.assets[0]) return;
+
+    const asset = result.assets[0];
+    const mime = asset.mimeType?.toLowerCase();
+    const typeAllowed = !mime || mime === "image/jpeg" || mime === "image/png" || mime === "image/webp";
+    const sizeAllowed = !asset.fileSize || asset.fileSize <= MAX_IMAGE_BYTES;
+    if (!typeAllowed || !sizeAllowed) {
+      Alert.alert("تعذر إضافة الصورة", "يجب أن تكون الصورة JPEG أو PNG أو WebP وبحجم لا يتجاوز 5MB.");
+      return;
+    }
+
+    setSelectedImages((current) => [...new Set([...current, asset.uri])].slice(0, MAX_POST_IMAGES));
   };
 
   const handleRemoveImage = async (uri: string) => {
@@ -384,7 +419,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
               </View>
             ))}
             {selectedImages.length < MAX_POST_IMAGES ? (
-              <Pressable disabled={isBusy} onPress={() => void handlePickImages()} style={{ width: "48%" }} className="h-24 items-center justify-center rounded-xl border border-dashed border-primary-200 bg-primary-100/50 dark:border-dark-400 dark:bg-dark-500">
+              <Pressable disabled={isBusy} onPress={() => setIsImageSourceDialogOpen(true)} style={{ width: "48%" }} className="h-24 items-center justify-center rounded-xl border border-dashed border-primary-200 bg-primary-100/50 dark:border-dark-400 dark:bg-dark-500">
                 <ImageIcon size={18} color={primaryColor} strokeWidth={2.25} />
                 <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">إضافة صور</Text>
               </Pressable>
@@ -398,6 +433,14 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         </View>
       </Animated.ScrollView>
 
+      <ImageSourceDialog
+        visible={isImageSourceDialogOpen}
+        title="إضافة صورة للمنشور"
+        onClose={() => setIsImageSourceDialogOpen(false)}
+        onChooseGallery={() => void handlePickImages()}
+        onTakePhoto={() => void handleTakePhoto()}
+        disabled={isBusy}
+      />
       <SelectionModal visible={isCityModalOpen} title="اختر المحافظة السورية" options={cityOptions} selectedValue={cityId} onSelect={(value) => { setCityId(value); setIsCityModalOpen(false); }} onClose={() => setIsCityModalOpen(false)} />
       <SelectionModal visible={isCategoryModalOpen} title="تصنيف المنشور" options={categoryOptions} selectedValue={categoryId} onSelect={(value) => { setCategoryId(value); setIsCategoryModalOpen(false); }} onClose={() => setIsCategoryModalOpen(false)} />
     </View>

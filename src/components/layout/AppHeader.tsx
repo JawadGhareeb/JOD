@@ -1,7 +1,7 @@
 import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
-import { headerScrollY } from "@/src/providers/CollapsibleHeaderProvider";
+import { headerCollapseProgress } from "@/src/providers/CollapsibleHeaderProvider";
 import { useRTL } from "@/src/providers/RTLProvider";
 import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
 import { usePathname, useRouter, useSegments } from "expo-router";
@@ -54,16 +54,19 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
 
   const topInsetHeight = includeTopInset ? insets.top : 0;
   const resolvedNavHeight = Math.max(navBarHeight, MIN_NAV_HEIGHT);
-  const navCollapseRange = Math.max(1, resolvedNavHeight);
-  const clampedScrollY = Animated.diffClamp(headerScrollY, 0, navCollapseRange);
-  const navWrapperHeight = clampedScrollY.interpolate({
-    inputRange: [0, navCollapseRange],
+  const navWrapperHeight = headerCollapseProgress.interpolate({
+    inputRange: [0, 1],
     outputRange: [resolvedNavHeight, 0],
     extrapolate: "clamp",
   });
-  const navTranslateY = clampedScrollY.interpolate({
-    inputRange: [0, navCollapseRange],
+  const navTranslateY = headerCollapseProgress.interpolate({
+    inputRange: [0, 1],
     outputRange: [0, -resolvedNavHeight],
+    extrapolate: "clamp",
+  });
+  const navOpacity = headerCollapseProgress.interpolate({
+    inputRange: [0, 0.8, 1],
+    outputRange: [1, 0.35, 0],
     extrapolate: "clamp",
   });
 
@@ -159,6 +162,7 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
           <Animated.View
             style={{
               transform: [{ translateY: navTranslateY }],
+              opacity: navOpacity,
               backgroundColor: surfaceColor,
             }}
           >

@@ -13,6 +13,7 @@ import Text from "@/src/components/ui/Text";
 import { useReportReasons } from "@/src/features/lookups/queries";
 import type { ReportReasonCode } from "@/src/features/lookups/types";
 import { useLikeMedia, useReportMedia, useSaveMedia } from "@/src/features/media/queries";
+import { getReelPlaybackUrl } from "@/src/features/media/helpers";
 import type { PublicMediaItem } from "@/src/features/media/types";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
@@ -37,6 +38,7 @@ export function ReelVideoItem({
   const HeartIcon = appIcons.myDonations;
   const BookmarkIcon = appIcons.savedPosts;
   const ShieldIcon = appIcons.shield;
+  const PlayIcon = appIcons.play;
   const likeMutation = useLikeMedia();
   const saveMutation = useSaveMedia();
   const reportMutation = useReportMedia();
@@ -115,6 +117,7 @@ export function ReelVideoItem({
 
   const organizationName = video.organization?.name || "منظمة على جود";
   const organizationImage = video.organization?.image || video.organization?.logo?.url || null;
+  const playbackUrl = getReelPlaybackUrl(video);
 
   return (
     <View style={{ height }} className="bg-light-100 px-3 pb-3 dark:bg-dark-300">
@@ -140,14 +143,26 @@ export function ReelVideoItem({
         </View>
 
         <View className="min-h-0 flex-1 bg-dark-500">
-          <VideoPlayer
-            url={video.streamUrl || video.url}
-            active={active}
-            onRequestPlay={onPlayRequest}
-            loop
-            showProgressControls
-            style={{ width: "100%", height: "100%" }}
-          />
+          {active ? (
+            <VideoPlayer
+              url={playbackUrl}
+              active
+              loop
+              showProgressControls
+              style={{ width: "100%", height: "100%" }}
+            />
+          ) : (
+            <Pressable
+              onPress={onPlayRequest}
+              className="flex-1 items-center justify-center bg-dark-500"
+              accessibilityRole="button"
+              accessibilityLabel="تشغيل الريل"
+            >
+              <View className="h-16 w-16 items-center justify-center rounded-full bg-black/55">
+                <PlayIcon size={28} color="#FFFFFF" fill="#FFFFFF" />
+              </View>
+            </Pressable>
+          )}
         </View>
 
         <View className="px-4 py-3">

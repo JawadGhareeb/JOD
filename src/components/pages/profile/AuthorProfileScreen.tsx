@@ -11,7 +11,7 @@ import { useAuthStatus } from "@/src/features/auth/queries";
 import type { FollowTargetType } from "@/src/features/follows/types";
 import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
 import { HomePostCardSkeleton } from "@/src/components/pages/home/HomePostCardSkeleton";
-import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
+import { CardSkeleton, Skeleton } from "@/src/components/ui/LoadingSkeleton";
 import Card from "@/src/components/ui/Card";
 import Tabs from "@/src/components/ui/Tabs";
 import Text from "@/src/components/ui/Text";
@@ -143,7 +143,7 @@ export function AuthorProfileScreen() {
   if (isLoading) {
     return (
       <View className="flex-1 gap-3 bg-light-100 px-4 pt-4 dark:bg-dark-300">
-        <CardSkeleton height={170} margin={0} />
+        <CardSkeleton height={220} margin={0} />
         <HomePostCardSkeleton />
         <HomePostCardSkeleton />
       </View>
@@ -263,6 +263,16 @@ export function AuthorProfileScreen() {
                 <Text weight="semibold" size="sm" className="text-primary-400">{totalLikes}</Text>
                 <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">الإعجابات</Text>
               </View>
+              {isOrganization ? (
+                <View className="flex-1 items-center rounded-xl bg-primary-100/70 py-2 dark:bg-dark-350">
+                  {publisherQuery.isFetching && author.donorsCount === undefined ? (
+                    <Skeleton containerStyle={{ width: 28 }} layout={{ width: 28, height: 16, borderRadius: 6 }} />
+                  ) : (
+                    <Text weight="semibold" size="sm" className="text-primary-400">{author.donorsCount ?? 0}</Text>
+                  )}
+                  <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">المتبرعون</Text>
+                </View>
+              ) : null}
               <View className="flex-1 items-center rounded-xl bg-primary-100/70 py-2 dark:bg-dark-350">
                 <Text weight="semibold" size="sm" className="text-primary-400">{author.followersCount ?? 0}</Text>
                 <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">المتابعون</Text>
