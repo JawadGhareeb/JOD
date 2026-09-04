@@ -1,10 +1,10 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, View, type ViewToken } from "react-native";
+import { FlatList, View, type ViewToken } from "react-native";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import Text from "@/src/components/ui/Text";
 import { usePublicMedia } from "@/src/features/media/queries";
-import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
 import { ReelVideoItem } from "./ReelVideoItem";
+import { ReelVideoItemSkeleton } from "./ReelVideoItemSkeleton";
 
 const REELS_PAGE_SIZE = 6;
 const REEL_GAP = 12;
@@ -73,9 +73,11 @@ export function ReelsScreen() {
 
   if (query.isLoading && items.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center bg-light-100 dark:bg-dark-300">
-        <ActivityIndicator color={PRIMARY_COLOR_LIGHT} />
-        <Text size="xs" className="mt-3 text-gray-500 dark:text-gray-300">جارِ تحميل الريلز...</Text>
+      <View
+        className="flex-1 bg-light-100 pt-3 dark:bg-dark-300"
+        onLayout={(event) => setPageHeight(Math.max(1, event.nativeEvent.layout.height))}
+      >
+        <ReelVideoItemSkeleton height={cardHeight} />
       </View>
     );
   }
@@ -117,7 +119,7 @@ export function ReelsScreen() {
           if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
         }}
         onEndReachedThreshold={0.25}
-        ListFooterComponent={query.isFetchingNextPage ? <View className="items-center py-5"><ActivityIndicator size="small" color={PRIMARY_COLOR_LIGHT} /></View> : <View className="h-4" />}
+        ListFooterComponent={query.isFetchingNextPage ? <ReelVideoItemSkeleton height={cardHeight} /> : <View className="h-4" />}
       />
     </View>
   );

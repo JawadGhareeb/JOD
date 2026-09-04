@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
+import { FlatList, Pressable, View } from "react-native";
 import Text from "@/src/components/ui/Text";
 import {
   useMarkAllNotificationsRead,
@@ -8,6 +8,7 @@ import {
   useUnreadNotificationCount,
 } from "@/src/features/notifications/queries";
 import { NotificationItemCard } from "./NotificationItemCard";
+import { NotificationItemCardSkeleton } from "./NotificationItemCardSkeleton";
 
 type InboxFilter = "all" | "unread";
 
@@ -97,11 +98,10 @@ export function NotificationsScreen() {
         onEndReachedThreshold={0.4}
         ListEmptyComponent={
           query.isLoading ? (
-            <View className="items-center py-8">
-              <ActivityIndicator />
-              <Text size="xs" className="mt-2 text-gray-500 dark:text-gray-300">
-                جارِ تحميل الإشعارات...
-              </Text>
+            <View className="pt-1">
+              <NotificationItemCardSkeleton />
+              <NotificationItemCardSkeleton />
+              <NotificationItemCardSkeleton />
             </View>
           ) : (
             <View className="items-center py-8">
@@ -114,9 +114,7 @@ export function NotificationsScreen() {
           )
         }
         ListFooterComponent={
-          query.isFetchingNextPage ? (
-            <ActivityIndicator style={{ marginVertical: 12 }} />
-          ) : null
+          query.isFetchingNextPage ? <NotificationItemCardSkeleton /> : null
         }
       />
     </View>

@@ -13,6 +13,7 @@ import { useDeletePost, useMyPosts } from "@/src/features/posts/queries";
 import type { MyPostStatus } from "@/src/features/posts/types";
 import { ProfileHeaderCard } from "./ProfileHeaderCard";
 import { MyPostCard } from "./MyPostCard";
+import { MyPostCardSkeleton } from "./MyPostCardSkeleton";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import { useToast } from "@/src/providers/ToastProvider";
 
@@ -50,7 +51,7 @@ export function ProfileScreen() {
   };
 
   if (isAuthLoading) {
-    return <View className="flex-1 gap-3 bg-light-100 px-4 pt-4 dark:bg-dark-300"><CardSkeleton height={220} margin={0} /><CardSkeleton height={54} margin={0} /><CardSkeleton height={260} margin={0} /></View>;
+    return <View className="flex-1 gap-3 bg-light-100 px-4 pt-4 dark:bg-dark-300"><CardSkeleton height={220} margin={0} /><CardSkeleton height={54} margin={0} /><MyPostCardSkeleton /></View>;
   }
 
   if (!isAuthenticated || !summary) {
@@ -102,7 +103,7 @@ export function ProfileScreen() {
         }
         ListEmptyComponent={
           isLoading ? (
-            <View className="gap-3 py-3"><CardSkeleton height={260} margin={0} /><CardSkeleton height={260} margin={0} /></View>
+            <View className="py-3"><MyPostCardSkeleton /><MyPostCardSkeleton /></View>
           ) : isError ? (
             <View className="items-center gap-3 py-8"><Text size="sm" className="text-center text-gray-500 dark:text-gray-300">تعذر تحميل منشوراتك. تحقق من اتصالك وحاول مرة أخرى.</Text><Button size="small" onPress={() => void refetch()}>إعادة المحاولة</Button></View>
           ) : (
