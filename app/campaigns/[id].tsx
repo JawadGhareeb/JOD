@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MapPin, Tag } from "lucide-react-native";
 import { Pressable, View } from "react-native";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
+import { FullScreenImageGallery } from "@/src/components/shared/FullScreenImageGallery";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
@@ -15,6 +17,7 @@ import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 export default function CampaignDetailsPage() {
   const router = useRouter();
   const { requireAuth } = useAuthGuard();
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const { id: raw } = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(raw) ? raw[0] : raw;
   const query = useCampaign(id);
@@ -69,7 +72,7 @@ export default function CampaignDetailsPage() {
           </View>
           {campaign.summary ? <Text size="sm" weight="medium" className="leading-7">{campaign.summary}</Text> : null}
           {campaign.content ? <Text size="sm" className="leading-7">{campaign.content}</Text> : null}
-          <FeedMediaGrid images={campaign.images} />
+          <FeedMediaGrid images={campaign.images} onPress={(index) => setGalleryIndex(index)} />
         </Card>
 
         <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
@@ -147,6 +150,12 @@ export default function CampaignDetailsPage() {
           <Button fullWidth disabled>الحملة غير متاحة للتبرع</Button>
         )}
       </View>
+      <FullScreenImageGallery
+        images={campaign.images}
+        visible={galleryIndex !== null}
+        initialIndex={galleryIndex ?? 0}
+        onClose={() => setGalleryIndex(null)}
+      />
     </Container>
   );
 }

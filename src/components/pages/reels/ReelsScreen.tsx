@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { FlatList, View, type ViewToken } from "react-native";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import Text from "@/src/components/ui/Text";
-import { usePublicMedia } from "@/src/features/media/queries";
+import { usePublicMedia, usePublicMediaItem } from "@/src/features/media/queries";
 import { ReelVideoItem } from "./ReelVideoItem";
 import { ReelVideoItemSkeleton } from "./ReelVideoItemSkeleton";
 
@@ -13,12 +13,17 @@ export function ReelsScreen() {
   const params = useLocalSearchParams<{ videoId?: string | string[] }>();
   const selectedId = Array.isArray(params.videoId) ? params.videoId[0] : params.videoId;
   const query = usePublicMedia({ perPage: REELS_PAGE_SIZE });
-  const items = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data]);
+  const selectedQuery = usePublicMediaItem(selectedId ?? "", Boolean(selectedId));
+  const pagedItems = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data]);
+  const items = useMemo(() => {
+    const selected = selectedQuery.data;
+    if (!selected) return pagedItems;
+    return [selected, ...pagedItems.filter((item) => item.id !== selected.id)];
+  }, [pagedItems, selectedQuery.data]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [screenFocused, setScreenFocused] = useState(false);
   const [pageHeight, setPageHeight] = useState(1);
   const listRef = useRef<FlatList<(typeof items)[number]>>(null);
-  const didScrollToSelected = useRef(false);
   const activeIdRef = useRef<string | null>(null);
 
   const setActiveReel = useCallback((id: string | null) => {
@@ -29,11 +34,15 @@ export function ReelsScreen() {
   useFocusEffect(
     useCallback(() => {
       setScreenFocused(true);
+      if (selectedId) {
+        setActiveReel(selectedId);
+        requestAnimationFrame(() => listRef.current?.scrollToOffset({ offset: 0, animated: false }));
+      }
       return () => {
         setScreenFocused(false);
         setActiveReel(null);
       };
-    }, [setActiveReel]),
+    }, [selectedId, setActiveReel]),
   );
 
   const availableHeight = Math.max(430, pageHeight);
@@ -62,16 +71,9 @@ export function ReelsScreen() {
     [items.length, query, setActiveReel],
   );
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 55 }).current;
+  const waitingForSelected = Boolean(selectedId) && selectedQuery.isLoading && !selectedQuery.data;
 
-  if (selectedId && !didScrollToSelected.current && items.length > 0 && pageHeight > 1) {
-    const index = items.findIndex((item) => item.id === selectedId);
-    if (index >= 0) {
-      requestAnimationFrame(() => listRef.current?.scrollToIndex({ index, animated: false }));
-      didScrollToSelected.current = true;
-    }
-  }
-
-  if (query.isLoading && items.length === 0) {
+  if ((query.isLoading && items.length === 0) || waitingForSelected) {
     return (
       <View
         className="flex-1 bg-light-100 pt-3 dark:bg-dark-300"
@@ -82,7 +84,7 @@ export function ReelsScreen() {
     );
   }
 
-  if (query.isError && items.length === 0) {
+  if (query.isError && items.length === 0 && (!selectedId || selectedQuery.isError)) {
     return (
       <View className="flex-1 items-center justify-center bg-light-100 px-6 dark:bg-dark-300">
         <Text size="sm" className="text-center text-gray-500 dark:text-gray-300">تعذر تحميل الريلز. حاول مرة أخرى.</Text>
@@ -115,6 +117,11 @@ export function ReelsScreen() {
         decelerationRate="fast"
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
+        onContentSizeChange={() => {
+          if (selectedId && selectedQuery.data && activeIdRef.current === selectedId) {
+            listRef.current?.scrollToOffset({ offset: 0, animated: false });
+          }
+        }}
         onEndReached={() => {
           if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
         }}

@@ -3,22 +3,23 @@ import Text from "@/src/components/ui/Text";
 
 type FeedMediaGridProps = {
   images: string[];
-  onPress?: () => void;
+  onPress?: (index: number) => void;
 };
 
 export function FeedMediaGrid({ images, onPress }: FeedMediaGridProps) {
-  const preview = images.filter(Boolean).slice(0, 4);
+  const normalizedImages = images.filter(Boolean);
+  const preview = normalizedImages.slice(0, 4);
   if (preview.length === 0) return null;
 
-  const extraCount = Math.max(0, images.length - 4);
+  const extraCount = Math.max(0, normalizedImages.length - 4);
   const image = (uri: string, index: number, className: string) => (
     <Pressable
       key={`${uri}-${index}`}
-      onPress={onPress}
+      onPress={() => onPress?.(index)}
       disabled={!onPress}
       className={`overflow-hidden bg-gray-200 dark:bg-dark-350 ${className}`}
       accessibilityRole={onPress ? "button" : undefined}
-      accessibilityLabel={onPress ? "عرض الصور والتفاصيل" : undefined}
+      accessibilityLabel={onPress ? "فتح معرض الصور" : undefined}
     >
       <Image source={{ uri }} className="h-full w-full" resizeMode="cover" />
       {extraCount > 0 && index === 3 ? (
