@@ -7,11 +7,16 @@ import type {
   LoginInput,
   RefreshedTokenPayload,
   RegisterInput,
+  ResendVerificationPayload,
   ResetPasswordInput,
+  VerificationPendingPayload,
+  VerifyAccountInput,
 } from "./types";
 
 const ENDPOINTS = {
   register: "/auth/register",
+  verifyAccount: "/auth/verify-account",
+  resendVerification: "/auth/resend-verification",
   login: "/auth/login",
   refresh: "/auth/refresh",
   logout: "/auth/logout",
@@ -23,8 +28,16 @@ const ENDPOINTS = {
 } as const;
 
 export const authApi = {
-  register: async (input: RegisterInput): Promise<AuthSession> => {
-    const response = await apiClient.post<ApiEnvelope<AuthSession>>(ENDPOINTS.register, input);
+  register: async (input: RegisterInput): Promise<VerificationPendingPayload> => {
+    const response = await apiClient.post<ApiEnvelope<VerificationPendingPayload>>(ENDPOINTS.register, input);
+    return response.data.data;
+  },
+  verifyAccount: async (input: VerifyAccountInput): Promise<AuthSession> => {
+    const response = await apiClient.post<ApiEnvelope<AuthSession>>(ENDPOINTS.verifyAccount, input);
+    return response.data.data;
+  },
+  resendVerification: async (login: string): Promise<ResendVerificationPayload> => {
+    const response = await apiClient.post<ApiEnvelope<ResendVerificationPayload>>(ENDPOINTS.resendVerification, { login });
     return response.data.data;
   },
   login: async (input: LoginInput): Promise<AuthSession> => {

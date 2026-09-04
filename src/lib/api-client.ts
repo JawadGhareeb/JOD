@@ -11,6 +11,8 @@ import type { ApiEnvelope, ApiErrorBody, ApiValidationDetails } from "@/src/type
 const DEFAULT_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 const ANONYMOUS_ENDPOINTS = [
   "/auth/register",
+  "/auth/verify-account",
+  "/auth/resend-verification",
   "/auth/login",
   "/auth/refresh",
   "/auth/forgot-password",

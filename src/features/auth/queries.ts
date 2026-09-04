@@ -3,7 +3,7 @@ import { authApi } from "./api";
 import { authKeys } from "./query-keys";
 import { endSession, getSessionState, storeSession } from "./session";
 import { getLoginPushFields } from "@/src/features/notifications/registration";
-import type { LoginInput, RegisterInput, ResetPasswordInput } from "./types";
+import type { LoginInput, RegisterInput, ResetPasswordInput, VerifyAccountInput } from "./types";
 const authSessionQueryOptions = {
   staleTime: Infinity,
   refetchOnMount: false,
@@ -25,7 +25,9 @@ export function useAuthStatus() {
   };
 }
 export function useLogin() { const queryClient = useQueryClient(); return useMutation({ mutationFn: async (input: LoginInput) => { const pushFields = await getLoginPushFields(); const session = await authApi.login({ ...input, ...pushFields }); await storeSession(session); return session; }, onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.session() }) }); }
-export function useRegister() { const queryClient = useQueryClient(); return useMutation({ mutationFn: async (input: RegisterInput) => { const session = await authApi.register(input); await storeSession(session); return session; }, onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.session() }) }); }
+export function useRegister() { return useMutation({ mutationFn: (input: RegisterInput) => authApi.register(input) }); }
+export function useVerifyAccount() { const queryClient = useQueryClient(); return useMutation({ mutationFn: async (input: VerifyAccountInput) => { const session = await authApi.verifyAccount(input); await storeSession(session); return session; }, onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.session() }) }); }
+export function useResendAccountVerification() { return useMutation({ mutationFn: (login: string) => authApi.resendVerification(login) }); }
 export function useLogout() { const queryClient = useQueryClient(); return useMutation({ mutationFn: endSession, onSuccess: () => { queryClient.clear(); queryClient.invalidateQueries({ queryKey: authKeys.session() }); } }); }
 export function useForgotPassword() { return useMutation({ mutationFn: (login: string) => authApi.forgotPassword(login) }); }
 export function useVerifyResetCode() { return useMutation({ mutationFn: ({ login, code }: { login: string; code: string }) => authApi.verifyResetCode(login, code) }); }

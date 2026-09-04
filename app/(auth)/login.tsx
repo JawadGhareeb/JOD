@@ -15,6 +15,7 @@ import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
 import { useAuthStatus, useLogin } from "@/src/features/auth/queries";
 import { applyApiFormErrors } from "@/src/lib/api-error-utils";
+import { ApiClientError } from "@/src/lib/api-client";
 import { useToast } from "@/src/providers/ToastProvider";
 
 const loginSchema = z.object({
@@ -43,6 +44,10 @@ export default function LoginScreen() {
       toast.success("أهلاً بعودتك إلى جود.", "تم تسجيل الدخول");
       router.replace("/(tabs)/home");
     } catch (error) {
+      if (error instanceof ApiClientError && error.code === "verification_required") {
+        router.push({ pathname: "/(auth)/verify-account", params: { login: values.email.trim() } });
+        return;
+      }
       const message = applyApiFormErrors(error, setError);
       if (message) { setFormError(message); toast.error(message, "تعذر تسجيل الدخول"); }
     }

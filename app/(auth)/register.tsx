@@ -40,9 +40,9 @@ export default function RegisterScreen() {
   const onSubmit = handleSubmit(async (values) => {
     setFormError("");
     try {
-      await registerMutation.mutateAsync({ name: values.name, email: values.email, phone: values.phoneNumber, password: values.password, password_confirmation: values.confirmPassword });
-      toast.success("تم إنشاء حسابك ويمكنك الآن استخدام جميع ميزات جود.", "أهلاً بك في جود");
-      router.replace("/(tabs)/home");
+      const pending = await registerMutation.mutateAsync({ name: values.name, email: values.email, phone: values.phoneNumber, password: values.password, password_confirmation: values.confirmPassword });
+      toast.success("تم إرسال رمز التحقق إلى بريدك الإلكتروني.", "تحقق من حسابك");
+      router.replace({ pathname: "/(auth)/verify-account", params: { login: values.email.trim(), expiresIn: String(pending.expiresIn), resendAvailableIn: String(pending.resendAvailableIn) } });
     } catch (error) {
       const message = applyApiFormErrors(error, setError, { password_confirmation: "confirmPassword" });
       if (message) { setFormError(message); toast.error(message, "تعذر إنشاء الحساب"); }
