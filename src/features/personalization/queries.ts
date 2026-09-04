@@ -22,6 +22,14 @@ export function useCompleteOnboarding() {
   return useMutation({ mutationFn: (input: CompleteOnboardingInput) => personalizationApi.completeOnboarding(input), onSuccess: (data) => queryClient.setQueryData(personalizationKeys.profile(), data) });
 }
 
+export function useRecommendationFeedback() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ contentType, contentId, action }: { contentType: "post" | "campaign" | "media" | "article"; contentId: string; action: "interested" | "not_interested" }) => personalizationApi.submitFeedback(contentType, contentId, action),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: personalizationKeys.all }),
+  });
+}
+
 export function usePersonalizedFeed(type: PersonalizedFeedType, enabled = true) {
   return useInfiniteQuery({
     queryKey: personalizationKeys.feed(type),

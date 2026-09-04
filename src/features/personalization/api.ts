@@ -28,6 +28,10 @@ export const personalizationApi = {
     const response = await apiClient.patch<ApiEnvelope<PersonalizationProfile>>("/me/capabilities", { capabilityIds });
     return response.data.data;
   },
+  submitFeedback: async (contentType: "post" | "campaign" | "media" | "article", contentId: string, action: "interested" | "not_interested") => {
+    const response = await apiClient.post<ApiEnvelope<{ contentType: string; contentId: string; action: string; saved: boolean }>>("/recommendation-feedback", { contentType, contentId, action });
+    return response.data.data;
+  },
   getFeed: async (type: PersonalizedFeedType, page: number, perPage = 20) => {
     const response = await apiClient.get<ApiEnvelope<PersonalizedFeedItem[], PaginationMeta & { feedType: PersonalizedFeedType }>>(`/feed${buildQuery({ type, page, perPage })}`);
     return { items: response.data.data, meta: response.data.meta };

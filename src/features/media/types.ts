@@ -53,6 +53,7 @@ export interface PublicMediaItem {
   createdAt: string | null;
   updatedAt: string | null;
   organization?: PublicMediaOrganization | null;
+  recommendation?: { reasons: string[]; source?: string; isExploration?: boolean; feedbackRequested?: boolean };
 }
 
 export interface PublicMediaParams {

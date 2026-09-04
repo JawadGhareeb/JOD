@@ -4,6 +4,7 @@ import { MapPin, Tag } from "lucide-react-native";
 import { Pressable, View, type GestureResponderEvent } from "react-native";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
+import { RecommendationFeedbackBox } from "@/src/components/shared/RecommendationFeedbackBox";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
@@ -102,6 +103,8 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
         images={campaign.images}
         onPress={() => router.push(`/campaigns/${campaign.id}` as never)}
       />
+
+      <RecommendationFeedbackBox contentType="campaign" contentId={campaign.id} visible={Boolean(campaign.recommendation?.feedbackRequested)} />
 
       {campaign.goalAmount > 0 ? (
         <View className="mt-4 border-t border-gray-100 pt-3 dark:border-dark-400">

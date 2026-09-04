@@ -6,6 +6,7 @@ import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { VideoPlayer } from "@/src/components/shared/VideoPlayer";
+import { RecommendationFeedbackBox } from "@/src/components/shared/RecommendationFeedbackBox";
 import Dialog from "@/src/components/ui/Dialog";
 import Input from "@/src/components/ui/Input";
 import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
@@ -171,6 +172,7 @@ export function ReelVideoItem({
               {video.description}
             </Text>
           ) : null}
+          <RecommendationFeedbackBox contentType="media" contentId={video.id} visible={Boolean(video.recommendation?.feedbackRequested)} />
           <View className="flex-row-reverse items-center gap-3 border-t border-gray-100 pt-3 dark:border-dark-400">
             <Pressable onPress={toggleLike} className="flex-row-reverse items-center gap-1 rounded-full px-2 py-1" disabled={likeMutation.isPending}>
               <HeartIcon size={18} color={isLiked ? "#E11D48" : "#9CA3AF"} fill={isLiked ? "#E11D48" : "transparent"} strokeWidth={2.25} />

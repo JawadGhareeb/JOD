@@ -43,6 +43,8 @@ export type HomePostActionType = "apply" | "donate" | "contact" | "details" | "n
 export type HomePostActionState = "open" | "submitted" | "closed";
 export interface HomePostAction { type: HomePostActionType; label: string; targetId?: string; state?: HomePostActionState }
 
+export interface RecommendationPresentation { reasons: string[]; source?: string; isExploration?: boolean; feedbackRequested?: boolean }
+
 export interface HomePost {
   id: string;
   publisher: Publisher;
@@ -71,6 +73,7 @@ export interface HomePost {
   phoneNumber?: string;
   whatsappNumber?: string;
   audience?: ContentAudience;
+  recommendation?: RecommendationPresentation;
 }
 export type HomeFeedPayload = { posts: HomePost[] };
 
@@ -101,6 +104,7 @@ export interface Campaign {
   closedAt: string | null; closedReason: string | null; reviewedBy?: string | null; rejectionReason: string | null;
   organizationName: string | null; managerName: string | null; phoneNumber?: string; whatsappNumber?: string;
   audience?: ContentAudience;
+  recommendation?: RecommendationPresentation;
 }
 
 export interface Category { id: string; name: string; target: "post" | "campaign"; description: string | null; usageCount: number; status: string; createdAt: string | null; updatedAt: string | null }

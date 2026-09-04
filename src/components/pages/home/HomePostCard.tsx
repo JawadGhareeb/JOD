@@ -18,6 +18,7 @@ import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
+import { RecommendationFeedbackBox } from "@/src/components/shared/RecommendationFeedbackBox";
 import { HomePostTypeEnum } from "@/src/constants/global";
 import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
 import { useLikePost, useReportPost, useSavePost } from "@/src/features/posts/queries";
@@ -404,6 +405,8 @@ export function HomePostCard({
         images={post.images}
         onPress={() => router.push({ pathname: "/posts/[id]", params: { id: post.id } })}
       />
+
+      <RecommendationFeedbackBox contentType="post" contentId={post.id} visible={Boolean(post.recommendation?.feedbackRequested)} />
 
       <View className="mt-3 flex-row-reverse items-center justify-between border-t border-gray-100 pt-2 dark:border-dark-400">
         <View className={`${actionItemClassName} items-center gap-2`}>
