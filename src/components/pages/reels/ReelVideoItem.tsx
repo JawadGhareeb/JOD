@@ -1,24 +1,30 @@
-import { useEffect, useMemo, useState } from "react";
-import { Check } from "lucide-react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, Volume2, VolumeX, X } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
-import { appIcons } from "@/src/components/layout/iconMap";
-import { Pressable, View } from "react-native";
+import { Modal, Pressable, Share, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
+import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
+import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import { VideoPlayer } from "@/src/components/shared/VideoPlayer";
-import { RecommendationFeedbackBox } from "@/src/components/shared/RecommendationFeedbackBox";
 import Dialog from "@/src/components/ui/Dialog";
 import Input from "@/src/components/ui/Input";
 import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
 import { useReportReasons } from "@/src/features/lookups/queries";
 import type { ReportReasonCode } from "@/src/features/lookups/types";
-import { useLikeMedia, useReportMedia, useSaveMedia } from "@/src/features/media/queries";
 import { getReelPlaybackUrl } from "@/src/features/media/helpers";
+import { useLikeMedia, useReportMedia, useSaveMedia } from "@/src/features/media/queries";
 import type { PublicMediaItem } from "@/src/features/media/types";
+import { useRecommendationFeedback } from "@/src/features/personalization/queries";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
-import { getPrimaryColor, PRIMARY_COLOR_LIGHT } from "@/src/theme";
+import { getPrimaryColor } from "@/src/theme";
+
+const ACTION_MENU_WIDTH = 228;
+const ACTION_MENU_HEIGHT = 204;
+const ACTION_MENU_GAP = 8;
+const ACTION_MENU_PADDING = 12;
 
 export function ReelVideoItem({
   video,
@@ -35,28 +41,38 @@ export function ReelVideoItem({
   const { requireAuth } = useAuthGuard();
   const toast = useToast();
   const { colorScheme } = useColorScheme();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const primaryColor = getPrimaryColor(colorScheme === "dark");
   const HeartIcon = appIcons.myDonations;
   const BookmarkIcon = appIcons.savedPosts;
+  const ShareIcon = appIcons.shares;
+  const MoreIcon = appIcons.moreVertical;
   const ShieldIcon = appIcons.shield;
   const PlayIcon = appIcons.play;
   const likeMutation = useLikeMedia();
   const saveMutation = useSaveMedia();
   const reportMutation = useReportMedia();
+  const feedbackMutation = useRecommendationFeedback();
   const reportReasons = useReportReasons();
   const [isLiked, setIsLiked] = useState(video.isLiked);
   const [likesCount, setLikesCount] = useState(video.likesCount ?? 0);
   const [isSaved, setIsSaved] = useState(video.isSaved);
+  const [savesCount, setSavesCount] = useState(video.savesCount ?? 0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [reportPickerOpen, setReportPickerOpen] = useState(false);
   const [selectedReason, setSelectedReason] = useState<ReportReasonCode | null>(null);
   const [customReason, setCustomReason] = useState("");
   const [customReportOpen, setCustomReportOpen] = useState(false);
+  const optionsButtonRef = useRef<View>(null);
+  const [optionsAnchor, setOptionsAnchor] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
   useEffect(() => {
     setIsLiked(video.isLiked);
     setLikesCount(video.likesCount ?? 0);
     setIsSaved(video.isSaved);
-  }, [video.isLiked, video.isSaved, video.likesCount]);
+    setSavesCount(video.savesCount ?? 0);
+  }, [video.isLiked, video.isSaved, video.likesCount, video.savesCount]);
 
   const reportOptions = useMemo<SelectionOption[]>(
     () =>
@@ -68,27 +84,91 @@ export function ReelVideoItem({
     [reportReasons.data],
   );
 
+  const closeOptionsMenu = () => setIsOptionsOpen(false);
+
+  const openOptionsMenu = () => {
+    const anchorNode = optionsButtonRef.current;
+    if (!anchorNode) {
+      setIsOptionsOpen(true);
+      return;
+    }
+    anchorNode.measureInWindow((x, y, width, anchorHeight) => {
+      setOptionsAnchor({ x, y, width, height: anchorHeight });
+      setIsOptionsOpen(true);
+    });
+  };
+
+  const getOptionsMenuStyle = () => {
+    const below = optionsAnchor.y + optionsAnchor.height + ACTION_MENU_GAP;
+    const above = Math.max(ACTION_MENU_PADDING, optionsAnchor.y - ACTION_MENU_HEIGHT - ACTION_MENU_GAP);
+    const top = below + ACTION_MENU_HEIGHT > windowHeight ? above : below;
+    const left = Math.max(
+      ACTION_MENU_PADDING,
+      Math.min(
+        optionsAnchor.x + optionsAnchor.width - ACTION_MENU_WIDTH,
+        windowWidth - ACTION_MENU_WIDTH - ACTION_MENU_PADDING,
+      ),
+    );
+    return { top, left };
+  };
+
   const toggleLike = async () => {
     if (!requireAuth() || likeMutation.isPending) return;
-    const next = !isLiked;
+    const wasLiked = isLiked;
+    const previousCount = likesCount;
+    const next = !wasLiked;
+    setIsLiked(next);
+    setLikesCount((current) => Math.max(0, current + (next ? 1 : -1)));
     try {
       const result = await likeMutation.mutateAsync({ mediaId: video.id, like: next });
       setIsLiked(Boolean(result.isLiked));
-      setLikesCount(result.likesCount ?? likesCount);
+      setLikesCount(result.likesCount ?? previousCount);
     } catch {
+      setIsLiked(wasLiked);
+      setLikesCount(previousCount);
       toast.error("تعذر تحديث الإعجاب. حاول مرة أخرى.", "حدث خطأ");
     }
   };
 
   const toggleSave = async () => {
     if (!requireAuth() || saveMutation.isPending) return;
-    const next = !isSaved;
+    const wasSaved = isSaved;
+    const previousCount = savesCount;
+    const next = !wasSaved;
+    setIsSaved(next);
+    setSavesCount((current) => Math.max(0, current + (next ? 1 : -1)));
     try {
       const result = await saveMutation.mutateAsync({ mediaId: video.id, save: next });
       setIsSaved(Boolean(result.isSaved));
-      toast.success(next ? "تم حفظ الريل." : "تمت إزالة الريل من المحفوظات.");
+      setSavesCount(result.savesCount ?? previousCount);
     } catch {
+      setIsSaved(wasSaved);
+      setSavesCount(previousCount);
       toast.error("تعذر تحديث الحفظ. حاول مرة أخرى.", "حدث خطأ");
+    }
+  };
+
+  const shareReel = async () => {
+    try {
+      await Share.share({ message: playbackUrl });
+    } catch {
+      toast.error("تعذر فتح المشاركة الآن.");
+    }
+  };
+
+  const handleRecommendationFeedback = async (action: "interested" | "not_interested") => {
+    closeOptionsMenu();
+    if (!requireAuth() || feedbackMutation.isPending) return;
+    try {
+      await feedbackMutation.mutateAsync({ contentType: "media", contentId: video.id, action });
+      toast.success(
+        action === "interested"
+          ? "سنقترح لك ريلز مشابهة أكثر."
+          : "سنقلل ظهور الريلز المشابهة.",
+        "تم تحديث تفضيلاتك",
+      );
+    } catch {
+      toast.error("تعذر حفظ تفضيلك الآن. حاول مرة أخرى.");
     }
   };
 
@@ -118,77 +198,187 @@ export function ReelVideoItem({
 
   const organizationName = video.organization?.name || "منظمة على جود";
   const organizationImage = video.organization?.image || video.organization?.logo?.url || null;
+  const organizationVerified = Boolean(video.organization?.verified);
   const playbackUrl = getReelPlaybackUrl(video);
 
   return (
     <View style={{ height }} className="bg-light-100 px-3 pb-3 dark:bg-dark-300">
-      <View className="flex-1 overflow-hidden rounded-3xl border border-gray-200 bg-white dark:border-dark-400 dark:bg-dark-500">
-        <View className="flex-row-reverse items-center justify-between px-4 py-3">
+      <View className="relative flex-1 overflow-hidden rounded-3xl bg-dark-500">
+        {active ? (
+          <VideoPlayer
+            url={playbackUrl}
+            active
+            loop
+            muted={isMuted}
+            showProgressControls
+            progressControlsPlacement="center"
+            style={{ width: "100%", height: "100%" }}
+          />
+        ) : (
           <Pressable
-            onPress={() => video.organization?.id && router.push(`/author/${video.organization.id}` as never)}
-            className="flex-row-reverse items-center gap-2"
+            onPress={onPlayRequest}
+            className="flex-1 items-center justify-center bg-dark-500"
             accessibilityRole="button"
+            accessibilityLabel="تشغيل الريل"
           >
-            <Avatar name={organizationName} imageUrl={organizationImage} size={42} />
-            <View className="items-end">
-              <View className="flex-row-reverse items-center gap-1">
-                <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
-                  {organizationName}
-                </Text>
-                <Check size={14} color={PRIMARY_COLOR_LIGHT} strokeWidth={2.7} />
-              </View>
-              <Text size="2xs" className="text-gray-500 dark:text-gray-300">فيديو من جود</Text>
+            <View className="h-16 w-16 items-center justify-center rounded-full bg-black/55">
+              <PlayIcon size={28} color="#FFFFFF" fill="#FFFFFF" />
             </View>
           </Pressable>
-          <View className="size-9" />
+        )}
+
+        <View className="absolute bottom-4 right-3 z-20 items-center gap-4">
+          <Pressable
+            onPress={() => void toggleLike()}
+            disabled={likeMutation.isPending}
+            className="items-center gap-1"
+            accessibilityRole="button"
+            accessibilityLabel={isLiked ? "إلغاء الإعجاب بالريل" : "إعجاب بالريل"}
+          >
+            <View className="h-11 w-11 items-center justify-center rounded-full bg-black/50">
+              <HeartIcon
+                size={24}
+                color={isLiked ? "#E11D48" : "#FFFFFF"}
+                fill={isLiked ? "#E11D48" : "transparent"}
+                strokeWidth={2.25}
+              />
+            </View>
+            <Text size="2xs" weight="semibold" className="text-white">{likesCount}</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => void toggleSave()}
+            disabled={saveMutation.isPending}
+            className="items-center gap-1"
+            accessibilityRole="button"
+            accessibilityLabel={isSaved ? "إلغاء حفظ الريل" : "حفظ الريل"}
+          >
+            <View className="h-11 w-11 items-center justify-center rounded-full bg-black/50">
+              <BookmarkIcon
+                size={23}
+                color={isSaved ? primaryColor : "#FFFFFF"}
+                fill={isSaved ? primaryColor : "transparent"}
+                strokeWidth={2.25}
+              />
+            </View>
+            <Text size="2xs" weight="semibold" className="text-white">{savesCount}</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => void shareReel()}
+            className="items-center gap-1"
+            accessibilityRole="button"
+            accessibilityLabel="مشاركة الريل"
+          >
+            <View className="h-11 w-11 items-center justify-center rounded-full bg-black/50">
+              <ShareIcon size={23} color="#FFFFFF" strokeWidth={2.25} />
+            </View>
+            <Text size="2xs" weight="semibold" className="text-white">مشاركة</Text>
+          </Pressable>
+
+          <Pressable
+            ref={optionsButtonRef}
+            onPress={openOptionsMenu}
+            className="items-center gap-1"
+            accessibilityRole="button"
+            accessibilityLabel="خيارات الريل"
+          >
+            <View className="h-11 w-11 items-center justify-center rounded-full bg-black/50">
+              <MoreIcon size={23} color="#FFFFFF" strokeWidth={2.25} />
+            </View>
+          </Pressable>
         </View>
 
-        <View className="min-h-0 flex-1 bg-dark-500">
-          {active ? (
-            <VideoPlayer
-              url={playbackUrl}
-              active
-              loop
-              showProgressControls
-              style={{ width: "100%", height: "100%" }}
-            />
-          ) : (
-            <Pressable
-              onPress={onPlayRequest}
-              className="flex-1 items-center justify-center bg-dark-500"
-              accessibilityRole="button"
-              accessibilityLabel="تشغيل الريل"
-            >
-              <View className="h-16 w-16 items-center justify-center rounded-full bg-black/55">
-                <PlayIcon size={28} color="#FFFFFF" fill="#FFFFFF" />
+        <Pressable
+          onPress={() => video.organization?.id && router.push(`/author/${video.organization.id}` as never)}
+          className="absolute bottom-4 left-3 right-20 z-20 rounded-2xl bg-black/40 p-3"
+          accessibilityRole="button"
+          accessibilityLabel={`عرض ملف ${organizationName}`}
+        >
+          <View className="flex-row-reverse items-center gap-2">
+            <Avatar name={organizationName} imageUrl={organizationImage} size={38} />
+            <View className="flex-1 items-end">
+              <View className="flex-row-reverse items-center gap-1">
+                <Text weight="semibold" size="sm" className="text-white">
+                  {organizationName}
+                </Text>
+                {organizationVerified ? <VerifiedBadge size={15} /> : null}
               </View>
-            </Pressable>
-          )}
-        </View>
-
-        <View className="px-4 py-3">
+              <Text size="2xs" className="mt-0.5 text-gray-200">فيديو من جود</Text>
+            </View>
+          </View>
           {video.description ? (
-            <Text size="sm" className="mb-3 text-dark-100 dark:text-light-50" numberOfLines={3}>
+            <Text size="xs" className="mt-2 text-white" numberOfLines={2} rtlAlign="right">
               {video.description}
             </Text>
           ) : null}
-          <RecommendationFeedbackBox contentType="media" contentId={video.id} visible={Boolean(video.recommendation?.feedbackRequested)} />
-          <View className="flex-row-reverse items-center gap-3 border-t border-gray-100 pt-3 dark:border-dark-400">
-            <Pressable onPress={toggleLike} className="flex-row-reverse items-center gap-1 rounded-full px-2 py-1" disabled={likeMutation.isPending}>
-              <HeartIcon size={18} color={isLiked ? "#E11D48" : "#9CA3AF"} fill={isLiked ? "#E11D48" : "transparent"} strokeWidth={2.25} />
-              <Text size="xs" className={isLiked ? "text-rose-600" : "text-gray-500 dark:text-gray-300"}>{likesCount}</Text>
+        </Pressable>
+      </View>
+
+      <Modal
+        visible={isOptionsOpen}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={closeOptionsMenu}
+      >
+        <View className="flex-1" onTouchStart={closeOptionsMenu}>
+          <View className="absolute inset-0 bg-transparent" />
+          <View
+            className="absolute z-30 w-56 rounded-xl border border-gray-200 bg-white p-1 shadow-sm dark:border-dark-400 dark:bg-dark-500"
+            style={getOptionsMenuStyle()}
+            onStartShouldSetResponder={() => true}
+            onTouchStart={(event) => event.stopPropagation()}
+          >
+            <Pressable
+              onPress={() => {
+                setIsMuted((current) => !current);
+                closeOptionsMenu();
+              }}
+              className="flex-row-reverse items-center justify-between rounded-lg px-3 py-2.5"
+              accessibilityRole="button"
+            >
+              <Text size="xs">{isMuted ? "تشغيل الصوت" : "كتم الصوت"}</Text>
+              {isMuted ? (
+                <Volume2 size={17} color={primaryColor} strokeWidth={2.25} />
+              ) : (
+                <VolumeX size={17} color={primaryColor} strokeWidth={2.25} />
+              )}
             </Pressable>
-            <Pressable onPress={toggleSave} className="flex-row-reverse items-center gap-1 rounded-full px-2 py-1" disabled={saveMutation.isPending}>
-              <BookmarkIcon size={17} color={isSaved ? primaryColor : "#9CA3AF"} fill={isSaved ? primaryColor : "transparent"} strokeWidth={2.25} />
-              <Text size="xs" className={isSaved ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}>{isSaved ? "محفوظ" : "حفظ"}</Text>
+            <Pressable
+              onPress={() => void handleRecommendationFeedback("interested")}
+              disabled={feedbackMutation.isPending}
+              className="flex-row-reverse items-center justify-between rounded-lg px-3 py-2.5"
+              accessibilityRole="button"
+            >
+              <Text size="xs">مهتم</Text>
+              <Check size={17} color={primaryColor} strokeWidth={2.5} />
             </Pressable>
-            <Pressable onPress={() => { if (!requireAuth()) return; setReportPickerOpen(true); }} className="flex-row-reverse items-center gap-1 rounded-full px-2 py-1">
+            <Pressable
+              onPress={() => void handleRecommendationFeedback("not_interested")}
+              disabled={feedbackMutation.isPending}
+              className="flex-row-reverse items-center justify-between rounded-lg px-3 py-2.5"
+              accessibilityRole="button"
+            >
+              <Text size="xs" className="text-gray-600 dark:text-gray-200">غير مهتم</Text>
+              <X size={17} color="#9CA3AF" strokeWidth={2.5} />
+            </Pressable>
+            <View className="my-1 h-px bg-gray-100 dark:bg-dark-400" />
+            <Pressable
+              onPress={() => {
+                closeOptionsMenu();
+                if (!requireAuth()) return;
+                setReportPickerOpen(true);
+              }}
+              className="flex-row-reverse items-center justify-between rounded-lg px-3 py-2.5"
+              accessibilityRole="button"
+            >
+              <Text size="xs" className="text-error-300">إبلاغ عن الريل</Text>
               <ShieldIcon size={17} color="#DC2626" strokeWidth={2.25} />
-              <Text size="xs" className="text-error-300">إبلاغ</Text>
             </Pressable>
           </View>
         </View>
-      </View>
+      </Modal>
 
       <SelectionModal
         visible={reportPickerOpen}

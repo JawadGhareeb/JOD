@@ -73,7 +73,7 @@ export function GroupsScreen() {
         onRefresh={() => void query.refetch()}
         ListHeaderComponent={
           <View className="gap-2">
-            {activeTab === "myGroups" ? <CreateGroupCta /> : null}
+            {activeTab === "myGroups" && groups.length > 0 ? <CreateGroupCta /> : null}
             {groups.length > 0 ? (
               <Text size="2xs" className="mb-1 text-gray-500 dark:text-gray-300">
                 {intro}
@@ -89,7 +89,11 @@ export function GroupsScreen() {
               ))}
             </View>
           ) : (
-            <GroupsEmptyState message={empty} showCreate={activeTab === "myGroups"} />
+            <GroupsEmptyState
+              message={empty}
+              showCreate={activeTab === "myGroups"}
+              onExplore={() => setActiveTab("discover")}
+            />
           )
         }
       />
@@ -179,30 +183,46 @@ function GroupsTabBar({
   );
 }
 
-function GroupsEmptyState({ message, showCreate }: { message: string; showCreate: boolean }) {
+function GroupsEmptyState({
+  message,
+  showCreate,
+  onExplore,
+}: {
+  message: string;
+  showCreate: boolean;
+  onExplore: () => void;
+}) {
   const router = useRouter();
   const { requireAuth } = useAuthGuard();
   const { colorScheme } = useColorScheme();
   const primaryColor = getPrimaryColor(colorScheme === "dark");
 
   return (
-    <View className="items-center gap-3 py-14">
-      <View className="size-16 items-center justify-center rounded-2xl bg-primary-100 dark:bg-dark-350">
-        <GroupsIcon size={28} color={primaryColor} strokeWidth={2} />
+    <View className="gap-3 py-8">
+      <View className="w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-dark-400 dark:bg-dark-500">
+        <View className="size-16 items-center justify-center rounded-2xl bg-primary-100 dark:bg-dark-350">
+          <GroupsIcon size={28} color={primaryColor} strokeWidth={2} />
+        </View>
+        <Text size="sm" rtlAlign="center" className="text-gray-500 dark:text-gray-300">
+          {message}
+        </Text>
       </View>
-      <Text size="sm" rtlAlign="center" className="text-gray-500 dark:text-gray-300">
-        {message}
-      </Text>
       {showCreate ? (
-        <Button
-          size="small"
-          onPress={() => {
-            if (!requireAuth()) return;
-            router.push("/groups/create" as never);
-          }}
-        >
-          أنشئ فريقك التطوعي الأول
-        </Button>
+        <View className="gap-2">
+          <Button
+            fullWidth
+            size="small"
+            onPress={() => {
+              if (!requireAuth()) return;
+              router.push("/groups/create" as never);
+            }}
+          >
+            إنشاء فريق تطوعي
+          </Button>
+          <Button fullWidth size="small" variant="tertiary" onPress={onExplore}>
+            تصفح الفرق التطوعية
+          </Button>
+        </View>
       ) : null}
     </View>
   );

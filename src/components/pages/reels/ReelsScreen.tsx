@@ -117,9 +117,6 @@ export function ReelsScreen() {
         showsVerticalScrollIndicator={false}
         onScroll={onHeaderScroll}
         scrollEventThrottle={16}
-        snapToInterval={cardHeight + REEL_GAP}
-        snapToAlignment="start"
-        decelerationRate="fast"
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         onContentSizeChange={() => {

@@ -2,33 +2,31 @@ import { View } from "react-native";
 import { SkeletonBlock } from "@/src/components/ui/SkeletonBlock";
 
 export function ReelVideoItemSkeleton({ height }: { height: number }) {
-  const videoHeight = Math.max(250, height - 154);
-
   return (
     <View style={{ height }} className="bg-light-100 px-3 pb-3 dark:bg-dark-300">
-      <View className="flex-1 overflow-hidden rounded-3xl border border-gray-200 bg-white dark:border-dark-400 dark:bg-dark-500">
-        <View className="flex-row-reverse items-center justify-between px-4 py-3">
+      <View className="relative flex-1 overflow-hidden rounded-3xl bg-dark-500">
+        <View className="absolute inset-0 bg-dark-350" />
+
+        <View className="absolute bottom-4 right-3 items-center gap-4">
+          {[0, 1, 2, 3].map((item) => (
+            <View key={item} className="items-center gap-1">
+              <SkeletonBlock width={44} height={44} radius={22} />
+              {item < 3 ? <SkeletonBlock width={28} height={9} radius={5} /> : null}
+            </View>
+          ))}
+        </View>
+
+        <View className="absolute bottom-4 left-3 right-20 rounded-2xl bg-black/30 p-3">
           <View className="flex-row-reverse items-center gap-2">
-            <SkeletonBlock width={42} height={42} radius={21} />
-            <View className="items-end gap-2">
+            <SkeletonBlock width={38} height={38} radius={19} />
+            <View className="flex-1 items-end gap-2">
               <SkeletonBlock width={110} height={12} radius={6} />
               <SkeletonBlock width={72} height={9} radius={6} />
             </View>
           </View>
-          <SkeletonBlock width={36} height={36} radius={18} />
-        </View>
-
-        <SkeletonBlock width="100%" height={videoHeight} radius={0} />
-
-        <View className="px-4 py-3">
-          <View className="mb-3 gap-2">
-            <SkeletonBlock width="92%" height={11} radius={6} />
-            <SkeletonBlock width="68%" height={11} radius={6} />
-          </View>
-          <View className="flex-row-reverse items-center gap-3 border-t border-gray-100 pt-3 dark:border-dark-400">
-            <SkeletonBlock width={62} height={26} radius={999} />
-            <SkeletonBlock width={70} height={26} radius={999} />
-            <SkeletonBlock width={58} height={26} radius={999} />
+          <View className="mt-3 gap-2">
+            <SkeletonBlock width="90%" height={10} radius={5} />
+            <SkeletonBlock width="62%" height={10} radius={5} />
           </View>
         </View>
       </View>

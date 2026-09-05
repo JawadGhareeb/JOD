@@ -26,6 +26,7 @@ export interface MediaItem {
 export interface PublicMediaOrganization {
   id: string;
   name: string;
+  verified?: boolean;
   image?: string | null;
   logo?: MediaItem | null;
 }

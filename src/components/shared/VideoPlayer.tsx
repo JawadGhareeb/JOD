@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   AppState,
@@ -23,6 +23,7 @@ type VideoPlayerProps = {
   muted?: boolean;
   nativeControls?: boolean;
   showProgressControls?: boolean;
+  progressControlsPlacement?: "bottom" | "center";
   onRequestPlay?: () => void;
   style?: StyleProp<ViewStyle>;
 };
@@ -42,6 +43,7 @@ export function VideoPlayer({
   muted = false,
   nativeControls = false,
   showProgressControls = false,
+  progressControlsPlacement = "bottom",
   onRequestPlay,
   style,
 }: VideoPlayerProps) {
@@ -50,6 +52,8 @@ export function VideoPlayer({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [progressWidth, setProgressWidth] = useState(1);
+  const [centerControlsVisible, setCenterControlsVisible] = useState(false);
+  const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const player = useVideoPlayer(url, (instance) => {
     instance.loop = loop;
     instance.muted = muted;
@@ -70,8 +74,15 @@ export function VideoPlayer({
   }, []);
 
   useEffect(() => {
+    return () => {
+      if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!active) {
       setManuallyPaused(false);
+      setCenterControlsVisible(false);
       player.pause();
       return;
     }
@@ -94,12 +105,32 @@ export function VideoPlayer({
     [currentTime, duration],
   );
 
+  const scheduleCenterControlsHide = () => {
+    if (progressControlsPlacement !== "center" || manuallyPaused) return;
+    if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+    controlsTimerRef.current = setTimeout(() => setCenterControlsVisible(false), 1600);
+  };
+
+  const revealCenterControls = () => {
+    if (progressControlsPlacement !== "center") return;
+    setCenterControlsVisible(true);
+    scheduleCenterControlsHide();
+  };
+
   const togglePlayback = () => {
     if (!active) {
       onRequestPlay?.();
       return;
     }
-    setManuallyPaused((current) => !current);
+    const nextPaused = !manuallyPaused;
+    setManuallyPaused(nextPaused);
+    if (progressControlsPlacement === "center") {
+      setCenterControlsVisible(true);
+      if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+      if (!nextPaused) {
+        controlsTimerRef.current = setTimeout(() => setCenterControlsVisible(false), 1600);
+      }
+    }
   };
 
   const seekFromPress = (event: GestureResponderEvent) => {
@@ -107,6 +138,7 @@ export function VideoPlayer({
     const ratio = Math.min(1, Math.max(0, event.nativeEvent.locationX / progressWidth));
     player.currentTime = ratio * duration;
     setCurrentTime(player.currentTime);
+    revealCenterControls();
   };
 
   const seekBy = (seconds: number) => {
@@ -114,6 +146,7 @@ export function VideoPlayer({
     const nextTime = Math.min(duration || Number.POSITIVE_INFINITY, Math.max(0, player.currentTime + seconds));
     player.currentTime = Number.isFinite(nextTime) ? nextTime : 0;
     setCurrentTime(player.currentTime);
+    revealCenterControls();
   };
 
   const restart = () => {
@@ -122,6 +155,8 @@ export function VideoPlayer({
     setManuallyPaused(false);
     if (active && appActive) player.play();
   };
+
+  const centerControlsShown = progressControlsPlacement === "center" && (centerControlsVisible || manuallyPaused);
 
   return (
     <View style={[{ overflow: "hidden" }, style]}>
@@ -136,7 +171,7 @@ export function VideoPlayer({
           contentFit="contain"
           allowsFullscreen
         />
-        {!nativeControls && (!active || manuallyPaused) ? (
+        {!nativeControls && (!active || manuallyPaused) && progressControlsPlacement !== "center" ? (
           <View className="absolute inset-0 items-center justify-center bg-black/20">
             <View className="h-14 w-14 items-center justify-center rounded-full bg-black/65">
               <PlayIcon size={26} color="#FFFFFF" fill="#FFFFFF" />
@@ -145,7 +180,64 @@ export function VideoPlayer({
         ) : null}
       </Pressable>
 
-      {showProgressControls ? (
+      {centerControlsShown ? (
+        <View pointerEvents="box-none" className="absolute inset-0 items-center justify-center bg-black/15">
+          <View className="flex-row items-center gap-7">
+            <Pressable
+              onPress={() => seekBy(-10)}
+              className="h-14 w-14 items-center justify-center rounded-full bg-black/60"
+              accessibilityRole="button"
+              accessibilityLabel="تأخير 10 ثواني"
+            >
+              <View className="items-center">
+                <RotateCcw size={24} color="#FFFFFF" />
+                <Text size="2xs" weight="bold" className="absolute top-1.5 text-white">10</Text>
+              </View>
+            </Pressable>
+            <Pressable
+              onPress={togglePlayback}
+              className="h-16 w-16 items-center justify-center rounded-full bg-black/65"
+              accessibilityRole="button"
+              accessibilityLabel={manuallyPaused ? "تشغيل" : "إيقاف مؤقت"}
+            >
+              {manuallyPaused ? (
+                <PlayIcon size={30} color="#FFFFFF" fill="#FFFFFF" />
+              ) : (
+                <Pause size={30} color="#FFFFFF" fill="#FFFFFF" />
+              )}
+            </Pressable>
+            <Pressable
+              onPress={() => seekBy(10)}
+              className="h-14 w-14 items-center justify-center rounded-full bg-black/60"
+              accessibilityRole="button"
+              accessibilityLabel="تقديم 10 ثواني"
+            >
+              <View className="items-center">
+                <RotateCw size={24} color="#FFFFFF" />
+                <Text size="2xs" weight="bold" className="absolute top-1.5 text-white">10</Text>
+              </View>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+
+      {showProgressControls && progressControlsPlacement === "center" ? (
+        <View className="absolute bottom-0 left-0 right-0 px-2 pb-1">
+          <Pressable
+            onLayout={(event) => setProgressWidth(Math.max(1, event.nativeEvent.layout.width))}
+            onPress={seekFromPress}
+            className="h-4 justify-end"
+            accessibilityRole="adjustable"
+            accessibilityLabel="تقديم أو تأخير الفيديو"
+          >
+            <View className="h-1 overflow-hidden rounded-full bg-white/30">
+              <View className="h-full rounded-full bg-primary-400" style={{ width: `${progress * 100}%` }} />
+            </View>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {showProgressControls && progressControlsPlacement === "bottom" ? (
         <View className="absolute bottom-0 left-0 right-0 bg-black/55 px-3 pb-2 pt-3">
           <Pressable
             onLayout={(event) => setProgressWidth(Math.max(1, event.nativeEvent.layout.width))}

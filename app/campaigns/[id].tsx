@@ -15,6 +15,8 @@ import { useCampaignDonors } from "@/src/features/donations/queries";
 import { useCampaign } from "@/src/features/posts/queries";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 
+const formatWesternNumber = (value: number) => value.toLocaleString("en-US");
+
 export default function CampaignDetailsPage() {
   const router = useRouter();
   const { requireAuth } = useAuthGuard();
@@ -25,37 +27,28 @@ export default function CampaignDetailsPage() {
   const campaign = query.data;
   const donorsQuery = useCampaignDonors(id, { perPage: 10 });
   const donors = donorsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+
   if (query.isLoading) return <CampaignDetailsSkeleton />;
-  if (!campaign || !id) return <Container className="bg-light-100 px-4 pt-6 dark:bg-dark-300"><Text>تعذر العثور على الحملة.</Text></Container>;
-  const progress = campaign.goalAmount > 0 ? Math.min(100, (campaign.raisedAmount / campaign.goalAmount) * 100) : 0;
+  if (!campaign || !id) {
+    return (
+      <Container className="bg-light-100 px-4 pt-6 dark:bg-dark-300">
+        <Text>تعذر العثور على الحملة.</Text>
+      </Container>
+    );
+  }
+
+  const progress = campaign.goalAmount > 0
+    ? Math.min(100, (campaign.raisedAmount / campaign.goalAmount) * 100)
+    : 0;
   const categoryName = typeof campaign.category === "string" ? campaign.category : campaign.category?.name;
   const publisherName = campaign.organizationName || campaign.publisher.name;
+
   return (
     <Container scrollable className="bg-light-100 px-4 pt-6 dark:bg-dark-300">
       <View className="gap-4 pb-8">
         <Text variant="heading" weight="bold" rtlAlign="right">تفاصيل الحملة</Text>
 
-        <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
-          <Pressable
-            onPress={() => campaign.publisher.id && router.push({ pathname: "/author/[id]", params: { id: campaign.publisher.id } })}
-            disabled={!campaign.publisher.id}
-            className="flex-row-reverse items-center gap-3"
-            accessibilityRole={campaign.publisher.id ? "button" : undefined}
-          >
-            <Avatar name={publisherName} imageUrl={campaign.publisher.avatarUrl} size={52} />
-            <View className="flex-1 items-end">
-              <View className="flex-row-reverse items-center gap-1">
-                <Text size="sm" weight="semibold">{publisherName}</Text>
-                {campaign.publisher.verified ? <VerifiedBadge /> : null}
-              </View>
-              {campaign.publisher.username ? (
-                <Text size="xs" className="text-gray-500 dark:text-gray-300">@{campaign.publisher.username}</Text>
-              ) : null}
-            </View>
-          </Pressable>
-        </Card>
-
-        <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="gap-4 border-gray-200 dark:border-dark-400">
           <Text variant="heading" weight="bold" rtlAlign="right">{campaign.title}</Text>
           <View className="flex-row-reverse flex-wrap gap-2">
             {categoryName ? (
@@ -71,6 +64,28 @@ export default function CampaignDetailsPage() {
               </View>
             ) : null}
           </View>
+
+          <Pressable
+            onPress={() => campaign.publisher.id && router.push({ pathname: "/author/[id]", params: { id: campaign.publisher.id } })}
+            disabled={!campaign.publisher.id}
+            className="flex-row-reverse items-center gap-3 border-t border-gray-100 pt-3 dark:border-dark-400"
+            accessibilityRole={campaign.publisher.id ? "button" : undefined}
+          >
+            <Avatar name={publisherName} imageUrl={campaign.publisher.avatarUrl} size={48} />
+            <View className="flex-1 items-end">
+              <View className="flex-row-reverse items-center gap-1">
+                <Text size="sm" weight="semibold">{publisherName}</Text>
+                {campaign.publisher.verified ? <VerifiedBadge /> : null}
+              </View>
+              {campaign.publisher.username ? (
+                <Text size="xs" className="text-gray-500 dark:text-gray-300">@{campaign.publisher.username}</Text>
+              ) : null}
+            </View>
+          </Pressable>
+        </Card>
+
+        <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
+          <Text size="sm" weight="semibold">الوصف</Text>
           {campaign.summary ? <Text size="sm" weight="medium" className="leading-7">{campaign.summary}</Text> : null}
           {campaign.content ? <Text size="sm" className="leading-7">{campaign.content}</Text> : null}
           <FeedMediaGrid images={campaign.images} onPress={(index) => setGalleryIndex(index)} />
@@ -88,15 +103,15 @@ export default function CampaignDetailsPage() {
             {campaign.raisedAmount.toLocaleString("ar-SY")} / {campaign.goalAmount.toLocaleString("ar-SY")}
           </Text>
           <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-            {campaign.donorsCount} متبرع
-            {campaign.beneficiariesCount > 0 ? ` • ${campaign.beneficiariesCount} مستفيد` : ""}
+            {formatWesternNumber(campaign.donorsCount)} متبرع
+            {campaign.beneficiariesCount > 0 ? ` • ${formatWesternNumber(campaign.beneficiariesCount)} مستفيد` : ""}
           </Text>
         </Card>
 
         <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
           <View className="flex-row-reverse items-center justify-between">
             <Text size="sm" weight="semibold">المتبرعون بالحملة</Text>
-            <Text size="2xs" className="text-gray-500 dark:text-gray-300">{campaign.donorsCount} متبرع</Text>
+            <Text size="2xs" className="text-gray-500 dark:text-gray-300">{formatWesternNumber(campaign.donorsCount)} متبرع</Text>
           </View>
 
           {donorsQuery.isLoading ? (
@@ -152,13 +167,20 @@ export default function CampaignDetailsPage() {
         </Card>
 
         {campaign.status === "active" ? (
-          <Button fullWidth onPress={() => { if (!requireAuth()) return; router.push({ pathname: "/donate/[id]", params: { id } }); }}>
+          <Button
+            fullWidth
+            onPress={() => {
+              if (!requireAuth()) return;
+              router.push({ pathname: "/donate/[id]", params: { id } });
+            }}
+          >
             تبرع للحملة
           </Button>
         ) : (
           <Button fullWidth disabled>الحملة غير متاحة للتبرع</Button>
         )}
       </View>
+
       <FullScreenImageGallery
         images={campaign.images}
         visible={galleryIndex !== null}

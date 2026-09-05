@@ -100,6 +100,7 @@ export interface Campaign {
   beneficiariesCount: number; donorsCount: number; applicantsCount: number;
   stats: { likes: number; comments: number; shares: number };
   viewsCount: number; reactionsCount: number; commentsCount: number; sharesCount: number;
+  isLiked?: boolean; engagementPostId?: string | null;
   startDate: string | null; endDate: string | null; submittedAt: string | null; createdAt: string | null; updatedAt: string | null;
   closedAt: string | null; closedReason: string | null; reviewedBy?: string | null; rejectionReason: string | null;
   organizationName: string | null; managerName: string | null; phoneNumber?: string; whatsappNumber?: string;

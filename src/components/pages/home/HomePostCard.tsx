@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { MapPin, Pencil, Tag, Trash2 } from "lucide-react-native";
+import { Check, MapPin, Pencil, Tag, Trash2, X } from "lucide-react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
@@ -18,11 +18,12 @@ import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
-import { RecommendationFeedbackBox } from "@/src/components/shared/RecommendationFeedbackBox";
+import { FullScreenImageGallery } from "@/src/components/shared/FullScreenImageGallery";
 import { HomePostTypeEnum } from "@/src/constants/global";
 import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
 import { useLikePost, useReportPost, useSavePost } from "@/src/features/posts/queries";
 import { useReportReasons } from "@/src/features/lookups/queries";
+import { useRecommendationFeedback } from "@/src/features/personalization/queries";
 import type { CreatePostType, HomePost } from "@/src/features/posts/types";
 import { useRTL } from "@/src/providers/RTLProvider";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
@@ -47,8 +48,8 @@ const MAX_CONTENT = 120;
 const ACTION_MENU_WIDTH = 208;
 const ACTION_MENU_GAP = 8;
 const ACTION_MENU_PADDING = 12;
-const ACTION_MENU_ESTIMATED_HEIGHT_SINGLE = 76;
-const ACTION_MENU_ESTIMATED_HEIGHT_DOUBLE = 164;
+const ACTION_MENU_ESTIMATED_HEIGHT_FEED = 156;
+const ACTION_MENU_ESTIMATED_HEIGHT_OWN = 164;
 const reportTypeOptions: SelectionOption[] = [
   {
     label: "محتوى مضلل",
@@ -104,6 +105,7 @@ export function HomePostCard({
   const likeMutation = useLikePost();
   const saveMutation = useSavePost();
   const reportMutation = useReportPost();
+  const feedbackMutation = useRecommendationFeedback();
   const reportReasonsQuery = useReportReasons();
   const liveReportTypeOptions: SelectionOption[] = (reportReasonsQuery.data ?? []).map((reason) => ({
     label: reason.label,
@@ -116,11 +118,15 @@ export function HomePostCard({
   const [likesCount, setLikesCount] = useState(post.stats.likes);
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [isOtherReasonDialogOpen, setIsOtherReasonDialogOpen] = useState(false);
 
 
   const [otherReportReason, setOtherReportReason] = useState("");
   const optionsButtonRef = useRef<View>(null);
+  const lastCardTapRef = useRef(0);
+  const lastMediaTapRef = useRef(0);
+  const mediaTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [optionsAnchor, setOptionsAnchor] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [pendingOwnPostAction, setPendingOwnPostAction] = useState<"delete" | "edit" | null>(null);
   const shouldTruncate = post.content.length > MAX_CONTENT;
@@ -140,9 +146,7 @@ export function HomePostCard({
   const canEditRejectedPost = isOwnPost && ownPostStatus === "unposted";
   const actionItemClassName = isRTL ? "flex-row-reverse" : "flex-row";
   const estimatedOptionsMenuHeight =
-    isOwnPost && canEditRejectedPost
-      ? ACTION_MENU_ESTIMATED_HEIGHT_DOUBLE
-      : ACTION_MENU_ESTIMATED_HEIGHT_SINGLE;
+    isOwnPost ? ACTION_MENU_ESTIMATED_HEIGHT_OWN : ACTION_MENU_ESTIMATED_HEIGHT_FEED;
   const openOptionsMenu = () => {
     const anchorNode = optionsButtonRef.current;
     if (!anchorNode) {
@@ -217,6 +221,51 @@ export function HomePostCard({
       setIsLiked(wasLiked);
       setLikesCount(previousCount);
       toast.error("لم نتمكن من تحديث الإعجاب الآن. حاول مرة أخرى.");
+    }
+  };
+
+  const handleCardPress = () => {
+    const now = Date.now();
+    if (now - lastCardTapRef.current <= 300) {
+      lastCardTapRef.current = 0;
+      void handleToggleLike();
+      return;
+    }
+    lastCardTapRef.current = now;
+  };
+
+  const handleMediaPress = (index: number) => {
+    const now = Date.now();
+    if (now - lastMediaTapRef.current <= 300) {
+      if (mediaTapTimerRef.current) clearTimeout(mediaTapTimerRef.current);
+      mediaTapTimerRef.current = null;
+      lastMediaTapRef.current = 0;
+      void handleToggleLike();
+      return;
+    }
+
+    lastMediaTapRef.current = now;
+    if (mediaTapTimerRef.current) clearTimeout(mediaTapTimerRef.current);
+    mediaTapTimerRef.current = setTimeout(() => {
+      lastMediaTapRef.current = 0;
+      mediaTapTimerRef.current = null;
+      setGalleryIndex(index);
+    }, 300);
+  };
+
+  const handleRecommendationFeedback = async (action: "interested" | "not_interested") => {
+    closeOptionsMenu();
+    if (!requireAuth() || feedbackMutation.isPending) return;
+    try {
+      await feedbackMutation.mutateAsync({ contentType: "post", contentId: post.id, action });
+      toast.success(
+        action === "interested"
+          ? "سنقترح لك محتوى مشابهاً أكثر."
+          : "سنقلل ظهور المحتوى المشابه.",
+        "تم تحديث تفضيلاتك",
+      );
+    } catch {
+      toast.error("تعذر حفظ تفضيلك الآن. حاول مرة أخرى.");
     }
   };
 
@@ -380,9 +429,24 @@ export function HomePostCard({
         </View>
       </View>
 
-      <Text size="sm" className="text-dark-100 dark:text-light-50">
-        {displayContent}
-      </Text>
+      <Pressable
+        onPress={handleCardPress}
+        accessibilityRole="button"
+        accessibilityLabel="اضغط مرتين للإعجاب بالمنشور"
+      >
+        <Text size="sm" className="text-dark-100 dark:text-light-50">
+          {displayContent}
+        </Text>
+
+        {post.category?.name ? (
+          <View className="mt-2 flex-row-reverse flex-wrap items-center gap-2">
+            <View className="flex-row-reverse items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 dark:bg-primary-400/15">
+              <Tag size={12} color={primaryColor} strokeWidth={2.2} />
+              <Text size="2xs" className="text-primary-400">{post.category.name}</Text>
+            </View>
+          </View>
+        ) : null}
+      </Pressable>
 
       {shouldTruncate ? (
         <Pressable onPress={() => setExpanded((prev) => !prev)} className="mt-2 self-end">
@@ -392,21 +456,7 @@ export function HomePostCard({
         </Pressable>
       ) : null}
 
-      {post.category?.name ? (
-        <View className="mt-2 flex-row-reverse flex-wrap items-center gap-2">
-          <View className="flex-row-reverse items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 dark:bg-primary-400/15">
-            <Tag size={12} color={primaryColor} strokeWidth={2.2} />
-            <Text size="2xs" className="text-primary-400">{post.category.name}</Text>
-          </View>
-        </View>
-      ) : null}
-
-      <FeedMediaGrid
-        images={post.images}
-        onPress={() => router.push({ pathname: "/posts/[id]", params: { id: post.id } })}
-      />
-
-      <RecommendationFeedbackBox contentType="post" contentId={post.id} visible={Boolean(post.recommendation?.feedbackRequested)} />
+      <FeedMediaGrid images={post.images} onPress={handleMediaPress} />
 
       <View className="mt-3 flex-row-reverse items-center justify-between border-t border-gray-100 pt-2 dark:border-dark-400">
         <View className={`${actionItemClassName} items-center gap-2`}>
@@ -509,15 +559,38 @@ export function HomePostCard({
                     </Pressable>
                   </>
                 ) : (
-                  <Pressable
-                    onPress={handleReportPost}
-                    className={`${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
-                    accessibilityRole="button"
-                    accessibilityLabel="إبلاغ عن المنشور"
-                  >
-                    <Text size="xs" className="text-error-300">إبلاغ عن المنشور</Text>
-                    <ShieldIcon size={15} color="#DC2626" strokeWidth={2.25} />
-                  </Pressable>
+                  <>
+                    <Pressable
+                      onPress={() => void handleRecommendationFeedback("interested")}
+                      disabled={feedbackMutation.isPending}
+                      className={`${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
+                      accessibilityRole="button"
+                      accessibilityLabel="مهتم بهذا المنشور"
+                    >
+                      <Text size="xs" className="text-dark-100 dark:text-light-50">مهتم</Text>
+                      <Check size={15} color={primaryColor} strokeWidth={2.5} />
+                    </Pressable>
+                    <Pressable
+                      onPress={() => void handleRecommendationFeedback("not_interested")}
+                      disabled={feedbackMutation.isPending}
+                      className={`${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
+                      accessibilityRole="button"
+                      accessibilityLabel="غير مهتم بهذا المنشور"
+                    >
+                      <Text size="xs" className="text-gray-600 dark:text-gray-200">غير مهتم</Text>
+                      <X size={15} color="#9CA3AF" strokeWidth={2.5} />
+                    </Pressable>
+                    <View className="my-1 h-px bg-gray-100 dark:bg-dark-400" />
+                    <Pressable
+                      onPress={handleReportPost}
+                      className={`${actionItemClassName} items-center justify-between rounded-lg px-3 py-2`}
+                      accessibilityRole="button"
+                      accessibilityLabel="إبلاغ عن المنشور"
+                    >
+                      <Text size="xs" className="text-error-300">إبلاغ عن المنشور</Text>
+                      <ShieldIcon size={15} color="#DC2626" strokeWidth={2.25} />
+                    </Pressable>
+                  </>
                 )}
               </View>
             </View>
@@ -566,6 +639,13 @@ export function HomePostCard({
             onPress: handleConfirmOwnPostAction,
           },
         ]}
+      />
+
+      <FullScreenImageGallery
+        images={post.images}
+        visible={galleryIndex !== null}
+        initialIndex={galleryIndex ?? 0}
+        onClose={() => setGalleryIndex(null)}
       />
 
       <SelectionModal
