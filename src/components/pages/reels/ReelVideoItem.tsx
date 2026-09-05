@@ -5,6 +5,7 @@ import { Modal, Pressable, Share, useWindowDimensions, View } from "react-native
 import { useRouter } from "expo-router";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
+import { FollowButton } from "@/src/components/shared/FollowButton";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import { VideoPlayer } from "@/src/components/shared/VideoPlayer";
 import Dialog from "@/src/components/ui/Dialog";
@@ -17,12 +18,13 @@ import { getReelPlaybackUrl } from "@/src/features/media/helpers";
 import { useLikeMedia, useReportMedia, useSaveMedia } from "@/src/features/media/queries";
 import type { PublicMediaItem } from "@/src/features/media/types";
 import { useRecommendationFeedback } from "@/src/features/personalization/queries";
+import { usePublisher } from "@/src/features/posts/queries";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
 import { getPrimaryColor } from "@/src/theme";
 
 const ACTION_MENU_WIDTH = 228;
-const ACTION_MENU_HEIGHT = 204;
+const ACTION_MENU_HEIGHT = 164;
 const ACTION_MENU_GAP = 8;
 const ACTION_MENU_PADDING = 12;
 
@@ -53,6 +55,7 @@ export function ReelVideoItem({
   const saveMutation = useSaveMedia();
   const reportMutation = useReportMedia();
   const feedbackMutation = useRecommendationFeedback();
+  const publisherQuery = usePublisher(video.organization?.id);
   const reportReasons = useReportReasons();
   const [isLiked, setIsLiked] = useState(video.isLiked);
   const [likesCount, setLikesCount] = useState(video.likesCount ?? 0);
@@ -196,14 +199,15 @@ export function ReelVideoItem({
     }
   };
 
-  const organizationName = video.organization?.name || "منظمة على جود";
-  const organizationImage = video.organization?.image || video.organization?.logo?.url || null;
-  const organizationVerified = Boolean(video.organization?.verified);
+  const publisher = publisherQuery.data;
+  const organizationName = publisher?.name || video.organization?.name || "منظمة على جود";
+  const organizationImage = publisher?.avatarUrl || video.organization?.image || video.organization?.logo?.url || null;
+  const organizationVerified = Boolean(publisher?.verified ?? video.organization?.verified);
   const playbackUrl = getReelPlaybackUrl(video);
 
   return (
-    <View style={{ height }} className="bg-light-100 px-3 pb-3 dark:bg-dark-300">
-      <View className="relative flex-1 overflow-hidden rounded-3xl bg-dark-500">
+    <View style={{ height }}>
+      <View className="relative flex-1 overflow-hidden bg-dark-500">
         {active ? (
           <VideoPlayer
             url={playbackUrl}
@@ -227,7 +231,7 @@ export function ReelVideoItem({
           </Pressable>
         )}
 
-        <View className="absolute bottom-4 right-3 z-20 items-center gap-4">
+        <View className="absolute bottom-24 right-3 z-20 items-center gap-4">
           <Pressable
             onPress={() => void toggleLike()}
             disabled={likeMutation.isPending}
@@ -235,7 +239,7 @@ export function ReelVideoItem({
             accessibilityRole="button"
             accessibilityLabel={isLiked ? "إلغاء الإعجاب بالريل" : "إعجاب بالريل"}
           >
-            <View className="h-11 w-11 items-center justify-center rounded-full bg-black/50">
+            <View className="h-11 w-11 items-center justify-center">
               <HeartIcon
                 size={24}
                 color={isLiked ? "#E11D48" : "#FFFFFF"}
@@ -253,7 +257,7 @@ export function ReelVideoItem({
             accessibilityRole="button"
             accessibilityLabel={isSaved ? "إلغاء حفظ الريل" : "حفظ الريل"}
           >
-            <View className="h-11 w-11 items-center justify-center rounded-full bg-black/50">
+            <View className="h-11 w-11 items-center justify-center">
               <BookmarkIcon
                 size={23}
                 color={isSaved ? primaryColor : "#FFFFFF"}
@@ -270,7 +274,7 @@ export function ReelVideoItem({
             accessibilityRole="button"
             accessibilityLabel="مشاركة الريل"
           >
-            <View className="h-11 w-11 items-center justify-center rounded-full bg-black/50">
+            <View className="h-11 w-11 items-center justify-center">
               <ShareIcon size={23} color="#FFFFFF" strokeWidth={2.25} />
             </View>
             <Text size="2xs" weight="semibold" className="text-white">مشاركة</Text>
@@ -283,36 +287,63 @@ export function ReelVideoItem({
             accessibilityRole="button"
             accessibilityLabel="خيارات الريل"
           >
-            <View className="h-11 w-11 items-center justify-center rounded-full bg-black/50">
+            <View className="h-11 w-11 items-center justify-center">
               <MoreIcon size={23} color="#FFFFFF" strokeWidth={2.25} />
             </View>
           </Pressable>
         </View>
 
         <Pressable
-          onPress={() => video.organization?.id && router.push(`/author/${video.organization.id}` as never)}
-          className="absolute bottom-4 left-3 right-20 z-20 rounded-2xl bg-black/40 p-3"
+          onPress={() => setIsMuted((current) => !current)}
+          className="absolute bottom-2 right-3 z-30 h-10 w-10 items-center justify-center"
           accessibilityRole="button"
-          accessibilityLabel={`عرض ملف ${organizationName}`}
+          accessibilityLabel={isMuted ? "تشغيل صوت الريل" : "كتم صوت الريل"}
         >
+          {isMuted ? (
+            <VolumeX size={23} color="#FFFFFF" strokeWidth={2.25} />
+          ) : (
+            <Volume2 size={23} color="#FFFFFF" strokeWidth={2.25} />
+          )}
+        </Pressable>
+
+        <View className="absolute bottom-8 left-3 right-20 z-20">
           <View className="flex-row-reverse items-center gap-2">
-            <Avatar name={organizationName} imageUrl={organizationImage} size={38} />
-            <View className="flex-1 items-end">
-              <View className="flex-row-reverse items-center gap-1">
-                <Text weight="semibold" size="sm" className="text-white">
-                  {organizationName}
-                </Text>
-                {organizationVerified ? <VerifiedBadge size={15} /> : null}
+            <Pressable
+              onPress={() => {
+                if (!video.organization?.id) return;
+                router.push({ pathname: "/author/[id]", params: { id: video.organization.id } });
+              }}
+              disabled={!video.organization?.id}
+              className="min-w-0 flex-1 flex-row-reverse items-center gap-2"
+              accessibilityRole="button"
+              accessibilityLabel={`عرض ملف ${organizationName}`}
+            >
+              <Avatar name={organizationName} imageUrl={organizationImage} size={38} />
+              <View className="min-w-0 flex-1 items-end">
+                <View className="flex-row-reverse items-center gap-1">
+                  <Text weight="semibold" size="sm" className="text-white" numberOfLines={1}>
+                    {organizationName}
+                  </Text>
+                  {organizationVerified ? <VerifiedBadge size={15} /> : null}
+                </View>
+                <Text size="2xs" className="mt-0.5 text-gray-200">فيديو من جود</Text>
               </View>
-              <Text size="2xs" className="mt-0.5 text-gray-200">فيديو من جود</Text>
-            </View>
+            </Pressable>
+            {video.organization?.id && publisher ? (
+              <FollowButton
+                targetType="organization"
+                targetId={video.organization.id}
+                isFollowing={Boolean(publisher.isFollowing)}
+                appearance="overlay"
+              />
+            ) : null}
           </View>
           {video.description ? (
             <Text size="xs" className="mt-2 text-white" numberOfLines={2} rtlAlign="right">
               {video.description}
             </Text>
           ) : null}
-        </Pressable>
+        </View>
       </View>
 
       <Modal
@@ -330,21 +361,6 @@ export function ReelVideoItem({
             onStartShouldSetResponder={() => true}
             onTouchStart={(event) => event.stopPropagation()}
           >
-            <Pressable
-              onPress={() => {
-                setIsMuted((current) => !current);
-                closeOptionsMenu();
-              }}
-              className="flex-row-reverse items-center justify-between rounded-lg px-3 py-2.5"
-              accessibilityRole="button"
-            >
-              <Text size="xs">{isMuted ? "تشغيل الصوت" : "كتم الصوت"}</Text>
-              {isMuted ? (
-                <Volume2 size={17} color={primaryColor} strokeWidth={2.25} />
-              ) : (
-                <VolumeX size={17} color={primaryColor} strokeWidth={2.25} />
-              )}
-            </Pressable>
             <Pressable
               onPress={() => void handleRecommendationFeedback("interested")}
               disabled={feedbackMutation.isPending}

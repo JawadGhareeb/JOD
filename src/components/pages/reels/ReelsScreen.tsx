@@ -26,7 +26,13 @@ export function ReelsScreen() {
   const [pageHeight, setPageHeight] = useState(1);
   const listRef = useRef<FlatList<(typeof items)[number]>>(null);
   const activeIdRef = useRef<string | null>(null);
-  const { onScroll: onHeaderScroll, resetHeader } = useCollapsibleHeaderScreen();
+  const { onScroll: onHeaderScroll } = useCollapsibleHeaderScreen({
+    resetOnFocus: false,
+    scrollEpsilon: 0.5,
+    collapseAfterY: 18,
+    collapseTravel: 7,
+    expandTravel: 5,
+  });
 
   const setActiveReel = useCallback((id: string | null) => {
     activeIdRef.current = id;
@@ -35,7 +41,6 @@ export function ReelsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      resetHeader();
       setScreenFocused(true);
       if (selectedId) {
         setActiveReel(selectedId);
@@ -45,7 +50,7 @@ export function ReelsScreen() {
         setScreenFocused(false);
         setActiveReel(null);
       };
-    }, [resetHeader, selectedId, setActiveReel]),
+    }, [selectedId, setActiveReel]),
   );
 
   const availableHeight = Math.max(430, pageHeight);

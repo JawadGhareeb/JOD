@@ -13,6 +13,7 @@ type FollowButtonProps = {
   isFollowing: boolean;
   size?: "small" | "medium";
   fullWidth?: boolean;
+  appearance?: "default" | "overlay";
 };
 
 export function FollowButton({
@@ -21,6 +22,7 @@ export function FollowButton({
   isFollowing,
   size = "small",
   fullWidth = false,
+  appearance = "default",
 }: FollowButtonProps) {
   const { requireAuth } = useAuthGuard();
   const toast = useToast();
@@ -28,8 +30,8 @@ export function FollowButton({
   const primaryColor = getPrimaryColor(colorScheme === "dark");
   const follow = useFollowPublisher();
   const unfollow = useUnfollowPublisher();
-  // Disabling during the request is what prevents a double-tap from firing twice.
   const isPending = follow.isPending || unfollow.isPending;
+  const isOverlay = appearance === "overlay";
 
   const onPress = async () => {
     if (!requireAuth() || isPending) return;
@@ -47,14 +49,15 @@ export function FollowButton({
     <Button
       size={size}
       fullWidth={fullWidth}
-      variant={isFollowing ? "tertiary" : "primary"}
+      variant={isOverlay ? "primary" : isFollowing ? "tertiary" : "primary"}
+      className={isOverlay ? "min-h-[32px] rounded-lg border border-white/80 bg-transparent px-3 py-1 shadow-none" : undefined}
       loading={isPending}
       disabled={isPending}
       onPress={() => void onPress()}
       accessibilityLabel={isFollowing ? "إلغاء المتابعة" : "متابعة"}
       accessibilityState={{ selected: isFollowing, disabled: isPending }}
       leftIcon={
-        isFollowing ? (
+        isOverlay ? undefined : isFollowing ? (
           <Check size={15} color={primaryColor} strokeWidth={2.5} />
         ) : (
           <UserPlus size={15} color="#FFFFFF" strokeWidth={2.25} />

@@ -1,5 +1,5 @@
 import { useFocusEffect } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { Animated, Easing, type NativeSyntheticEvent, type NativeScrollEvent } from "react-native";
 
 const SCROLL_EPSILON = 2;
@@ -13,44 +13,69 @@ let directionalTravel = 0;
 let lastDirection: -1 | 0 | 1 = 0;
 let isCollapsed = false;
 
+type CollapsibleHeaderScreenOptions = {
+  resetOnFocus?: boolean;
+  scrollEpsilon?: number;
+  collapseAfterY?: number;
+  collapseTravel?: number;
+  expandTravel?: number;
+};
+
+function resetScrollTracking(offsetY = 0) {
+  lastScrollY = Math.max(0, offsetY);
+  directionalTravel = 0;
+  lastDirection = 0;
+}
+
 function animateHeader(collapsed: boolean) {
   if (collapsed === isCollapsed) return;
   isCollapsed = collapsed;
   headerCollapseProgress.stopAnimation();
   Animated.timing(headerCollapseProgress, {
     toValue: collapsed ? 1 : 0,
-    duration: collapsed ? 150 : 170,
-    easing: Easing.out(Easing.cubic),
+    duration: collapsed ? 105 : 120,
+    easing: Easing.out(Easing.quad),
     useNativeDriver: false,
   }).start();
 }
 
 export function resetHeader() {
-  lastScrollY = 0;
-  directionalTravel = 0;
-  lastDirection = 0;
+  resetScrollTracking(0);
   isCollapsed = false;
   headerCollapseProgress.stopAnimation();
   headerCollapseProgress.setValue(0);
 }
 
-export function useCollapsibleHeaderScreen() {
+export function useCollapsibleHeaderScreen(options: CollapsibleHeaderScreenOptions = {}) {
+  const {
+    resetOnFocus = true,
+    scrollEpsilon = SCROLL_EPSILON,
+    collapseAfterY = COLLAPSE_AFTER_Y,
+    collapseTravel = COLLAPSE_TRAVEL,
+    expandTravel = EXPAND_TRAVEL,
+  } = options;
+  const hasScrolledSinceFocusRef = useRef(false);
+
   useFocusEffect(
     useCallback(() => {
-      resetHeader();
-    }, []),
+      hasScrolledSinceFocusRef.current = false;
+      if (resetOnFocus) resetHeader();
+      else resetScrollTracking(0);
+    }, [resetOnFocus]),
   );
 
   const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetY = Math.max(0, event.nativeEvent.contentOffset.y);
 
-    if (offsetY <= SCROLL_EPSILON) {
-      resetHeader();
+    if (offsetY <= scrollEpsilon) {
+      resetScrollTracking(0);
+      if (resetOnFocus || hasScrolledSinceFocusRef.current) animateHeader(false);
       return;
     }
 
+    hasScrolledSinceFocusRef.current = true;
     const delta = offsetY - lastScrollY;
-    if (Math.abs(delta) < SCROLL_EPSILON) return;
+    if (Math.abs(delta) < scrollEpsilon) return;
 
     const direction: -1 | 1 = delta > 0 ? 1 : -1;
     if (direction !== lastDirection) {
@@ -60,17 +85,17 @@ export function useCollapsibleHeaderScreen() {
     directionalTravel += Math.abs(delta);
     lastScrollY = offsetY;
 
-    if (direction > 0 && offsetY >= COLLAPSE_AFTER_Y && directionalTravel >= COLLAPSE_TRAVEL) {
+    if (direction > 0 && offsetY >= collapseAfterY && directionalTravel >= collapseTravel) {
       directionalTravel = 0;
       animateHeader(true);
       return;
     }
 
-    if (direction < 0 && directionalTravel >= EXPAND_TRAVEL) {
+    if (direction < 0 && directionalTravel >= expandTravel) {
       directionalTravel = 0;
       animateHeader(false);
     }
-  }, []);
+  }, [collapseAfterY, collapseTravel, expandTravel, resetOnFocus, scrollEpsilon]);
 
   return {
     onScroll,

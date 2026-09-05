@@ -222,7 +222,7 @@ export function VideoPlayer({
       ) : null}
 
       {showProgressControls && progressControlsPlacement === "center" ? (
-        <View className="absolute bottom-0 left-0 right-0 px-2 pb-1">
+        <View className="absolute bottom-0 left-0 right-0 z-30">
           <Pressable
             onLayout={(event) => setProgressWidth(Math.max(1, event.nativeEvent.layout.width))}
             onPress={seekFromPress}
@@ -230,8 +230,13 @@ export function VideoPlayer({
             accessibilityRole="adjustable"
             accessibilityLabel="تقديم أو تأخير الفيديو"
           >
-            <View className="h-1 overflow-hidden rounded-full bg-white/30">
-              <View className="h-full rounded-full bg-primary-400" style={{ width: `${progress * 100}%` }} />
+            <View className="h-[3px] bg-white/35">
+              <View className="relative h-full bg-white" style={{ width: `${progress * 100}%` }}>
+                <View
+                  style={{ position: "absolute", right: -4, top: -2.5, width: 8, height: 8, borderRadius: 4 }}
+                  className="bg-white"
+                />
+              </View>
             </View>
           </Pressable>
         </View>
