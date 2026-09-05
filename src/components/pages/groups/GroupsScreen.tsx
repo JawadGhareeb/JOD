@@ -91,8 +91,13 @@ export function GroupsScreen() {
           ) : (
             <GroupsEmptyState
               message={empty}
-              showCreate={activeTab === "myGroups"}
-              onExplore={() => setActiveTab("discover")}
+              onExplore={() => {
+                if (activeTab === "discover") {
+                  void query.refetch();
+                  return;
+                }
+                setActiveTab("discover");
+              }}
             />
           )
         }
@@ -185,11 +190,9 @@ function GroupsTabBar({
 
 function GroupsEmptyState({
   message,
-  showCreate,
   onExplore,
 }: {
   message: string;
-  showCreate: boolean;
   onExplore: () => void;
 }) {
   const router = useRouter();
@@ -207,23 +210,21 @@ function GroupsEmptyState({
           {message}
         </Text>
       </View>
-      {showCreate ? (
-        <View className="gap-2">
-          <Button
-            fullWidth
-            size="small"
-            onPress={() => {
-              if (!requireAuth()) return;
-              router.push("/groups/create" as never);
-            }}
-          >
-            إنشاء فريق تطوعي
-          </Button>
-          <Button fullWidth size="small" variant="tertiary" onPress={onExplore}>
-            تصفح الفرق التطوعية
-          </Button>
-        </View>
-      ) : null}
+      <View className="gap-2">
+        <Button
+          fullWidth
+          size="small"
+          onPress={() => {
+            if (!requireAuth()) return;
+            router.push("/groups/create" as never);
+          }}
+        >
+          إنشاء فريق تطوعي
+        </Button>
+        <Button fullWidth size="small" variant="tertiary" onPress={onExplore}>
+          تصفح الفرق التطوعية
+        </Button>
+      </View>
     </View>
   );
 }

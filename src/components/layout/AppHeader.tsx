@@ -101,7 +101,6 @@ export function AppHeader({ includeTopInset = true }: AppHeaderProps) {
     <View
       style={{
         zIndex: 20,
-        elevation: 20,
         backgroundColor: surfaceColor,
       }}
     >

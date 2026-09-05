@@ -44,8 +44,19 @@ export default function CampaignDetailsPage() {
   const publisherName = campaign.organizationName || campaign.publisher.name;
 
   return (
-    <Container scrollable className="bg-light-100 px-4 pt-6 dark:bg-dark-300">
-      <View className="gap-4 pb-8">
+    <Container
+      scrollable
+      className="bg-light-100 dark:bg-dark-300"
+      scrollViewProps={{
+        contentContainerStyle: {
+          flexGrow: 1,
+          paddingHorizontal: 16,
+          paddingTop: 24,
+          paddingBottom: 36,
+          gap: 16,
+        },
+      }}
+    >
         <Text variant="heading" weight="bold" rtlAlign="right">تفاصيل الحملة</Text>
 
         <Card padding="md" className="gap-4 border-gray-200 dark:border-dark-400">
@@ -179,7 +190,6 @@ export default function CampaignDetailsPage() {
         ) : (
           <Button fullWidth disabled>الحملة غير متاحة للتبرع</Button>
         )}
-      </View>
 
       <FullScreenImageGallery
         images={campaign.images}
