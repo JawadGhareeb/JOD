@@ -4,7 +4,7 @@ import { SkeletonBlock } from "@/src/components/ui/SkeletonBlock";
 
 export function NotificationItemCardSkeleton() {
   return (
-    <Card padding="md" className="mb-3 border border-gray-200 dark:border-dark-400">
+    <Card padding="md" className="mb-2 border border-gray-200 dark:border-dark-400">
       <View className="flex-row-reverse items-start gap-3">
         <SkeletonBlock width={40} height={40} radius={12} />
         <View className="flex-1">

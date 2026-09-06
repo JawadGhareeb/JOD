@@ -96,7 +96,7 @@ export default function VerifyAccountScreen() {
   return (
     <KeyboardAvoider className="flex-1">
       <Container scrollable className="bg-light-100 dark:bg-dark-300" scrollViewProps={{ contentContainerStyle: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 16, paddingVertical: 32 } }}>
-        <View className="gap-5">
+        <View className="gap-2">
           <View className="items-center gap-3">
             <Logo variant="medium" showName />
             <View className="h-14 w-14 items-center justify-center rounded-2xl bg-primary-100 dark:bg-primary-400/15"><MailCheck size={28} color="#4A9782" /></View>

@@ -20,7 +20,7 @@ export function GroupPostCard({ post }: GroupPostCardProps) {
   const isStaff = post.author.role !== "member";
 
   return (
-    <Card padding="md" className="mb-3 gap-3 border-gray-200 dark:border-dark-400">
+    <Card padding="md" className="mb-2 gap-3 border-gray-200 dark:border-dark-400">
       <View className="flex-row-reverse items-center gap-2">
         <Avatar name={post.author.name} imageUrl={post.author.avatarUrl} size={36} />
         <View className="flex-1">

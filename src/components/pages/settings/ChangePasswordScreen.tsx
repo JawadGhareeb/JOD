@@ -75,7 +75,7 @@ export function ChangePasswordScreen() {
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
       <MenuPageHeader title="تغيير كلمة المرور" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <View className="mb-3 flex-row-reverse items-center gap-2">
             {step === "verify" ? <ShieldCheck size={20} color="#4A9782" /> : <Lock size={20} color="#4A9782" />}
             <Text weight="semibold" size="sm">{step === "verify" ? "تحقق من رمز الأمان" : "أمان الحساب"}</Text>

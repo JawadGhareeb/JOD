@@ -53,7 +53,7 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoider className="flex-1">
       <Container scrollable className="bg-light-100 dark:bg-dark-300" scrollViewProps={{ contentContainerStyle: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 24, paddingBottom: 36, justifyContent: "center" } }}>
-        <View className="gap-5">
+        <View className="gap-2">
           <View className="absolute -left-24 -top-20 h-52 w-52 rounded-full bg-primary-100/60 dark:bg-primary-400/10" />
           <FadeInUp><View className="items-center gap-3"><Logo variant="medium" showName /><View className="items-center gap-2 px-4"><Text variant="heading" weight="bold" rtlAlign="center">ابدأ رحلتك مع جود</Text><Text size="sm" rtlAlign="center" className="leading-6 text-gray-600 dark:text-gray-300">أنشئ حساباً لتطلب المساعدة أو تقدمها وتتابع الحملات.</Text></View></View></FadeInUp>
           <FadeInUp delay={90}>

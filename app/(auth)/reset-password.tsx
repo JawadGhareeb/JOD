@@ -277,7 +277,7 @@ export default function ResetPasswordScreen() {
   };
 
   const renderEmailStep = () => (
-    <View className="gap-4">
+    <View className="gap-2">
       <View className="gap-2">
         <Text variant="heading" weight="bold" rtlAlign="center">
           إعادة تعيين كلمة المرور
@@ -315,7 +315,7 @@ export default function ResetPasswordScreen() {
   );
 
   const renderCodeStep = () => (
-    <View className="gap-4">
+    <View className="gap-2">
       <View className="gap-2">
         <Text variant="heading" weight="bold" rtlAlign="center">
           تحقق من الرمز
@@ -382,7 +382,7 @@ export default function ResetPasswordScreen() {
   );
 
   const renderPasswordStep = () => (
-    <View className="gap-4">
+    <View className="gap-2">
       <View className="gap-2">
         <Text variant="heading" weight="bold" rtlAlign="center">
           تعيين كلمة مرور جديدة

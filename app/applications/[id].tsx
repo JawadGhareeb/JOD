@@ -40,7 +40,7 @@ export default function ApplicationDetailsPage() {
     {query.isLoading ? <Text size="xs" className="py-8 text-center text-gray-500">جارِ تحميل الطلب...</Text> : null}
     {query.isError ? <Card padding="md"><Text size="xs" className="text-error-300">تعذر تحميل الطلب.</Text><View className="mt-3"><Button size="small" onPress={() => void query.refetch()}>إعادة المحاولة</Button></View></Card> : null}
     {item ? <>
-      <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+      <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
         <Text weight="semibold" size="base">{item.campaignTitle}</Text>
         <Text size="xs" className="mt-1 text-gray-500 dark:text-gray-300">{item.organizationName ?? "-"}</Text>
         <View className="mt-4 gap-3">

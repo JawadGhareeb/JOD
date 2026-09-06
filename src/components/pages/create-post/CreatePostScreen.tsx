@@ -343,14 +343,14 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         scrollEventThrottle={showPageHeader ? undefined : 16}
       >
         {editMode && myPostQuery.data?.status === "blocked" && myPostQuery.data.blockReason ? (
-          <Card padding="md" className="mb-3 border-error-300/30 bg-error-300/5">
+          <Card padding="md" className="mb-2 border-error-300/30 bg-error-300/5">
             <Text weight="semibold" size="sm" className="text-error-300">سبب رفض المنشور</Text>
             <Text size="xs" className="mt-2 text-error-300">{myPostQuery.data.blockReason}</Text>
             <Text size="2xs" className="mt-2 text-gray-500 dark:text-gray-300">عدّل البيانات المطلوبة ثم استخدم «حفظ وإعادة الإرسال» لإرساله للمراجعة من جديد.</Text>
           </Card>
         ) : null}
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="mb-3 text-dark-100 dark:text-light-50">نوع المنشور</Text>
           {postTypeOptions.length ? (
             <View className="flex-row-reverse gap-2">
@@ -367,7 +367,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
           {typeHint ? <Text size="2xs" className="mt-3 text-gray-500 dark:text-gray-300">{typeHint}</Text> : null}
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="mb-3 text-dark-100 dark:text-light-50">الجمهور المستهدف</Text>
           <View className="flex-row-reverse gap-2">
             {CONTENT_AUDIENCE_OPTIONS.map((option) => {
@@ -388,7 +388,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
           </Text>
         </Card>
 
-        <Card padding="md" className="mb-3 gap-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 gap-3 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">تفاصيل المنشور</Text>
           <Input fullWidth showStatusIcon={false} rightIcon={<TitleIcon size={16} strokeWidth={2.25} />} value={title} onChangeText={setTitle} placeholder="عنوان المنشور" placeholderTextColor="#9CA3AF" />
 
@@ -400,7 +400,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
           {!canPublish ? <Text size="2xs" className="text-error-300">للنشر: العنوان 4 أحرف على الأقل، التفاصيل 10 أحرف على الأقل، ويجب اختيار المحافظة والتصنيف.</Text> : null}
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <View className="mb-2 flex-row-reverse items-center justify-between">
             <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">صور المنشور</Text>
             <Text size="2xs" className="text-gray-500 dark:text-gray-300">{selectedImages.length}/{MAX_POST_IMAGES}</Text>

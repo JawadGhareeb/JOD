@@ -43,7 +43,7 @@ export function CampaignDetailsSkeleton() {
   return (
     <Container scrollable className="bg-light-100 px-4 dark:bg-dark-300">
       <MenuPageHeader title="تفاصيل الحملة" />
-      <View className="gap-4 pb-8">
+      <View className="gap-2 pb-8">
         <SkeletonBlock width={132} height={22} radius={8} />
 
         <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">

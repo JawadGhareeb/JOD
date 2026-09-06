@@ -26,7 +26,7 @@ export function AboutScreen() {
           <Logo variant="small" />
         </View>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             منصة جود
           </Text>
@@ -36,7 +36,7 @@ export function AboutScreen() {
           </Text>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             رؤيتنا ورسالتنا
           </Text>
@@ -46,7 +46,7 @@ export function AboutScreen() {
           </Text>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             ما الذي نقدمه؟
           </Text>
@@ -59,7 +59,7 @@ export function AboutScreen() {
           </View>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             كيف نتحقق من المحتوى؟
           </Text>
@@ -72,7 +72,7 @@ export function AboutScreen() {
           </View>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             قيمنا
           </Text>
@@ -82,7 +82,7 @@ export function AboutScreen() {
           </Text>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             الإصدار والتواصل
           </Text>

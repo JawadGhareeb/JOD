@@ -19,7 +19,7 @@ const STATUS_LABELS: Record<string, string> = {
 function ApplicationCard({ item, onPress }: { item: CampaignApplication; onPress: () => void }) {
   return (
     <Pressable onPress={onPress}>
-      <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+      <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
         <View className="flex-row-reverse items-start justify-between gap-3">
           <View className="flex-1">
             <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">{item.campaignTitle}</Text>

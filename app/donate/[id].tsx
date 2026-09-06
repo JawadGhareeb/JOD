@@ -86,7 +86,7 @@ export default function DonatePage() {
     <KeyboardAvoider className="flex-1">
       <Container scrollable className="bg-light-100 dark:bg-dark-300" scrollViewProps={{ contentContainerStyle: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 36 } }}>
         <MenuPageHeader title="طلب تبرع" />
-        <View className="gap-5">
+        <View className="gap-2">
           <View className="items-center gap-3"><Logo variant="medium" showName /></View>
           {campaignQuery.isLoading ? <Text size="sm" color="secondary" rtlAlign="center">جارِ تحميل الحملة...</Text> : !campaign ? <Card padding="md"><Text size="sm" rtlAlign="center">تعذر العثور على الحملة المطلوبة.</Text></Card> : (
             <>

@@ -30,7 +30,7 @@ export default function DonationDetailsPage() {
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
       <MenuPageHeader title="تفاصيل التبرع" />
       {query.isLoading ? (
-        <View className="gap-3">
+        <View className="gap-2">
           <CardSkeleton height={130} margin={0} />
           <CardSkeleton height={260} margin={0} />
         </View>
@@ -41,7 +41,7 @@ export default function DonationDetailsPage() {
           </Text>
         </Card>
       ) : (
-        <View className="gap-3">
+        <View className="gap-2">
           <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
             <View className="flex-row-reverse items-start justify-between gap-3">
               <View className="flex-1">

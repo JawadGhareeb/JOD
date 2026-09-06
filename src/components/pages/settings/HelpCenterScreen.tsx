@@ -59,7 +59,7 @@ export function HelpCenterScreen() {
           <Logo variant="small" />
         </View>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             أكثر الأسئلة شيوعًا
           </Text>
@@ -98,7 +98,7 @@ export function HelpCenterScreen() {
           </View>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             تواصل معنا
           </Text>

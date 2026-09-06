@@ -164,7 +164,7 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
   };
 
   return (
-    <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+    <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
       <Pressable
         onPress={openPublisherProfile}
         className="flex-row-reverse items-center gap-2"

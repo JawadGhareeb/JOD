@@ -49,7 +49,7 @@ export function MyDonationsScreen() {
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
       <MenuPageHeader title="تبرعاتي" />
-      <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+      <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
         <View className="flex-row-reverse items-center justify-between">
           <View>
             <Text size="xs" className="text-gray-500 dark:text-gray-300">

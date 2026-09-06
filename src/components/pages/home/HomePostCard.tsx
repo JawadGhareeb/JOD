@@ -407,7 +407,7 @@ export function HomePostCard({
   };
 
   return (
-    <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+    <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
       <View className="mb-3 flex-row-reverse items-center justify-between">
         <Pressable
           onPress={handleOpenAuthorProfile}

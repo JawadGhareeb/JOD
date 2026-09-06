@@ -161,7 +161,7 @@ export function SettingsScreen() {
           </View>
         ))}
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             المظهر
           </Text>

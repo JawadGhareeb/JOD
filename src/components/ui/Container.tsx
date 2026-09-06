@@ -33,9 +33,9 @@ const Container: React.FC<ContainerProps> = ({
           contentContainerStyle={{
             flexGrow: 1,
             paddingBottom: 100,
-            paddingTop: 20,
+            paddingTop: 8,
             paddingHorizontal: 16,
-            gap: 20,
+            gap: 8,
           }}
           keyboardShouldPersistTaps="handled"
           {...scrollViewProps}

@@ -32,7 +32,7 @@ export function TermsPrivacyScreen() {
           <Logo variant="small" />
         </View>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             سياسة الاستخدام
           </Text>
@@ -45,7 +45,7 @@ export function TermsPrivacyScreen() {
           </View>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             البيانات التي نجمعها
           </Text>
@@ -58,7 +58,7 @@ export function TermsPrivacyScreen() {
           </View>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             كيف نستخدم البيانات
           </Text>
@@ -71,7 +71,7 @@ export function TermsPrivacyScreen() {
           </View>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             حماية الخصوصية
           </Text>
@@ -82,7 +82,7 @@ export function TermsPrivacyScreen() {
           </Text>
         </Card>
 
-        <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+        <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
             حقوق المستخدم
           </Text>

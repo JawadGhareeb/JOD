@@ -200,7 +200,7 @@ export function AuthorProfileScreen() {
         <View>
           <MenuPageHeader title={isOrganization ? "ملف المنظمة" : "ملف الناشر"} />
 
-          <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+          <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
             <View className="flex-row-reverse items-start gap-3">
               <Avatar name={author.name} imageUrl={author.avatarUrl} size={56} />
               <View className="flex-1">

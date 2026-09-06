@@ -51,7 +51,7 @@ function SkeletonBlock({
 
 export function HomePostCardSkeleton() {
   return (
-    <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
+    <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
       <View className="mb-3 flex-row-reverse items-center justify-between">
         <View className="flex-row-reverse items-center gap-2">
           <SkeletonBlock width={42} height={42} radius={21} />

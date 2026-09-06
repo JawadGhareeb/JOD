@@ -53,9 +53,9 @@ export default function CampaignDetailsPage() {
         contentContainerStyle: {
           flexGrow: 1,
           paddingHorizontal: 16,
-          paddingTop: 12,
+          paddingTop: 8,
           paddingBottom: 36,
-          gap: 16,
+          gap: 8,
         },
       }}
     >
