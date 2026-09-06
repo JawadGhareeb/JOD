@@ -23,7 +23,17 @@ export function usePost(id?: string) { return useQuery({ queryKey: postKeys.deta
 export function useCampaigns(filters: Omit<GetDiscoveryCampaignsParams, "page"> = {}, enabled = true) { return useInfiniteQuery({ queryKey: postKeys.campaignList(filters), queryFn: ({ pageParam }) => postsApi.getCampaigns({ ...filters, page: pageParam, perPage: filters.perPage ?? 20 }), initialPageParam: 1, enabled, getNextPageParam: (last) => last.meta.currentPage < last.meta.lastPage ? last.meta.currentPage + 1 : undefined }); }
 export function useCampaign(id?: string | null) { return useQuery({ queryKey: postKeys.campaign(id), queryFn: () => postsApi.getCampaign(id!), enabled: Boolean(id) }); }
 export function useCategories(params = {}) { return useQuery({ queryKey: postKeys.categories(params), queryFn: () => postsApi.getCategories({ perPage: 100, ...(params as object) }) }); }
-export function useMyPosts(options?: { enabled?: boolean; params?: GetMyPostsParams }) { const params = options?.params ?? { perPage: 100 }; return useQuery({ queryKey: postKeys.mine(params), queryFn: () => postsApi.getMyPosts(params), enabled: options?.enabled ?? true }); }
+export function useMyPosts(options?: { enabled?: boolean; params?: GetMyPostsParams }) {
+  const params = options?.params ?? { perPage: 100 };
+  return useQuery({
+    queryKey: postKeys.mine(params),
+    queryFn: () => postsApi.getMyPosts(params),
+    enabled: options?.enabled ?? true,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnReconnect: true,
+  });
+}
 export function useMyPost(id?: string) { return useQuery({ queryKey: postKeys.myDetail(id), queryFn: () => postsApi.getMyPost(id!), enabled: Boolean(id) }); }
 export function useSavedPosts() { return useInfiniteQuery({ queryKey: postKeys.saved(), queryFn: ({ pageParam }) => postsApi.getSavedPosts({ page: pageParam, perPage: 20 }), initialPageParam: 1, getNextPageParam: (last) => last.meta.currentPage < last.meta.lastPage ? last.meta.currentPage + 1 : undefined }); }
 
