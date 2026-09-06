@@ -8,6 +8,7 @@ import Container from "@/src/components/ui/Container";
 import Input from "@/src/components/ui/Input";
 import KeyboardAvoider from "@/src/components/ui/KeyboardAvoider";
 import Logo from "@/src/components/ui/Logo";
+import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
@@ -51,9 +52,10 @@ export default function ApplyPage() {
 
   return (
     <KeyboardAvoider className="flex-1">
-      <Container scrollable className="bg-light-100 dark:bg-dark-300" scrollViewProps={{ contentContainerStyle: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 24, paddingBottom: 36 } }}>
+      <Container scrollable className="bg-light-100 dark:bg-dark-300" scrollViewProps={{ contentContainerStyle: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 36 } }}>
+        <MenuPageHeader title="التقديم على الحملة" />
         <View className="gap-5">
-          <View className="items-center gap-3"><Logo variant="medium" showName /><Text variant="heading" weight="bold" rtlAlign="center">التقديم على الحملة</Text></View>
+          <View className="items-center gap-3"><Logo variant="medium" showName /></View>
           {campaignQuery.isLoading ? <Text size="sm" color="secondary" rtlAlign="center">جارِ تحميل الحملة...</Text> : !campaign ? <Card padding="md"><Text size="sm" rtlAlign="center">تعذر العثور على الحملة المطلوبة.</Text></Card> : (
             <>
               <Card padding="md" className="gap-2 border-gray-200 dark:border-dark-400">

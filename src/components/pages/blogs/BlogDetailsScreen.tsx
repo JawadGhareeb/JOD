@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { Image, ScrollView, View } from "react-native";
 import Text from "@/src/components/ui/Text";
+import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useArticle } from "@/src/features/articles/queries";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
 
@@ -20,7 +21,8 @@ export function BlogDetailsScreen() {
   }, [article]);
 
   return (
-    <View className="flex-1 bg-light-100 dark:bg-dark-300">
+    <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
+      <MenuPageHeader title="المقال" />
       {query.isLoading ? (
         <View className="flex-1 items-center justify-center">
           <Text size="sm" className="text-gray-500 dark:text-gray-300">جارِ تحميل المقال...</Text>
@@ -30,7 +32,7 @@ export function BlogDetailsScreen() {
           <Text size="sm" className="text-gray-500 dark:text-gray-300">تعذر العثور على المقال.</Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 36 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 36 }}>
           <Text variant="heading" weight="bold" className="text-dark-100 dark:text-light-50">{article.title}</Text>
           <View className="mt-3 flex-row-reverse items-center gap-2">
             <Text size="2xs" className="text-gray-500 dark:text-gray-300">{article.authorName || "فريق جود"}</Text>

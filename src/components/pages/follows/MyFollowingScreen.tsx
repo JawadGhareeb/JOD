@@ -119,7 +119,7 @@ function FollowingRow({ item, onOpen }: { item: FollowedPublisher; onOpen: () =>
             <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
               {item.name}
             </Text>
-            {targetType === "organization" && item.verified ? <VerifiedBadge /> : null}
+            {item.verified ? <VerifiedBadge /> : null}
           </View>
           <Text size="2xs" className="mt-0.5 text-gray-500 dark:text-gray-300">
             {targetType === "organization" ? "منظمة" : "مستخدم"} • {item.followersCount ?? 0} متابع

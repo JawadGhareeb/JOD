@@ -7,6 +7,7 @@ import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
 import { FullScreenImageGallery } from "@/src/components/shared/FullScreenImageGallery";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import { CampaignDetailsSkeleton, CampaignDonorRowSkeleton } from "@/src/components/pages/campaigns/CampaignDetailsSkeleton";
+import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
@@ -31,7 +32,8 @@ export default function CampaignDetailsPage() {
   if (query.isLoading) return <CampaignDetailsSkeleton />;
   if (!campaign || !id) {
     return (
-      <Container className="bg-light-100 px-4 pt-6 dark:bg-dark-300">
+      <Container className="bg-light-100 px-4 dark:bg-dark-300">
+        <MenuPageHeader title="تفاصيل الحملة" />
         <Text>تعذر العثور على الحملة.</Text>
       </Container>
     );
@@ -51,13 +53,13 @@ export default function CampaignDetailsPage() {
         contentContainerStyle: {
           flexGrow: 1,
           paddingHorizontal: 16,
-          paddingTop: 24,
+          paddingTop: 12,
           paddingBottom: 36,
           gap: 16,
         },
       }}
     >
-        <Text variant="heading" weight="bold" rtlAlign="right">تفاصيل الحملة</Text>
+        <MenuPageHeader title="تفاصيل الحملة" />
 
         <Card padding="md" className="gap-4 border-gray-200 dark:border-dark-400">
           <Text variant="heading" weight="bold" rtlAlign="right">{campaign.title}</Text>
@@ -86,9 +88,7 @@ export default function CampaignDetailsPage() {
             <View className="flex-1 items-end">
               <View className="flex-row-reverse items-center gap-1">
                 <Text size="sm" weight="semibold">{publisherName}</Text>
-                {campaign.publisher.publisherType === "organization" && campaign.publisher.verified ? (
-                  <VerifiedBadge />
-                ) : null}
+                {campaign.publisher.verified ? <VerifiedBadge /> : null}
               </View>
               {campaign.publisher.username ? (
                 <Text size="xs" className="text-gray-500 dark:text-gray-300">@{campaign.publisher.username}</Text>

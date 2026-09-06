@@ -2,6 +2,7 @@ import { View } from "react-native";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
 import { SkeletonBlock } from "@/src/components/ui/SkeletonBlock";
+import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 
 export function CampaignDonorRowSkeleton() {
   return (
@@ -40,7 +41,8 @@ function CampaignMediaSkeleton() {
 
 export function CampaignDetailsSkeleton() {
   return (
-    <Container scrollable className="bg-light-100 px-4 pt-6 dark:bg-dark-300">
+    <Container scrollable className="bg-light-100 px-4 dark:bg-dark-300">
+      <MenuPageHeader title="تفاصيل الحملة" />
       <View className="gap-4 pb-8">
         <SkeletonBlock width={132} height={22} radius={8} />
 

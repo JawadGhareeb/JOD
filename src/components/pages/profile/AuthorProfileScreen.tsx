@@ -2,8 +2,6 @@ import { useMemo, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { FollowButton } from "@/src/components/shared/FollowButton";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
@@ -20,10 +18,9 @@ import type { PublicMediaItem } from "@/src/features/media/types";
 import { useCampaigns, usePublisher, usePublisherPosts } from "@/src/features/posts/queries";
 import type { Campaign, HomePost } from "@/src/features/posts/types";
 import { getPrimaryColor } from "@/src/theme";
+import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { OrganizationCampaignCard } from "./OrganizationCampaignCard";
 import { OrganizationVideoCard } from "./OrganizationVideoCard";
-
-const BackIcon = appIcons.chevronRight;
 
 type OrganizationProfileTab = "posts" | "campaigns" | "videos";
 type ProfileListItem =
@@ -39,7 +36,6 @@ const ORGANIZATION_TABS = [
 
 export function AuthorProfileScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
   const authorId = Array.isArray(id) ? id[0] : id;
   const { colorScheme } = useColorScheme();
@@ -143,6 +139,7 @@ export function AuthorProfileScreen() {
   if (isLoading) {
     return (
       <View className="flex-1 gap-3 bg-light-100 px-4 pt-4 dark:bg-dark-300">
+        <MenuPageHeader title="ملف الناشر" />
         <CardSkeleton height={220} margin={0} />
         <HomePostCardSkeleton />
         <HomePostCardSkeleton />
@@ -153,23 +150,7 @@ export function AuthorProfileScreen() {
   if (!author) {
     return (
       <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
-        <View
-          style={{ paddingTop: Math.max(insets.top, 8) }}
-          className="mb-3 flex-row-reverse items-center justify-between border-b border-gray-200 py-3 dark:border-dark-400"
-        >
-          <Pressable
-            onPress={() => router.back()}
-            className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100"
-            accessibilityRole="button"
-            accessibilityLabel="رجوع"
-          >
-            <BackIcon size={20} color={primaryColor} strokeWidth={2.25} />
-          </Pressable>
-          <Text weight="semibold" size="lg" className="text-dark-100 dark:text-light-50">
-            ملف الناشر
-          </Text>
-          <View className="h-10 w-10" />
-        </View>
+        <MenuPageHeader title="ملف الناشر" />
 
         <View className="flex-1 items-center justify-center px-3">
           <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
@@ -217,23 +198,7 @@ export function AuthorProfileScreen() {
       onRefresh={refreshActiveTab}
       ListHeaderComponent={
         <View>
-          <View
-            style={{ paddingTop: Math.max(insets.top, 8) }}
-            className="mb-3 flex-row-reverse items-center justify-between border-b border-gray-200 py-3 dark:border-dark-400"
-          >
-            <Pressable
-              onPress={() => router.back()}
-              className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100"
-              accessibilityRole="button"
-              accessibilityLabel="رجوع"
-            >
-              <BackIcon size={20} color={primaryColor} strokeWidth={2.25} />
-            </Pressable>
-            <Text weight="semibold" size="lg" className="text-dark-100 dark:text-light-50">
-              {isOrganization ? "ملف المنظمة" : "ملف الناشر"}
-            </Text>
-            <View className="h-10 w-10" />
-          </View>
+          <MenuPageHeader title={isOrganization ? "ملف المنظمة" : "ملف الناشر"} />
 
           <Card padding="md" className="mb-3 border-gray-200 dark:border-dark-400">
             <View className="flex-row-reverse items-start gap-3">
@@ -243,7 +208,7 @@ export function AuthorProfileScreen() {
                   <Text weight="semibold" size="base" className="text-dark-100 dark:text-light-50">
                     {author.name}
                   </Text>
-                  {isOrganization && author.verified ? <VerifiedBadge /> : null}
+                  {author.verified ? <VerifiedBadge /> : null}
                 </View>
                 <Text size="xs" className="mt-1 text-gray-500 dark:text-gray-300">
                   @{author.username}{author.city ? ` • ${author.city}` : ""}

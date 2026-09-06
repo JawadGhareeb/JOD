@@ -12,11 +12,11 @@ import Card from "@/src/components/ui/Card";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Input from "@/src/components/ui/Input";
 import Text from "@/src/components/ui/Text";
+import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useGlobalSearch } from "@/src/features/search/queries";
 import type { GlobalSearchType, SearchAccount } from "@/src/features/search/types";
 import { getPrimaryColor } from "@/src/theme";
 
-const BackIcon = appIcons.chevronRight;
 const SearchIcon = appIcons.search;
 const TYPES: { value: GlobalSearchType; label: string }[] = [
   { value: "all", label: "الكل" },
@@ -95,20 +95,7 @@ export function SearchScreen() {
 
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
-      <View className="mb-3 flex-row-reverse items-center justify-between border-b border-gray-200 py-3 dark:border-dark-400">
-        <Pressable
-          onPress={() => router.back()}
-          className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100"
-          accessibilityRole="button"
-          accessibilityLabel="رجوع"
-        >
-          <BackIcon size={20} color={primaryColor} strokeWidth={2.25} />
-        </Pressable>
-        <Text weight="semibold" size="lg" className="text-dark-100 dark:text-light-50">
-          البحث
-        </Text>
-        <View className="h-10 w-10" />
-      </View>
+      <MenuPageHeader title="البحث" />
 
       <Input
         fullWidth
