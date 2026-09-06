@@ -165,7 +165,9 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
             <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
               {campaign.publisher.name}
             </Text>
-            {campaign.publisher.verified ? <VerifiedBadge /> : null}
+            {campaign.publisher.publisherType === "organization" && campaign.publisher.verified ? (
+              <VerifiedBadge />
+            ) : null}
           </View>
           <Text size="2xs" className="mt-0.5 text-gray-500 dark:text-gray-300">
             @{campaign.publisher.username}

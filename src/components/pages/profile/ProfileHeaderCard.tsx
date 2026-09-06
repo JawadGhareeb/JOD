@@ -6,7 +6,6 @@ import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
-import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import type { ProfileSummary } from "@/src/types/profile";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { PRIMARY_COLOR_LIGHT } from "@/src/theme";
@@ -62,7 +61,6 @@ export function ProfileHeaderCard({ summary, followingCount = 0 }: ProfileHeader
 
         <View className="mt-3 flex-row-reverse items-center gap-1.5">
           <Text weight="bold" size="xl" className="text-dark-100 dark:text-light-50">{summary.name}</Text>
-          {summary.verified ? <VerifiedBadge /> : null}
         </View>
 
         <Text size="sm" className="mt-1 text-gray-500 dark:text-gray-300">

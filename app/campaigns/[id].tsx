@@ -86,7 +86,9 @@ export default function CampaignDetailsPage() {
             <View className="flex-1 items-end">
               <View className="flex-row-reverse items-center gap-1">
                 <Text size="sm" weight="semibold">{publisherName}</Text>
-                {campaign.publisher.verified ? <VerifiedBadge /> : null}
+                {campaign.publisher.publisherType === "organization" && campaign.publisher.verified ? (
+                  <VerifiedBadge />
+                ) : null}
               </View>
               {campaign.publisher.username ? (
                 <Text size="xs" className="text-gray-500 dark:text-gray-300">@{campaign.publisher.username}</Text>

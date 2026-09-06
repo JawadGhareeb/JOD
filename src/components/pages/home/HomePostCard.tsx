@@ -406,7 +406,9 @@ export function HomePostCard({
               <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
                 {post.publisher.name}
               </Text>
-              {post.publisher.verified ? <VerifiedBadge /> : null}
+              {post.publisher.publisherType === "organization" && post.publisher.verified ? (
+                <VerifiedBadge />
+              ) : null}
             </View>
             <View className="flex-row-reverse items-center gap-1">
               <Text size="2xs" className="text-gray-500 dark:text-gray-300">

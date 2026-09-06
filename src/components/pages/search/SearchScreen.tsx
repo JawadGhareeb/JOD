@@ -220,7 +220,6 @@ export function SearchScreen() {
                     <View className="flex-row-reverse items-center gap-3">
                       <Avatar name={account.name} imageUrl={account.avatarUrl} size={46} />
                       <View className="flex-1"><Text weight="semibold" size="sm">{account.name}</Text><Text size="2xs" className="text-gray-500 dark:text-gray-300">@{account.username}{account.city ? ` • ${account.city}` : ""}</Text></View>
-                      {account.verified ? <VerifiedBadge /> : null}
                     </View>
                   </Card>
                 ))}
