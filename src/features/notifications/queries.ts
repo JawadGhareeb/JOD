@@ -8,4 +8,13 @@ export function useNotification(id?: string) { return useQuery({ queryKey: notif
 function useNotificationMutation(fn: (id: string) => Promise<unknown>) { const qc = useQueryClient(); return useMutation({ mutationFn: fn, onSuccess: () => { qc.invalidateQueries({ queryKey: notificationKeys.all }); } }); }
 export const useMarkNotificationRead = () => useNotificationMutation(notificationsApi.markRead);
 export const useMarkNotificationUnread = () => useNotificationMutation(notificationsApi.markUnread);
-export function useMarkAllNotificationsRead() { const qc = useQueryClient(); return useMutation({ mutationFn: notificationsApi.readAll, onSuccess: () => qc.invalidateQueries({ queryKey: notificationKeys.all }) }); }
+export function useMarkAllNotificationsRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: notificationsApi.readAll,
+    onSuccess: (data) => {
+      // Clear the tab badge without moving "New" items to "Earlier" until the next visit.
+      qc.setQueryData(notificationKeys.unread(), data.unreadCount ?? 0);
+    },
+  });
+}

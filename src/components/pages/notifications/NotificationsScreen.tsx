@@ -1,95 +1,88 @@
-import { useMemo, useState } from "react";
-import { FlatList, Pressable, View } from "react-native";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { SectionList, View } from "react-native";
 import Text from "@/src/components/ui/Text";
 import {
   useMarkAllNotificationsRead,
-  useMarkNotificationRead,
   useNotifications,
-  useUnreadNotificationCount,
 } from "@/src/features/notifications/queries";
+import type { MobileNotification } from "@/src/features/notifications/types";
 import { NotificationItemCard } from "./NotificationItemCard";
 import { NotificationItemCardSkeleton } from "./NotificationItemCardSkeleton";
 
-type InboxFilter = "all" | "unread";
+type NotificationSection = {
+  title: string;
+  key: "new" | "earlier";
+  data: MobileNotification[];
+};
 
 export function NotificationsScreen() {
-  const [filter, setFilter] = useState<InboxFilter>("all");
-  const query = useNotifications({ status: filter === "unread" ? "unread" : undefined });
-  const unreadQuery = useUnreadNotificationCount();
-  const markRead = useMarkNotificationRead();
+  const query = useNotifications({});
   const markAll = useMarkAllNotificationsRead();
   const items = useMemo(
     () => query.data?.pages.flatMap((page) => page.items) ?? [],
     [query.data],
   );
-  const unreadCount = unreadQuery.data ?? 0;
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const markingRef = useRef(false);
+  const refetch = query.refetch;
+  const markAllRead = markAll.mutateAsync;
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+
+      void (async () => {
+        const result = await refetch();
+        if (!active) return;
+
+        const list = result.data?.pages.flatMap((page) => page.items) ?? [];
+        setNewIds(new Set(list.filter((item) => !item.isRead).map((item) => item.id)));
+
+        if (markingRef.current) return;
+        markingRef.current = true;
+        try {
+          await markAllRead();
+        } catch {
+          // Badge clear is best-effort; keep the inbox usable.
+        } finally {
+          markingRef.current = false;
+        }
+      })();
+
+      return () => {
+        active = false;
+      };
+    }, [markAllRead, refetch]),
+  );
+
+  const sections = useMemo<NotificationSection[]>(() => {
+    const newer = items.filter((item) => newIds.has(item.id));
+    const earlier = items.filter((item) => !newIds.has(item.id));
+    const next: NotificationSection[] = [];
+    if (newer.length > 0) next.push({ title: "جديد", key: "new", data: newer });
+    if (earlier.length > 0) next.push({ title: "سابقاً", key: "earlier", data: earlier });
+    return next;
+  }, [items, newIds]);
 
   return (
     <View className="flex-1 bg-light-100 px-4 pt-3 dark:bg-dark-300">
-      <View className="mb-3 flex-row-reverse items-center justify-between">
-        <View className="flex-row-reverse gap-2">
-          <Pressable
-            onPress={() => setFilter("all")}
-            className={`rounded-full border px-4 py-2 ${
-              filter === "all"
-                ? "border-primary-400 bg-primary-400/10"
-                : "border-gray-200 dark:border-dark-400"
-            }`}
-          >
-            <Text
-              size="2xs"
-              weight="medium"
-              className={filter === "all" ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}
-            >
-              الكل
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setFilter("unread")}
-            className={`rounded-full border px-4 py-2 ${
-              filter === "unread"
-                ? "border-primary-400 bg-primary-400/10"
-                : "border-gray-200 dark:border-dark-400"
-            }`}
-          >
-            <Text
-              size="2xs"
-              weight="medium"
-              className={filter === "unread" ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}
-            >
-              غير المقروءة{unreadCount > 0 ? ` (${unreadCount})` : ""}
-            </Text>
-          </Pressable>
-        </View>
-
-        <Pressable
-          disabled={unreadCount === 0 || markAll.isPending}
-          onPress={() => markAll.mutate()}
-        >
-          <Text
-            size="2xs"
-            className={unreadCount > 0 ? "text-primary-400" : "text-gray-400"}
-          >
-            قراءة الكل
-          </Text>
-        </Pressable>
-      </View>
-
-      <FlatList
-        data={items}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <NotificationItemCard
-            item={item}
-            onPress={(notification) => {
-              if (!notification.isRead) markRead.mutate(notification.id);
-            }}
-          />
+        renderItem={({ item }) => <NotificationItemCard item={item} />}
+        renderSectionHeader={({ section }) => (
+          <View className="mb-2 mt-1 bg-light-100 pb-1 dark:bg-dark-300">
+            <Text weight="bold" size="sm" className="text-dark-100 dark:text-light-50">
+              {section.title}
+            </Text>
+          </View>
         )}
+        stickySectionHeadersEnabled={false}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
         refreshing={query.isRefetching && !query.isFetchingNextPage}
-        onRefresh={() => void query.refetch()}
+        onRefresh={() => void refetch()}
         onEndReached={() => {
           if (query.hasNextPage && !query.isFetchingNextPage) {
             void query.fetchNextPage();
@@ -106,9 +99,7 @@ export function NotificationsScreen() {
           ) : (
             <View className="items-center py-8">
               <Text size="sm" className="text-gray-500 dark:text-gray-300">
-                {filter === "unread"
-                  ? "لا توجد إشعارات غير مقروءة."
-                  : "لا توجد إشعارات حالياً."}
+                لا توجد إشعارات حالياً.
               </Text>
             </View>
           )
