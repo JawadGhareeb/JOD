@@ -29,15 +29,15 @@ export function HomeBlogsSection({ items, loading = false }: Props) {
   const openArticle = (id: string) => router.push({ pathname: "/blogs/[id]", params: { id } });
 
   return (
-    <View className="mb-4 rounded-2xl bg-white py-3 dark:bg-dark-500">
-      <View className="px-4">
+    <View className="mb-0 border-b border-gray-100 bg-transparent py-3 dark:border-dark-400">
+      <View className="px-3">
         <SectionHeader title="مقالات جود" />
       </View>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 10, paddingHorizontal: 16, paddingBottom: 4 }}
+        contentContainerStyle={{ gap: 10, paddingHorizontal: 12, paddingBottom: 4 }}
       >
         {loading
           ? [0, 1, 2].map((key) => <CardSkeleton key={key} width={260} height={300} margin={0} />)
@@ -110,7 +110,7 @@ export function HomeBlogsSection({ items, loading = false }: Props) {
           onPress={() => router.push("/blogs")}
           accessibilityRole="button"
           accessibilityLabel="عرض كل المقالات"
-          className="mx-4 mt-3 flex-row-reverse items-center justify-center gap-2 rounded-xl border border-primary-400/30 bg-primary-400/10 px-4 py-3"
+          className="mx-3 mt-3 flex-row-reverse items-center justify-center gap-2 rounded-xl border border-primary-400/30 bg-primary-400/10 px-4 py-3"
         >
           <Text size="xs" weight="semibold" className="text-primary-400">
             عرض كل المقالات

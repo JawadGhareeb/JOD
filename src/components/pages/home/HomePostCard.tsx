@@ -407,7 +407,14 @@ export function HomePostCard({
   };
 
   return (
-    <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
+    <Card
+      padding="none"
+      bordered={false}
+      radius="none"
+      elevated={false}
+      className="mb-0 border-b border-gray-100 bg-transparent dark:border-dark-400 dark:bg-transparent"
+    >
+      <View className="px-3 py-3">
       <View className="mb-3 flex-row-reverse items-center justify-between">
         <Pressable
           onPress={handleOpenAuthorProfile}
@@ -426,13 +433,13 @@ export function HomePostCard({
               </Text>
               {showOrganizationVerifiedBadge(post.publisher) ? <VerifiedBadge /> : null}
             </View>
-            <View className="flex-row-reverse items-center gap-1">
+            <View className="mt-0.5 flex-row-reverse flex-wrap items-center gap-1">
               <Text size="2xs" className="text-gray-500 dark:text-gray-300">
                 @{post.publisher.username} • {formatHomePostRelativeDate(post.createdAt)}
               </Text>
               {post.location ? (
                 <View className="flex-row-reverse items-center gap-0.5">
-                  <Text size="2xs" className="text-gray-400 dark:text-gray-400">•</Text>
+                  <Text size="2xs" className="text-gray-400">•</Text>
                   <MapPin size={11} color="#9CA3AF" strokeWidth={2.25} />
                   <Text size="2xs" className="text-gray-500 dark:text-gray-300">{post.location}</Text>
                 </View>
@@ -475,12 +482,14 @@ export function HomePostCard({
           </Pressable>
         ) : null}
 
-        <FeedMediaGrid images={post.images} onPress={handleMediaPress} />
+        <View className="-mx-3">
+          <FeedMediaGrid images={post.images} onPress={handleMediaPress} />
+        </View>
 
         <HeartBurst scale={heartScale} opacity={heartOpacity} position={heartPosition} />
       </View>
 
-      <View className="mt-3 flex-row-reverse items-center justify-between border-t border-gray-100 pt-2 dark:border-dark-400">
+      <View className="mt-3 flex-row-reverse items-center justify-between pt-1">
         <View className={`${actionItemClassName} items-center gap-2`}>
           <Pressable
             onPress={() => void handleToggleLike()}
@@ -627,6 +636,7 @@ export function HomePostCard({
           </Button>
         </View>
       ) : null}
+      </View>
 
       <Dialog
         visible={pendingOwnPostAction !== null}

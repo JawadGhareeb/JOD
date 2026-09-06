@@ -41,12 +41,12 @@ export function HomeScreen() {
         onScroll={onScroll}
         onRefresh={resetHeader}
         listHeaderComponent={
-          <View className="gap-3 pb-3">
+          <View className="gap-3 border-b border-gray-200/80 bg-light-100 px-3 pb-3 pt-1 dark:border-dark-400 dark:bg-dark-300">
             {isAuthenticated && personalization.data?.onboardingCompleted ? (
               <HomeFeedTypeTabs value={feedType} onChange={setFeedType} />
             ) : null}
             {showPersonalizationReminder ? (
-              <Card padding="md" className="mx-4 gap-2 border-primary-200 bg-primary-50 dark:border-primary-400/30 dark:bg-primary-400/10">
+              <Card padding="md" className="gap-2 border-primary-200 bg-primary-50 dark:border-primary-400/30 dark:bg-primary-400/10">
                 <Text size="sm" weight="semibold">حسّن الاقتراحات التي تظهر لك</Text>
                 <Text size="xs" className="leading-6 text-gray-600 dark:text-gray-300">أكمل بعض تفضيلاتك لتحصل على محتوى ومساعدات أقرب لاهتماماتك. التطبيق يبقى متاحاً بالكامل حتى لو تركتها ناقصة.</Text>
                 <Button size="small" variant="tertiary" onPress={() => router.push("/personalization-settings" as Href)}>تخصيص المحتوى</Button>

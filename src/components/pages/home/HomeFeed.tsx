@@ -232,7 +232,7 @@ export const HomeFeed = forwardRef<HomeFeedHandle, HomeFeedProps>(function HomeF
 
   if (contentIsLoading && (usePersonalized || campaignsQuery.isLoading)) {
     return (
-      <View className="flex-1 bg-light-100 px-4 pt-4 dark:bg-dark-300">
+      <View className="flex-1 bg-light-100 pt-4 dark:bg-dark-300">
         <HomePostCardSkeleton />
         <HomePostCardSkeleton />
         <HomePostCardSkeleton />
@@ -257,7 +257,7 @@ export const HomeFeed = forwardRef<HomeFeedHandle, HomeFeedProps>(function HomeF
     <View className="flex-1 bg-light-100 dark:bg-dark-300">
       <Animated.FlatList
         ref={listRef}
-        className="flex-1 px-4"
+        className="flex-1"
         data={feed}
         keyExtractor={(item) => item.key}
         renderItem={({ item }) => {

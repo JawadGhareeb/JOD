@@ -27,7 +27,13 @@ export function HomeComposerBar() {
   };
 
   return (
-    <Card padding="sm" className="mb-3 border-gray-200 dark:border-dark-400">
+    <Card
+      padding="sm"
+      bordered
+      radius="xl"
+      elevated={false}
+      className="mb-1 border-gray-200 bg-white dark:border-dark-400 dark:bg-dark-500"
+    >
       <View className="flex-row-reverse items-center gap-2">
         <Pressable onPress={openProfile} accessibilityRole="button" accessibilityLabel="فتح الملف الشخصي" className="rounded-full">
           <Avatar name={user?.name || "زائر"} size={38} />

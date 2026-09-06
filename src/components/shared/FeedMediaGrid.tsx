@@ -31,12 +31,12 @@ export function FeedMediaGrid({ images, onPress }: FeedMediaGridProps) {
   );
 
   if (preview.length === 1) {
-    return <View className="mt-3 h-64 overflow-hidden rounded-xl">{image(preview[0], 0, "h-full w-full")}</View>;
+    return <View className="mt-3 h-64 overflow-hidden">{image(preview[0], 0, "h-full w-full")}</View>;
   }
 
   if (preview.length === 2) {
     return (
-      <View className="mt-3 h-56 flex-row gap-0.5 overflow-hidden rounded-xl">
+      <View className="mt-3 h-56 flex-row gap-0.5 overflow-hidden">
         <View className="flex-1">{image(preview[0], 0, "h-full w-full")}</View>
         <View className="flex-1">{image(preview[1], 1, "h-full w-full")}</View>
       </View>
@@ -45,7 +45,7 @@ export function FeedMediaGrid({ images, onPress }: FeedMediaGridProps) {
 
   if (preview.length === 3) {
     return (
-      <View className="mt-3 h-64 flex-row gap-0.5 overflow-hidden rounded-xl">
+      <View className="mt-3 h-64 flex-row gap-0.5 overflow-hidden">
         <View className="flex-1">{image(preview[0], 0, "h-full w-full")}</View>
         <View className="flex-1 gap-0.5">
           <View className="flex-1">{image(preview[1], 1, "h-full w-full")}</View>
@@ -56,7 +56,7 @@ export function FeedMediaGrid({ images, onPress }: FeedMediaGridProps) {
   }
 
   return (
-    <View className="mt-3 h-64 gap-0.5 overflow-hidden rounded-xl">
+    <View className="mt-3 h-64 gap-0.5 overflow-hidden">
       <View className="flex-1 flex-row gap-0.5">
         <View className="flex-1">{image(preview[0], 0, "h-full w-full")}</View>
         <View className="flex-1">{image(preview[1], 1, "h-full w-full")}</View>

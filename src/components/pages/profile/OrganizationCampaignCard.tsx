@@ -164,7 +164,14 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
   };
 
   return (
-    <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
+    <Card
+      padding="none"
+      bordered={false}
+      radius="none"
+      elevated={false}
+      className="mb-0 border-b border-gray-100 bg-transparent dark:border-dark-400 dark:bg-transparent"
+    >
+      <View className="px-3 py-3">
       <Pressable
         onPress={openPublisherProfile}
         className="flex-row-reverse items-center gap-2"
@@ -181,9 +188,18 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
               <VerifiedBadge />
             ) : null}
           </View>
-          <Text size="2xs" className="mt-0.5 text-gray-500 dark:text-gray-300">
-            @{campaign.publisher.username}
-          </Text>
+          <View className="mt-0.5 flex-row-reverse flex-wrap items-center gap-1">
+            <Text size="2xs" className="text-gray-500 dark:text-gray-300">
+              @{campaign.publisher.username}
+            </Text>
+            {campaign.location ? (
+              <View className="flex-row-reverse items-center gap-0.5">
+                <Text size="2xs" className="text-gray-400">•</Text>
+                <MapPin size={11} color="#9CA3AF" strokeWidth={2.25} />
+                <Text size="2xs" className="text-gray-500 dark:text-gray-300">{campaign.location}</Text>
+              </View>
+            ) : null}
+          </View>
         </View>
       </Pressable>
 
@@ -199,20 +215,14 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
           <Text size="sm" className="mt-2 leading-7 text-dark-100 dark:text-light-50">
             {displayContent}
           </Text>
-          <View className="mt-2 flex-row-reverse flex-wrap gap-2">
-            {categoryName ? (
+          {categoryName ? (
+            <View className="mt-2 flex-row-reverse flex-wrap items-center gap-2">
               <View className="flex-row-reverse items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 dark:bg-primary-400/15">
                 <Tag size={12} color={primaryColor} strokeWidth={2.2} />
                 <Text size="2xs" className="text-primary-400">{categoryName}</Text>
               </View>
-            ) : null}
-            {campaign.location ? (
-              <View className="flex-row-reverse items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 dark:bg-dark-350">
-                <MapPin size={12} color="#6B7280" strokeWidth={2.2} />
-                <Text size="2xs" className="text-gray-600 dark:text-gray-200">{campaign.location}</Text>
-              </View>
-            ) : null}
-          </View>
+            </View>
+          ) : null}
         </Pressable>
 
         {shouldTruncate ? (
@@ -223,10 +233,12 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
           </Pressable>
         ) : null}
 
-        <FeedMediaGrid
-          images={campaign.images}
-          onPress={(index, event) => handleDoubleAwarePress(() => setGalleryIndex(index), event)}
-        />
+        <View className="-mx-3">
+          <FeedMediaGrid
+            images={campaign.images}
+            onPress={(index, event) => handleDoubleAwarePress(() => setGalleryIndex(index), event)}
+          />
+        </View>
 
         <HeartBurst scale={heartScale} opacity={heartOpacity} position={heartPosition} />
       </View>
@@ -239,7 +251,7 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
       />
 
       {campaign.goalAmount > 0 ? (
-        <View className="mt-4 border-t border-gray-100 pt-3 dark:border-dark-400">
+        <View className="mt-4 pt-2">
           <View className="mb-2 flex-row-reverse items-center justify-between">
             <Text size="2xs" className="text-gray-500 dark:text-gray-300">
               تم جمع {campaign.raisedAmount.toLocaleString("ar-SY")}
@@ -260,7 +272,7 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
         </View>
       ) : null}
 
-      <View className="mt-3 flex-row-reverse items-center justify-between border-t border-gray-100 pt-2 dark:border-dark-400">
+      <View className="mt-3 flex-row-reverse items-center justify-between pt-1">
         <Pressable
           onPress={() => void handleToggleLike()}
           disabled={!campaign.engagementPostId || likeMutation.isPending}
@@ -331,6 +343,7 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
         <Button fullWidth size="small" variant="primary" onPress={handleDetails}>
           عرض التفاصيل
         </Button>
+      </View>
       </View>
     </Card>
   );

@@ -1,17 +1,15 @@
 import { View } from "react-native";
-import Card from "@/src/components/ui/Card";
 import { SkeletonBlock } from "@/src/components/ui/SkeletonBlock";
 
 export function NotificationItemCardSkeleton() {
   return (
-    <Card padding="md" className="mb-2 border border-gray-200 dark:border-dark-400">
+    <View className="mb-0 border-b border-gray-100 bg-transparent px-3 py-3 dark:border-dark-400">
       <View className="flex-row-reverse items-start gap-3">
-        <SkeletonBlock width={40} height={40} radius={12} />
+        <SkeletonBlock width={40} height={40} radius={20} />
         <View className="flex-1">
           <View className="flex-row-reverse items-start justify-between gap-2">
             <View className="flex-1 items-end gap-2">
               <SkeletonBlock width="62%" height={12} radius={6} />
-              <SkeletonBlock width={74} height={18} radius={999} />
             </View>
             <SkeletonBlock width={10} height={10} radius={5} />
           </View>
@@ -25,6 +23,6 @@ export function NotificationItemCardSkeleton() {
           </View>
         </View>
       </View>
-    </Card>
+    </View>
   );
 }

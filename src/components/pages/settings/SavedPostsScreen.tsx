@@ -22,15 +22,17 @@ export function SavedPostsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
-      <MenuPageHeader title="بوستات محفوظة" />
+    <View className="flex-1 bg-light-100 dark:bg-dark-300">
+      <View className="px-4">
+        <MenuPageHeader title="بوستات محفوظة" />
+      </View>
 
       {isLoading ? (
         <View>
           {[0, 1, 2].map((item) => <HomePostCardSkeleton key={item} />)}
         </View>
       ) : isError ? (
-        <View className="items-center gap-3 py-8">
+        <View className="items-center gap-3 px-4 py-8">
           <Text size="sm" className="text-center text-gray-500 dark:text-gray-300">
             تعذر تحميل المنشورات المحفوظة. تحقق من اتصالك وحاول مرة أخرى.
           </Text>
@@ -59,7 +61,7 @@ export function SavedPostsScreen() {
           }}
           onEndReachedThreshold={0.4}
           ListEmptyComponent={
-            <View className="items-center py-8">
+            <View className="items-center px-4 py-8">
               <Text size="sm" className="text-gray-500 dark:text-gray-300">
                 لا توجد منشورات محفوظة حالياً.
               </Text>

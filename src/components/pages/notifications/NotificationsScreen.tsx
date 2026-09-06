@@ -80,14 +80,16 @@ export function NotificationsScreen() {
   });
 
   return (
-    <View className="flex-1 bg-light-100 px-4 pt-3 dark:bg-dark-300">
+    <View className="flex-1 bg-light-100 dark:bg-dark-300">
       <SectionList
         ref={listRef}
         sections={sections}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <NotificationItemCard item={item} />}
+        renderItem={({ item, section }) => (
+          <NotificationItemCard item={item} isNew={section.key === "new"} />
+        )}
         renderSectionHeader={({ section }) => (
-          <View className="mb-2 mt-1 bg-light-100 pb-1 dark:bg-dark-300">
+          <View className="border-b border-gray-100 bg-light-100 px-3 py-3 dark:border-dark-400 dark:bg-dark-300">
             <Text weight="bold" size="sm" className="text-dark-100 dark:text-light-50">
               {section.title}
             </Text>
@@ -106,13 +108,13 @@ export function NotificationsScreen() {
         onEndReachedThreshold={0.4}
         ListEmptyComponent={
           query.isLoading ? (
-            <View className="pt-1">
+            <View>
               <NotificationItemCardSkeleton />
               <NotificationItemCardSkeleton />
               <NotificationItemCardSkeleton />
             </View>
           ) : (
-            <View className="items-center py-8">
+            <View className="items-center py-8 px-3">
               <Text size="sm" className="text-gray-500 dark:text-gray-300">
                 لا توجد إشعارات حالياً.
               </Text>

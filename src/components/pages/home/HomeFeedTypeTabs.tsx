@@ -11,7 +11,7 @@ const OPTIONS: { value: PersonalizedFeedType; label: string }[] = [
 
 export function HomeFeedTypeTabs({ value, onChange }: { value: PersonalizedFeedType; onChange: (value: PersonalizedFeedType) => void }) {
   return (
-    <View className="mb-3 flex-row-reverse gap-2" accessibilityRole="tablist">
+    <View className="mb-0 flex-row-reverse gap-2" accessibilityRole="tablist">
       {OPTIONS.map((option) => {
         const selected = option.value === value;
         return (

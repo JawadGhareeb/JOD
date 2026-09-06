@@ -94,8 +94,8 @@ export function HomeReelsSection({ items, loading = false, active = false }: Pro
   };
 
   return (
-    <View className="mb-4 rounded-2xl bg-white py-3 dark:bg-dark-500">
-      <View className="px-4">
+    <View className="mb-0 border-b border-gray-100 bg-transparent py-3 dark:border-dark-400">
+      <View className="px-3">
         <SectionHeader title="ريلز جود" />
       </View>
 
@@ -106,7 +106,7 @@ export function HomeReelsSection({ items, loading = false, active = false }: Pro
         snapToInterval={CARD_WIDTH + CARD_GAP}
         onMomentumScrollEnd={updateHorizontalPreview}
         onScrollEndDrag={updateHorizontalPreview}
-        contentContainerStyle={{ gap: CARD_GAP, paddingHorizontal: 16, paddingBottom: 4 }}
+        contentContainerStyle={{ gap: CARD_GAP, paddingHorizontal: 12, paddingBottom: 4 }}
       >
         {loading
           ? [0, 1, 2].map((key) => (
@@ -128,7 +128,7 @@ export function HomeReelsSection({ items, loading = false, active = false }: Pro
           onPress={() => router.push("/(tabs)/reels")}
           accessibilityRole="button"
           accessibilityLabel="مشاهدة كل الريلز"
-          className="mx-4 mt-3 flex-row-reverse items-center justify-center gap-2 rounded-xl border border-primary-400/30 bg-primary-400/10 px-4 py-3"
+          className="mx-3 mt-3 flex-row-reverse items-center justify-center gap-2 rounded-xl border border-primary-400/30 bg-primary-400/10 px-4 py-3"
         >
           <Text size="xs" weight="semibold" className="text-primary-400">مشاهدة كل الريلز</Text>
           <ArrowIcon size={16} color={primaryColor} strokeWidth={2.25} />

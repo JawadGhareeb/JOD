@@ -22,7 +22,7 @@ export function StudentAssistanceScreen() {
         onScroll={onScroll}
         onRefresh={resetHeader}
         listHeaderComponent={
-          <View className="pb-3">
+          <View className="border-b border-gray-200/80 bg-light-100 px-3 pb-3 pt-1 dark:border-dark-400 dark:bg-dark-300">
             <HomeComposerBar />
           </View>
         }

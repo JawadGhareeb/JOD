@@ -176,7 +176,7 @@ export function AuthorProfileScreen() {
 
   return (
     <FlatList
-      className="flex-1 bg-light-100 px-4 dark:bg-dark-300"
+      className="flex-1 bg-light-100 dark:bg-dark-300"
       contentContainerStyle={{ paddingBottom: 24 }}
       data={listItems}
       keyExtractor={(item) => `${item.kind}-${item.value.id}`}
@@ -197,7 +197,7 @@ export function AuthorProfileScreen() {
       refreshing={publisherQuery.isRefetching || tabIsRefetching}
       onRefresh={refreshActiveTab}
       ListHeaderComponent={
-        <View>
+        <View className="px-4">
           <MenuPageHeader title={isOrganization ? "ملف المنظمة" : "ملف الناشر"} />
 
           <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">

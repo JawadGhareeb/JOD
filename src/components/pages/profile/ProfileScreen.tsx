@@ -1,6 +1,6 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, Pressable, ScrollView, View } from "react-native";
+import { Animated, Pressable, View } from "react-native";
 import Button from "@/src/components/ui/Button";
 import Text from "@/src/components/ui/Text";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
@@ -22,7 +22,7 @@ const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة 
 
 const STATUS_TABS: { key: MyPostStatus; label: string }[] = [
   { key: "published", label: "منشور" },
-  { key: "pending", label: "قيد المراجعة" },
+  { key: "pending", label: "مراجعة" },
   { key: "blocked", label: "مرفوض" },
   { key: "draft", label: "مسودة" },
 ];
@@ -120,7 +120,7 @@ export function ProfileScreen() {
     <View className="flex-1 bg-light-100 dark:bg-dark-300">
       <Animated.FlatList
         ref={listRef}
-        className="flex-1 px-4 dark:bg-dark-300"
+        className="flex-1 dark:bg-dark-300"
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
         data={filteredPosts}
         keyExtractor={(item) => item.id}
@@ -139,49 +139,57 @@ export function ProfileScreen() {
         onRefresh={() => void handlePullRefresh()}
         ListHeaderComponent={
           <View>
-            <ProfileHeaderCard summary={summary} followingCount={followingCount} />
-            <SectionHeader title="منشوراتي" />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ flexDirection: "row-reverse", gap: 8, paddingBottom: 12 }}
-            >
-              {STATUS_TABS.map((tab) => {
-                const isActive = activeTab === tab.key;
-                return (
-                  <Pressable
-                    key={tab.key}
-                    onPress={() => selectTab(tab.key)}
-                    className={`flex-row-reverse items-center gap-2 rounded-full px-4 py-2.5 ${
-                      isActive ? "bg-primary-400/15" : "bg-white dark:bg-dark-500"
-                    }`}
-                    accessibilityRole="button"
-                    accessibilityLabel={tab.label}
-                  >
-                    <Text
-                      size="xs"
-                      weight="medium"
-                      className={isActive ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}
+            <View className="px-4">
+              <ProfileHeaderCard summary={summary} followingCount={followingCount} />
+              <SectionHeader title="منشوراتي" />
+            </View>
+
+            <View className="mb-1 border-y border-gray-100 dark:border-dark-400">
+              <View className="flex-row-reverse">
+                {STATUS_TABS.map((tab) => {
+                  const isActive = activeTab === tab.key;
+                  const count = getTabCount(tab.key);
+                  return (
+                    <Pressable
+                      key={tab.key}
+                      onPress={() => selectTab(tab.key)}
+                      accessibilityRole="tab"
+                      accessibilityState={{ selected: isActive }}
+                      accessibilityLabel={`${tab.label} ${count}`}
+                      className="relative flex-1 items-center py-3"
                     >
-                      {tab.label}
-                    </Text>
-                    <View
-                      className={`min-w-6 items-center justify-center rounded-full px-1.5 py-1 ${
-                        isActive ? "bg-primary-400" : "bg-gray-200 dark:bg-dark-350"
-                      }`}
-                    >
-                      <Text
-                        size="2xs"
-                        weight="medium"
-                        className={isActive ? "text-light-50" : "text-gray-600 dark:text-gray-200"}
-                      >
-                        {getTabCount(tab.key)}
-                      </Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+                      <View className="flex-row-reverse items-center gap-1">
+                        <Text
+                          size="xs"
+                          weight={isActive ? "semibold" : "medium"}
+                          className={
+                            isActive
+                              ? "text-primary-400"
+                              : "text-gray-400 dark:text-gray-400"
+                          }
+                        >
+                          {tab.label}
+                        </Text>
+                        <Text
+                          size="xs"
+                          weight={isActive ? "semibold" : "medium"}
+                          className={
+                            isActive
+                              ? "text-primary-400"
+                              : "text-gray-400 dark:text-gray-500"
+                          }
+                        >
+                          {count}
+                        </Text>
+                      </View>
+                      {isActive ? (
+                        <View className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-400" />
+                      ) : null}
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
           </View>
         }
         ListEmptyComponent={
@@ -200,7 +208,7 @@ export function ProfileScreen() {
               </Button>
             </View>
           ) : (
-            <View className="items-center rounded-2xl bg-white py-10 dark:bg-dark-500">
+            <View className="items-center py-10 px-4">
               <Text size="sm" className="text-gray-500 dark:text-gray-300">
                 لا توجد منشورات ضمن هذا القسم.
               </Text>
