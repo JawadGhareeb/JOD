@@ -58,13 +58,6 @@ export default function NotificationDetailsPage() {
                 </Text>
               </View>
             </View>
-            {item.priority === "high" ? (
-              <View className="self-end rounded-full bg-error-300/10 px-3 py-1">
-                <Text size="2xs" weight="medium" className="text-error-300">
-                  أولوية عالية
-                </Text>
-              </View>
-            ) : null}
           </Card>
 
           <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">

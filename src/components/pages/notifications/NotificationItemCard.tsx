@@ -62,13 +62,6 @@ export function NotificationItemCard({ item, onPress }: Props) {
               >
                 {item.title}
               </Text>
-              {item.priority === "high" ? (
-                <View className="mt-1 self-end rounded-full bg-error-300/10 px-2 py-0.5">
-                  <Text size="2xs" weight="medium" className="text-error-300">
-                    أولوية عالية
-                  </Text>
-                </View>
-              ) : null}
             </View>
             {!item.isRead ? (
               <View className="mt-1 h-2.5 w-2.5 rounded-full bg-primary-400" />
