@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Animated, Pressable, ScrollView, View } from "react-native";
 import Button from "@/src/components/ui/Button";
 import Text from "@/src/components/ui/Text";
@@ -9,8 +9,9 @@ import { toProfileSummary } from "@/src/features/account/helpers";
 import { useAuthStatus } from "@/src/features/auth/queries";
 import { useMyFollowing } from "@/src/features/follows/queries";
 import { ApiClientError } from "@/src/lib/api-client";
+import { useOnTabReselect } from "@/src/lib/tab-reselect";
 import { useDeletePost, useMyPosts } from "@/src/features/posts/queries";
-import type { MyPostStatus } from "@/src/features/posts/types";
+import type { MyPost, MyPostStatus } from "@/src/features/posts/types";
 import { ProfileHeaderCard } from "./ProfileHeaderCard";
 import { MyPostCard } from "./MyPostCard";
 import { MyPostCardSkeleton } from "./MyPostCardSkeleton";
@@ -28,10 +29,11 @@ const STATUS_TABS: { key: MyPostStatus; label: string }[] = [
 
 export function ProfileScreen() {
   const router = useRouter();
-  const { onScroll } = useCollapsibleHeaderScreen();
+  const { onScroll, resetHeader } = useCollapsibleHeaderScreen();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<MyPostStatus>("published");
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+  const listRef = useRef<Animated.FlatList<MyPost>>(null);
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStatus();
   const followingQuery = useMyFollowing("all", isAuthenticated);
   const { data, isLoading, isError, refetch } = useMyPosts({
@@ -57,6 +59,12 @@ export function ProfileScreen() {
       void refreshPosts();
     }, [refreshPosts]),
   );
+
+  useOnTabReselect("profile", () => {
+    resetHeader();
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    void refreshPosts();
+  });
 
   const selectTab = (status: MyPostStatus) => {
     setActiveTab(status);
@@ -111,6 +119,7 @@ export function ProfileScreen() {
   return (
     <View className="flex-1 bg-light-100 dark:bg-dark-300">
       <Animated.FlatList
+        ref={listRef}
         className="flex-1 px-4 dark:bg-dark-300"
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
         data={filteredPosts}

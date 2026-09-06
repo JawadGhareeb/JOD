@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { useColorScheme } from "nativewind";
@@ -13,6 +13,7 @@ import {
   useSuggestedGroups,
 } from "@/src/features/groups/queries";
 import type { Group } from "@/src/features/groups/types";
+import { useOnTabReselect } from "@/src/lib/tab-reselect";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { getPrimaryColor } from "@/src/theme";
 import { GroupCard } from "./GroupCard";
@@ -47,6 +48,7 @@ const TAB_META: Record<GroupsTab, { intro: string; empty: string; showJoin: bool
 
 export function GroupsScreen() {
   const [activeTab, setActiveTab] = useState<GroupsTab>("forYou");
+  const listRef = useRef<FlatList<Group>>(null);
 
   const suggested = useSuggestedGroups();
   const mine = useMyGroups();
@@ -56,11 +58,17 @@ export function GroupsScreen() {
   const { intro, empty, showJoin } = TAB_META[activeTab];
   const groups: Group[] = query.data ?? [];
 
+  useOnTabReselect("groups", () => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    void query.refetch();
+  });
+
   return (
     <View className="flex-1 bg-light-100 dark:bg-dark-300">
       <GroupsTabBar activeTab={activeTab} onChange={setActiveTab} />
 
       <FlatList
+        ref={listRef}
         // Remount on tab change so the list scrolls back to the top.
         key={activeTab}
         className="flex-1 px-4"

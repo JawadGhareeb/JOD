@@ -1,5 +1,5 @@
 import { useColorScheme } from "nativewind";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { Animated, RefreshControl, View, type NativeScrollEvent, type NativeSyntheticEvent, type ViewToken } from "react-native";
 import { OrganizationCampaignCard } from "@/src/components/pages/profile/OrganizationCampaignCard";
 import Button from "@/src/components/ui/Button";
@@ -119,11 +119,19 @@ interface HomeFeedProps {
   onRefresh?: () => void;
 }
 
-export function HomeFeed({ audience, feedType = "for_you", listHeaderComponent, onScroll, onRefresh }: HomeFeedProps) {
+export type HomeFeedHandle = {
+  scrollToTopAndRefresh: () => void;
+};
+
+export const HomeFeed = forwardRef<HomeFeedHandle, HomeFeedProps>(function HomeFeed(
+  { audience, feedType = "for_you", listHeaderComponent, onScroll, onRefresh },
+  ref,
+) {
   const { colorScheme } = useColorScheme();
   const { isAuthenticated } = useAuthStatus();
   const primaryColor = getPrimaryColor(colorScheme === "dark");
   const usePersonalized = !audience && isAuthenticated;
+  const listRef = useRef<Animated.FlatList<HomeFeedItem>>(null);
   const [compositionSeed, setCompositionSeed] = useState(() => Math.floor(Math.random() * 2_000_000_000));
   const [activeReelsKey, setActiveReelsKey] = useState<string | null>(null);
   const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken<HomeFeedItem>[] }) => {
@@ -187,8 +195,6 @@ export function HomeFeed({ audience, feedType = "for_you", listHeaderComponent, 
     }
   }, [articles.length, articlesQuery, blogsModuleCount]);
 
-  const refetchContent = () => usePersonalized ? personalizedQuery.refetch() : discoveryQuery.refetch();
-
   const handleLoadMore = () => {
     if (contentHasNextPage && !contentIsFetchingNextPage) {
       if (usePersonalized) void personalizedQuery.fetchNextPage();
@@ -197,16 +203,32 @@ export function HomeFeed({ audience, feedType = "for_you", listHeaderComponent, 
     if (!useFollowingComposition && campaignsQuery.hasNextPage && !campaignsQuery.isFetchingNextPage) void campaignsQuery.fetchNextPage();
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     onRefresh?.();
     setCompositionSeed(Math.floor(Math.random() * 2_000_000_000));
     void Promise.all([
-      refetchContent(),
+      usePersonalized ? personalizedQuery.refetch() : discoveryQuery.refetch(),
       useFollowingComposition ? Promise.resolve() : campaignsQuery.refetch(),
       articlesQuery.refetch(),
       mediaQuery.refetch(),
     ]);
-  };
+  }, [
+    articlesQuery,
+    campaignsQuery,
+    discoveryQuery,
+    mediaQuery,
+    onRefresh,
+    personalizedQuery,
+    useFollowingComposition,
+    usePersonalized,
+  ]);
+
+  useImperativeHandle(ref, () => ({
+    scrollToTopAndRefresh: () => {
+      listRef.current?.scrollToOffset({ offset: 0, animated: true });
+      handleRefresh();
+    },
+  }), [handleRefresh]);
 
   if (contentIsLoading && (usePersonalized || campaignsQuery.isLoading)) {
     return (
@@ -224,7 +246,7 @@ export function HomeFeed({ audience, feedType = "for_you", listHeaderComponent, 
         <Text size="sm" className="text-center text-gray-500 dark:text-gray-300">
           تعذر تحميل المحتوى. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.
         </Text>
-        <Button size="small" onPress={() => void refetchContent()}>
+        <Button size="small" onPress={() => void (usePersonalized ? personalizedQuery.refetch() : discoveryQuery.refetch())}>
           إعادة المحاولة
         </Button>
       </View>
@@ -234,6 +256,7 @@ export function HomeFeed({ audience, feedType = "for_you", listHeaderComponent, 
   return (
     <View className="flex-1 bg-light-100 dark:bg-dark-300">
       <Animated.FlatList
+        ref={listRef}
         className="flex-1 px-4"
         data={feed}
         keyExtractor={(item) => item.key}
@@ -304,4 +327,4 @@ export function HomeFeed({ audience, feedType = "for_you", listHeaderComponent, 
       />
     </View>
   );
-}
+});

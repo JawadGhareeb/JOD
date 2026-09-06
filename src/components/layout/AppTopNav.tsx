@@ -1,6 +1,7 @@
 import Text from "@/src/components/ui/Text";
 import { useAuthStatus } from "@/src/features/auth/queries";
 import { useUnreadNotificationCount } from "@/src/features/notifications/queries";
+import { emitTabReselect, type TopNavTabKey } from "@/src/lib/tab-reselect";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { getPrimaryColor } from "@/src/theme";
 import { usePathname, useRouter } from "expo-router";
@@ -8,7 +9,7 @@ import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
 import { appIcons } from "./iconMap";
 
-type TopNavKey = "home" | "groups" | "student" | "reels" | "notifications" | "profile";
+type TopNavKey = TopNavTabKey;
 
 export const TOP_NAV_ITEMS: {
   key: TopNavKey;
@@ -51,6 +52,10 @@ export function AppTopNav() {
         const isActive = pathname === tabPath || pathname.startsWith(`${tabPath}/`);
         const handlePress = () => {
           if (item.requiresAuth && !requireAuth()) return;
+          if (isActive) {
+            emitTabReselect(item.key);
+            return;
+          }
           router.push(item.path as never);
         };
 

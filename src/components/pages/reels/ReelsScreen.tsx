@@ -3,6 +3,7 @@ import { FlatList, View, type ViewToken } from "react-native";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import Text from "@/src/components/ui/Text";
 import { usePublicMedia, usePublicMediaItem } from "@/src/features/media/queries";
+import { useOnTabReselect } from "@/src/lib/tab-reselect";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import { ReelVideoItem } from "./ReelVideoItem";
 import { ReelVideoItemSkeleton } from "./ReelVideoItemSkeleton";
@@ -26,7 +27,7 @@ export function ReelsScreen() {
   const [pageHeight, setPageHeight] = useState(1);
   const listRef = useRef<FlatList<(typeof items)[number]>>(null);
   const activeIdRef = useRef<string | null>(null);
-  const { onScroll: onHeaderScroll } = useCollapsibleHeaderScreen({
+  const { onScroll: onHeaderScroll, resetHeader } = useCollapsibleHeaderScreen({
     resetOnFocus: false,
     scrollEpsilon: 0.5,
     collapseAfterY: 18,
@@ -38,6 +39,12 @@ export function ReelsScreen() {
     activeIdRef.current = id;
     setActiveId(id);
   }, []);
+
+  useOnTabReselect("reels", () => {
+    resetHeader();
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    void query.refetch();
+  });
 
   useFocusEffect(
     useCallback(() => {

@@ -7,6 +7,7 @@ import {
   useNotifications,
 } from "@/src/features/notifications/queries";
 import type { MobileNotification } from "@/src/features/notifications/types";
+import { useOnTabReselect } from "@/src/lib/tab-reselect";
 import { NotificationItemCard } from "./NotificationItemCard";
 import { NotificationItemCardSkeleton } from "./NotificationItemCardSkeleton";
 
@@ -25,6 +26,7 @@ export function NotificationsScreen() {
   );
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
   const markingRef = useRef(false);
+  const listRef = useRef<SectionList<MobileNotification, NotificationSection>>(null);
   const refetch = query.refetch;
   const markAllRead = markAll.mutateAsync;
 
@@ -65,9 +67,22 @@ export function NotificationsScreen() {
     return next;
   }, [items, newIds]);
 
+  useOnTabReselect("notifications", () => {
+    if (sections.length > 0 && sections[0]?.data.length) {
+      listRef.current?.scrollToLocation({
+        sectionIndex: 0,
+        itemIndex: 0,
+        animated: true,
+        viewOffset: 0,
+      });
+    }
+    void refetch();
+  });
+
   return (
     <View className="flex-1 bg-light-100 px-4 pt-3 dark:bg-dark-300">
       <SectionList
+        ref={listRef}
         sections={sections}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <NotificationItemCard item={item} />}

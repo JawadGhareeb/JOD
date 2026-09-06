@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { View } from "react-native";
 import { useRouter, type Href } from "expo-router";
 import Button from "@/src/components/ui/Button";
@@ -8,8 +8,9 @@ import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderPro
 import { useAuthStatus } from "@/src/features/auth/queries";
 import { usePersonalizationProfile } from "@/src/features/personalization/queries";
 import type { PersonalizedFeedType } from "@/src/features/personalization/types";
+import { useOnTabReselect } from "@/src/lib/tab-reselect";
 import { HomeComposerBar } from "./HomeComposerBar";
-import { HomeFeed } from "./HomeFeed";
+import { HomeFeed, type HomeFeedHandle } from "./HomeFeed";
 import { HomeFeedTypeTabs } from "./HomeFeedTypeTabs";
 
 export function HomeScreen() {
@@ -18,6 +19,12 @@ export function HomeScreen() {
   const personalization = usePersonalizationProfile(isAuthenticated);
   const [feedType, setFeedType] = useState<PersonalizedFeedType>("for_you");
   const { onScroll, resetHeader } = useCollapsibleHeaderScreen();
+  const feedRef = useRef<HomeFeedHandle>(null);
+
+  useOnTabReselect("home", () => {
+    resetHeader();
+    feedRef.current?.scrollToTopAndRefresh();
+  });
 
   const showPersonalizationReminder = Boolean(
     isAuthenticated &&
@@ -28,6 +35,7 @@ export function HomeScreen() {
   return (
     <View className="flex-1 bg-light-100 dark:bg-dark-300">
       <HomeFeed
+        ref={feedRef}
         audience={isAuthenticated ? undefined : "general"}
         feedType={feedType}
         onScroll={onScroll}
