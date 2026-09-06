@@ -40,7 +40,7 @@ function OrganizationCard({ account, onPress }: { account: SearchAccount; onPres
         <View className="mt-3 w-full items-center">
           <View className="max-w-full flex-row-reverse items-center gap-1.5">
             <Text numberOfLines={1} weight="semibold" size="sm" className="max-w-[165px] text-dark-100 dark:text-light-50">{account.name}</Text>
-            {account.verified ? <VerifiedBadge /> : null}
+            {account.accountType === "organization" && account.verified ? <VerifiedBadge /> : null}
           </View>
           <Text numberOfLines={1} size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">{account.city || `@${account.username}`}</Text>
           <View className="h-12 w-full justify-center">

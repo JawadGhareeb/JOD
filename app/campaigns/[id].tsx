@@ -5,7 +5,7 @@ import { Pressable, View } from "react-native";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
 import { FullScreenImageGallery } from "@/src/components/shared/FullScreenImageGallery";
-import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
+import { showOrganizationVerifiedBadge, VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import { CampaignDetailsSkeleton, CampaignDonorRowSkeleton } from "@/src/components/pages/campaigns/CampaignDetailsSkeleton";
 import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import Button from "@/src/components/ui/Button";
@@ -88,7 +88,9 @@ export default function CampaignDetailsPage() {
             <View className="flex-1 items-end">
               <View className="flex-row-reverse items-center gap-1">
                 <Text size="sm" weight="semibold">{publisherName}</Text>
-                {campaign.publisher.verified ? <VerifiedBadge /> : null}
+                {showOrganizationVerifiedBadge(campaign.publisher, { assumeOrganization: true }) ? (
+                  <VerifiedBadge />
+                ) : null}
               </View>
               {campaign.publisher.username ? (
                 <Text size="xs" className="text-gray-500 dark:text-gray-300">@{campaign.publisher.username}</Text>

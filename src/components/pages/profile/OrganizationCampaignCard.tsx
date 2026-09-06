@@ -8,7 +8,7 @@ import { Avatar } from "@/src/components/shared/Avatar";
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
 import { FullScreenImageGallery } from "@/src/components/shared/FullScreenImageGallery";
 import { HeartBurst, useHeartBurst } from "@/src/components/shared/HeartBurst";
-import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
+import { showOrganizationVerifiedBadge, VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
@@ -177,7 +177,9 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
             <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
               {campaign.publisher.name}
             </Text>
-            {campaign.publisher.verified ? <VerifiedBadge /> : null}
+            {showOrganizationVerifiedBadge(campaign.publisher, { assumeOrganization: true }) ? (
+              <VerifiedBadge />
+            ) : null}
           </View>
           <Text size="2xs" className="mt-0.5 text-gray-500 dark:text-gray-300">
             @{campaign.publisher.username}

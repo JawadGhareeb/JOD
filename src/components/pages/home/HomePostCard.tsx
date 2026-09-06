@@ -17,7 +17,7 @@ import Input from "@/src/components/ui/Input";
 import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
-import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
+import { showOrganizationVerifiedBadge, VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
 import { HeartBurst, useHeartBurst } from "@/src/components/shared/HeartBurst";
 import { FullScreenImageGallery } from "@/src/components/shared/FullScreenImageGallery";
@@ -424,7 +424,7 @@ export function HomePostCard({
               <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
                 {post.publisher.name}
               </Text>
-              {post.publisher.verified ? <VerifiedBadge /> : null}
+              {showOrganizationVerifiedBadge(post.publisher) ? <VerifiedBadge /> : null}
             </View>
             <View className="flex-row-reverse items-center gap-1">
               <Text size="2xs" className="text-gray-500 dark:text-gray-300">

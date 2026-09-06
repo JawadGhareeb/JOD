@@ -8,6 +8,21 @@ type VerifiedBadgeProps = {
   size?: number;
 };
 
+type VerifiedPublisherLike = {
+  publisherType?: string | null;
+  verified?: boolean | null;
+};
+
+/** Org verification badge only — never for regular user accounts. */
+export function showOrganizationVerifiedBadge(
+  publisher?: VerifiedPublisherLike | null,
+  options?: { assumeOrganization?: boolean },
+): boolean {
+  if (!publisher?.verified) return false;
+  if (options?.assumeOrganization) return true;
+  return publisher.publisherType === "organization";
+}
+
 // Instagram-style scalloped "seal" badge, not a plain circle. Reuses
 // lucide's BadgeCheck outline path, but drawn directly via react-native-svg
 // instead of lucide's <Icon> wrapper — that wrapper applies one fill color

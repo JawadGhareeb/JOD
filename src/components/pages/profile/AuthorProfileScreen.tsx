@@ -208,7 +208,7 @@ export function AuthorProfileScreen() {
                   <Text weight="semibold" size="base" className="text-dark-100 dark:text-light-50">
                     {author.name}
                   </Text>
-                  {author.verified ? <VerifiedBadge /> : null}
+                  {isOrganization && author.verified ? <VerifiedBadge /> : null}
                 </View>
                 <Text size="xs" className="mt-1 text-gray-500 dark:text-gray-300">
                   @{author.username}{author.city ? ` • ${author.city}` : ""}
