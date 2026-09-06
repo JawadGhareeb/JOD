@@ -1,9 +1,9 @@
-import { Image, Pressable, View } from "react-native";
+import { Image, Pressable, View, type GestureResponderEvent } from "react-native";
 import Text from "@/src/components/ui/Text";
 
 type FeedMediaGridProps = {
   images: string[];
-  onPress?: (index: number) => void;
+  onPress?: (index: number, event: GestureResponderEvent) => void;
 };
 
 export function FeedMediaGrid({ images, onPress }: FeedMediaGridProps) {
@@ -15,7 +15,7 @@ export function FeedMediaGrid({ images, onPress }: FeedMediaGridProps) {
   const image = (uri: string, index: number, className: string) => (
     <Pressable
       key={`${uri}-${index}`}
-      onPress={() => onPress?.(index)}
+      onPress={(event) => onPress?.(index, event)}
       disabled={!onPress}
       className={`overflow-hidden bg-gray-200 dark:bg-dark-350 ${className}`}
       accessibilityRole={onPress ? "button" : undefined}

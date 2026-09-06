@@ -6,6 +6,7 @@ import {
   Pressable,
   useWindowDimensions,
   View,
+  type GestureResponderEvent,
 } from "react-native";
 import { Check, MapPin, Pencil, Tag, Trash2, X } from "lucide-react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
@@ -18,6 +19,7 @@ import Text from "@/src/components/ui/Text";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
+import { HeartBurst, useHeartBurst } from "@/src/components/shared/HeartBurst";
 import { FullScreenImageGallery } from "@/src/components/shared/FullScreenImageGallery";
 import { HomePostTypeEnum } from "@/src/constants/global";
 import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
@@ -103,6 +105,12 @@ export function HomePostCard({
   const { requireAuth } = useAuthGuard();
   const toast = useToast();
   const likeMutation = useLikePost();
+  const {
+    trigger: triggerHeartBurst,
+    scale: heartScale,
+    opacity: heartOpacity,
+    position: heartPosition,
+  } = useHeartBurst();
   const saveMutation = useSavePost();
   const reportMutation = useReportPost();
   const feedbackMutation = useRecommendationFeedback();
@@ -124,6 +132,7 @@ export function HomePostCard({
 
   const [otherReportReason, setOtherReportReason] = useState("");
   const optionsButtonRef = useRef<View>(null);
+  const contentRef = useRef<View>(null);
   const lastCardTapRef = useRef(0);
   const lastMediaTapRef = useRef(0);
   const mediaTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -224,22 +233,31 @@ export function HomePostCard({
     }
   };
 
-  const handleCardPress = () => {
+  const triggerHeartBurstAt = (event: GestureResponderEvent) => {
+    const { pageX, pageY } = event.nativeEvent;
+    contentRef.current?.measureInWindow((x, y) => {
+      triggerHeartBurst(pageX - x, pageY - y);
+    });
+  };
+
+  const handleCardPress = (event: GestureResponderEvent) => {
     const now = Date.now();
     if (now - lastCardTapRef.current <= 300) {
       lastCardTapRef.current = 0;
+      triggerHeartBurstAt(event);
       void handleToggleLike();
       return;
     }
     lastCardTapRef.current = now;
   };
 
-  const handleMediaPress = (index: number) => {
+  const handleMediaPress = (index: number, event: GestureResponderEvent) => {
     const now = Date.now();
     if (now - lastMediaTapRef.current <= 300) {
       if (mediaTapTimerRef.current) clearTimeout(mediaTapTimerRef.current);
       mediaTapTimerRef.current = null;
       lastMediaTapRef.current = 0;
+      triggerHeartBurstAt(event);
       void handleToggleLike();
       return;
     }
@@ -429,34 +447,38 @@ export function HomePostCard({
         </View>
       </View>
 
-      <Pressable
-        onPress={handleCardPress}
-        accessibilityRole="button"
-        accessibilityLabel="اضغط مرتين للإعجاب بالمنشور"
-      >
-        <Text size="sm" className="text-dark-100 dark:text-light-50">
-          {displayContent}
-        </Text>
-
-        {post.category?.name ? (
-          <View className="mt-2 flex-row-reverse flex-wrap items-center gap-2">
-            <View className="flex-row-reverse items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 dark:bg-primary-400/15">
-              <Tag size={12} color={primaryColor} strokeWidth={2.2} />
-              <Text size="2xs" className="text-primary-400">{post.category.name}</Text>
-            </View>
-          </View>
-        ) : null}
-      </Pressable>
-
-      {shouldTruncate ? (
-        <Pressable onPress={() => setExpanded((prev) => !prev)} className="mt-2 self-end">
-          <Text size="xs" weight="medium" className="text-primary-400">
-            {expanded ? "عرض أقل" : "عرض المزيد"}
+      <View ref={contentRef} className="relative">
+        <Pressable
+          onPress={handleCardPress}
+          accessibilityRole="button"
+          accessibilityLabel="اضغط مرتين للإعجاب بالمنشور"
+        >
+          <Text size="sm" className="text-dark-100 dark:text-light-50">
+            {displayContent}
           </Text>
-        </Pressable>
-      ) : null}
 
-      <FeedMediaGrid images={post.images} onPress={handleMediaPress} />
+          {post.category?.name ? (
+            <View className="mt-2 flex-row-reverse flex-wrap items-center gap-2">
+              <View className="flex-row-reverse items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 dark:bg-primary-400/15">
+                <Tag size={12} color={primaryColor} strokeWidth={2.2} />
+                <Text size="2xs" className="text-primary-400">{post.category.name}</Text>
+              </View>
+            </View>
+          ) : null}
+        </Pressable>
+
+        {shouldTruncate ? (
+          <Pressable onPress={() => setExpanded((prev) => !prev)} className="mt-2 self-end">
+            <Text size="xs" weight="medium" className="text-primary-400">
+              {expanded ? "عرض أقل" : "عرض المزيد"}
+            </Text>
+          </Pressable>
+        ) : null}
+
+        <FeedMediaGrid images={post.images} onPress={handleMediaPress} />
+
+        <HeartBurst scale={heartScale} opacity={heartOpacity} position={heartPosition} />
+      </View>
 
       <View className="mt-3 flex-row-reverse items-center justify-between border-t border-gray-100 pt-2 dark:border-dark-400">
         <View className={`${actionItemClassName} items-center gap-2`}>

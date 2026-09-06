@@ -7,6 +7,7 @@ import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
 import { FullScreenImageGallery } from "@/src/components/shared/FullScreenImageGallery";
+import { HeartBurst, useHeartBurst } from "@/src/components/shared/HeartBurst";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
@@ -32,6 +33,12 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const primaryColor = getPrimaryColor(colorScheme === "dark");
   const likeMutation = useLikePost();
+  const {
+    trigger: triggerHeartBurst,
+    scale: heartScale,
+    opacity: heartOpacity,
+    position: heartPosition,
+  } = useHeartBurst();
   const feedbackMutation = useRecommendationFeedback();
   const [expanded, setExpanded] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
@@ -41,6 +48,7 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
   const lastCardTapRef = useRef(0);
   const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const optionsButtonRef = useRef<View>(null);
+  const contentRef = useRef<View>(null);
   const [optionsAnchor, setOptionsAnchor] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const HeartIcon = appIcons.myDonations;
   const MoreIcon = appIcons.moreVertical;
@@ -85,12 +93,16 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
     }
   };
 
-  const handleDoubleAwarePress = (singleAction: () => void) => {
+  const handleDoubleAwarePress = (singleAction: () => void, event: GestureResponderEvent) => {
     const now = Date.now();
     if (now - lastCardTapRef.current <= 300) {
       if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
       singleTapTimerRef.current = null;
       lastCardTapRef.current = 0;
+      const { pageX, pageY } = event.nativeEvent;
+      contentRef.current?.measureInWindow((x, y) => {
+        triggerHeartBurst(pageX - x, pageY - y);
+      });
       void handleToggleLike();
       return;
     }
@@ -173,45 +185,49 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
         </View>
       </Pressable>
 
-      <Pressable
-        onPress={() => handleDoubleAwarePress(() => router.push(`/campaigns/${campaign.id}` as never))}
-        accessibilityRole="button"
-        accessibilityLabel={`فتح حملة ${campaign.title}. اضغط مرتين للإعجاب`}
-      >
-        <Text weight="semibold" size="sm" className="mt-3 text-dark-100 dark:text-light-50">
-          {campaign.title}
-        </Text>
-        <Text size="sm" className="mt-2 leading-7 text-dark-100 dark:text-light-50">
-          {displayContent}
-        </Text>
-        <View className="mt-2 flex-row-reverse flex-wrap gap-2">
-          {categoryName ? (
-            <View className="flex-row-reverse items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 dark:bg-primary-400/15">
-              <Tag size={12} color={primaryColor} strokeWidth={2.2} />
-              <Text size="2xs" className="text-primary-400">{categoryName}</Text>
-            </View>
-          ) : null}
-          {campaign.location ? (
-            <View className="flex-row-reverse items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 dark:bg-dark-350">
-              <MapPin size={12} color="#6B7280" strokeWidth={2.2} />
-              <Text size="2xs" className="text-gray-600 dark:text-gray-200">{campaign.location}</Text>
-            </View>
-          ) : null}
-        </View>
-      </Pressable>
-
-      {shouldTruncate ? (
-        <Pressable onPress={() => setExpanded((value) => !value)} className="mt-1 self-end">
-          <Text size="xs" weight="semibold" className="text-primary-400">
-            {expanded ? "عرض أقل" : "عرض المزيد"}
+      <View ref={contentRef} className="relative">
+        <Pressable
+          onPress={(event) => handleDoubleAwarePress(() => router.push(`/campaigns/${campaign.id}` as never), event)}
+          accessibilityRole="button"
+          accessibilityLabel={`فتح حملة ${campaign.title}. اضغط مرتين للإعجاب`}
+        >
+          <Text weight="semibold" size="sm" className="mt-3 text-dark-100 dark:text-light-50">
+            {campaign.title}
           </Text>
+          <Text size="sm" className="mt-2 leading-7 text-dark-100 dark:text-light-50">
+            {displayContent}
+          </Text>
+          <View className="mt-2 flex-row-reverse flex-wrap gap-2">
+            {categoryName ? (
+              <View className="flex-row-reverse items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 dark:bg-primary-400/15">
+                <Tag size={12} color={primaryColor} strokeWidth={2.2} />
+                <Text size="2xs" className="text-primary-400">{categoryName}</Text>
+              </View>
+            ) : null}
+            {campaign.location ? (
+              <View className="flex-row-reverse items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 dark:bg-dark-350">
+                <MapPin size={12} color="#6B7280" strokeWidth={2.2} />
+                <Text size="2xs" className="text-gray-600 dark:text-gray-200">{campaign.location}</Text>
+              </View>
+            ) : null}
+          </View>
         </Pressable>
-      ) : null}
 
-      <FeedMediaGrid
-        images={campaign.images}
-        onPress={(index) => handleDoubleAwarePress(() => setGalleryIndex(index))}
-      />
+        {shouldTruncate ? (
+          <Pressable onPress={() => setExpanded((value) => !value)} className="mt-1 self-end">
+            <Text size="xs" weight="semibold" className="text-primary-400">
+              {expanded ? "عرض أقل" : "عرض المزيد"}
+            </Text>
+          </Pressable>
+        ) : null}
+
+        <FeedMediaGrid
+          images={campaign.images}
+          onPress={(index, event) => handleDoubleAwarePress(() => setGalleryIndex(index), event)}
+        />
+
+        <HeartBurst scale={heartScale} opacity={heartOpacity} position={heartPosition} />
+      </View>
 
       <FullScreenImageGallery
         images={campaign.images}
