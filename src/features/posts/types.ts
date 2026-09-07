@@ -113,6 +113,7 @@ export interface Category { id: string; name: string; target: "post" | "campaign
 export interface CreatePostInput {
   type: ApiPostType; title?: string | null; details?: string | null; cityId?: string | null; categoryId?: string | null; saveAsDraft?: boolean;
   audience?: ContentAudience;
+  images?: MobileImageFile[];
 }
 export interface UpdatePostInput {
   type?: ApiPostType; title?: string | null; details?: string | null; cityId?: string | null; categoryId?: string | null;
@@ -125,7 +126,7 @@ export interface PostImageMedia { id: string; url: string; position: number }
 export interface MyPost {
   id: string; ownerId: string | null; title: string | null; details: string | null; cityId: string | null; city: string | null; type: string; categoryId: string | null;
   images: string[]; imageMedia: PostImageMedia[]; viewsCount: number; reactionsCount: number; commentsCount: number; sharesCount: number;
-  stats: { likes: number; comments: number; shares: number }; status: MyPostStatus; blockReason: string | null;
+  stats: { likes: number; comments: number; shares: number }; isLiked: boolean; isSaved: boolean; status: MyPostStatus; blockReason: string | null;
   submittedAt: string | null; reviewedAt: string | null; blockedAt?: string | null; createdAt: string | null; updatedAt: string | null; publishedAt: string | null;
   audience?: ContentAudience;
 }

@@ -5,6 +5,7 @@ import { Image, Pressable, ScrollView, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { HomePostCard } from "@/src/components/pages/home/HomePostCard";
 import { HomePostCardSkeleton } from "@/src/components/pages/home/HomePostCardSkeleton";
+import { GroupCard } from "@/src/components/pages/groups/GroupCard";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { VerifiedBadge } from "@/src/components/shared/VerifiedBadge";
 import Button from "@/src/components/ui/Button";
@@ -21,6 +22,8 @@ const SearchIcon = appIcons.search;
 const TYPES: { value: GlobalSearchType; label: string }[] = [
   { value: "all", label: "الكل" },
   { value: "accounts", label: "الحسابات" },
+  { value: "organizations", label: "المنظمات" },
+  { value: "groups", label: "المجموعات" },
   { value: "posts", label: "المنشورات" },
   { value: "campaigns", label: "الحملات" },
 ];
@@ -73,21 +76,18 @@ export function SearchScreen() {
     debouncedSearch.length > 0,
   );
   const organizationsQuery = useGlobalSearch(
-    { type: "accounts", sort: "newest", perType: 12 },
+    { type: "organizations", sort: "newest", perType: 12 },
     debouncedSearch.length === 0,
   );
 
   const result = query.data?.data;
   const counts = query.data?.meta.counts;
   const total = useMemo(
-    () => (counts?.accounts ?? 0) + (counts?.posts ?? 0) + (counts?.campaigns ?? 0),
+    () => (counts?.accounts ?? 0) + (counts?.organizations ?? 0) + (counts?.groups ?? 0) + (counts?.posts ?? 0) + (counts?.campaigns ?? 0),
     [counts],
   );
   const organizations = useMemo(
-    () =>
-      (organizationsQuery.data?.data.accounts ?? [])
-        .filter((account) => account.accountType === "organization")
-        .slice(0, 10),
+    () => (organizationsQuery.data?.data.organizations ?? []).slice(0, 10),
     [organizationsQuery.data],
   );
 
@@ -103,7 +103,7 @@ export function SearchScreen() {
         rightIcon={<SearchIcon size={18} color={primaryColor} />}
         value={search}
         onChangeText={setSearch}
-        placeholder="ابحث عن حساب أو منشور أو حملة"
+        placeholder="ابحث عن حساب أو منظمة أو مجموعة أو منشور أو حملة"
         placeholderTextColor="#9CA3AF"
         autoCapitalize="none"
       />
@@ -197,9 +197,9 @@ export function SearchScreen() {
                 <Text weight="semibold" size="sm" className="mb-2 text-dark-100 dark:text-light-50">
                   الحسابات ({counts?.accounts ?? 0})
                 </Text>
-                {(result?.accounts.some((account) => account.accountType === "organization")) ? (
+                {type === "accounts" && result?.accounts.some((account) => account.accountType === "organization") ? (
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 12 }}>
-                    {result?.accounts.filter((account) => account.accountType === "organization").map((account) => <OrganizationCard key={account.id} account={account} onPress={() => openAccount(account.id)} />)}
+                    {result.accounts.filter((account) => account.accountType === "organization").map((account) => <OrganizationCard key={account.id} account={account} onPress={() => openAccount(account.id)} />)}
                   </ScrollView>
                 ) : null}
                 {result?.accounts.filter((account) => account.accountType !== "organization").map((account) => (
@@ -210,6 +210,26 @@ export function SearchScreen() {
                     </View>
                   </Card>
                 ))}
+              </View>
+            ) : null}
+
+            {(type === "all" || type === "organizations") && (result?.organizations.length ?? 0) > 0 ? (
+              <View className="mb-4">
+                <Text weight="semibold" size="sm" className="mb-2 text-dark-100 dark:text-light-50">
+                  المنظمات ({counts?.organizations ?? 0})
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 12 }}>
+                  {result?.organizations.map((account) => <OrganizationCard key={account.id} account={account} onPress={() => openAccount(account.id)} />)}
+                </ScrollView>
+              </View>
+            ) : null}
+
+            {(type === "all" || type === "groups") && (result?.groups.length ?? 0) > 0 ? (
+              <View className="mb-4">
+                <Text weight="semibold" size="sm" className="mb-2 text-dark-100 dark:text-light-50">
+                  المجموعات ({counts?.groups ?? 0})
+                </Text>
+                {result?.groups.map((group) => <GroupCard key={group.id} group={group} />)}
               </View>
             ) : null}
 

@@ -1,6 +1,7 @@
+import type { Group } from "@/src/features/groups/types";
 import type { Campaign, HomePost, Publisher } from "@/src/features/posts/types";
 
-export type GlobalSearchType = "all" | "accounts" | "posts" | "campaigns";
+export type GlobalSearchType = "all" | "accounts" | "organizations" | "groups" | "posts" | "campaigns";
 export interface GlobalSearchParams {
   search?: string;
   type?: GlobalSearchType;
@@ -10,8 +11,14 @@ export interface GlobalSearchParams {
   perType?: number;
 }
 export interface SearchAccount extends Publisher { accountType: "organization" | "user" }
-export interface GlobalSearchData { accounts: SearchAccount[]; posts: HomePost[]; campaigns: Campaign[] }
+export interface GlobalSearchData {
+  accounts: SearchAccount[];
+  organizations: SearchAccount[];
+  groups: Group[];
+  posts: HomePost[];
+  campaigns: Campaign[];
+}
 export interface GlobalSearchMeta {
-  counts: { accounts: number; posts: number; campaigns: number };
+  counts: { accounts: number; organizations: number; groups: number; posts: number; campaigns: number };
   appliedFilters: GlobalSearchParams;
 }

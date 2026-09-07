@@ -121,7 +121,7 @@ export function MyPostCard({ post, authorName, authorUsername, onDelete }: Props
               <Text size="2xs" className="text-gray-500 dark:text-gray-300">{post.viewsCount ?? 0}</Text>
             </View>
             <View className="flex-row-reverse items-center gap-1">
-              <Heart size={17} color="#9CA3AF" />
+              <Heart size={17} color={post.isLiked ? "#E5484D" : "#9CA3AF"} fill={post.isLiked ? "#E5484D" : "transparent"} />
               <Text size="2xs" className="text-gray-500 dark:text-gray-300">{post.reactionsCount ?? 0}</Text>
             </View>
           </View>

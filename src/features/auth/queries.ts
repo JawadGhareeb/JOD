@@ -3,7 +3,7 @@ import { authApi } from "./api";
 import { authKeys } from "./query-keys";
 import { endSession, getSessionState, storeSession } from "./session";
 import { getLoginPushFields } from "@/src/features/notifications/registration";
-import type { LoginInput, RegisterInput, ResetPasswordInput, VerifyAccountInput } from "./types";
+import type { LoginInput, RegisterInput, ResetPasswordInput, SessionState, VerifyAccountInput } from "./types";
 const authSessionQueryOptions = {
   staleTime: Infinity,
   refetchOnMount: false,
@@ -32,5 +32,5 @@ export function useLogout() { const queryClient = useQueryClient(); return useMu
 export function useForgotPassword() { return useMutation({ mutationFn: (login: string) => authApi.forgotPassword(login) }); }
 export function useVerifyResetCode() { return useMutation({ mutationFn: ({ login, code }: { login: string; code: string }) => authApi.verifyResetCode(login, code) }); }
 export function useResetPassword() { return useMutation({ mutationFn: (input: ResetPasswordInput) => authApi.resetPassword(input) }); }
-export function useUpdateAvatar() { const queryClient = useQueryClient(); return useMutation({ mutationFn: authApi.updateAvatar, onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.session() }) }); }
-export function useRemoveAvatar() { const queryClient = useQueryClient(); return useMutation({ mutationFn: authApi.removeAvatar, onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.session() }) }); }
+export function useUpdateAvatar() { const queryClient = useQueryClient(); return useMutation({ mutationFn: authApi.updateAvatar, onSuccess: (user) => { queryClient.setQueryData<SessionState>(authKeys.session(), { isAuthenticated: true, user }); queryClient.invalidateQueries({ queryKey: authKeys.session() }); queryClient.invalidateQueries({ queryKey: ["posts"] }); queryClient.invalidateQueries({ queryKey: ["groups"] }); queryClient.invalidateQueries({ queryKey: ["search"] }); } }); }
+export function useRemoveAvatar() { const queryClient = useQueryClient(); return useMutation({ mutationFn: authApi.removeAvatar, onSuccess: (user) => { queryClient.setQueryData<SessionState>(authKeys.session(), { isAuthenticated: true, user }); queryClient.invalidateQueries({ queryKey: authKeys.session() }); queryClient.invalidateQueries({ queryKey: ["posts"] }); queryClient.invalidateQueries({ queryKey: ["groups"] }); queryClient.invalidateQueries({ queryKey: ["search"] }); } }); }

@@ -25,16 +25,31 @@ const ENDPOINTS = {
   myPosts: "/me/posts", myPost: (id: string) => `/me/posts/${id}`, savedPosts: "/me/saved-posts",
 } as const;
 
+const appendImage = async (form: FormData, field: string, image: MobileImageFile) => {
+  if (Platform.OS === "web") {
+    const blob = await fetch(image.uri).then((response) => response.blob());
+    form.append(field, blob, image.name);
+  } else {
+    form.append(field, image as unknown as Blob);
+  }
+};
+
 const toPostImagesFormData = async (images: MobileImageFile[]) => {
   const form = new FormData();
-  for (const image of images) {
-    if (Platform.OS === "web") {
-      const blob = await fetch(image.uri).then((response) => response.blob());
-      form.append("images[]", blob, image.name);
-    } else {
-      form.append("images[]", image as unknown as Blob);
-    }
-  }
+  for (const image of images) await appendImage(form, "images[]", image);
+  return form;
+};
+
+const toCreatePostFormData = async (input: CreatePostInput) => {
+  const form = new FormData();
+  form.append("type", input.type);
+  if (input.title != null) form.append("title", input.title);
+  if (input.details != null) form.append("details", input.details);
+  if (input.cityId != null) form.append("cityId", input.cityId);
+  if (input.categoryId != null) form.append("categoryId", input.categoryId);
+  if (input.audience != null) form.append("audience", input.audience);
+  form.append("saveAsDraft", input.saveAsDraft ? "1" : "0");
+  for (const image of input.images ?? []) await appendImage(form, "images[]", image);
   return form;
 };
 
@@ -51,7 +66,7 @@ export const postsApi = {
   getCategories: async (params: GetCategoriesParams = {}) => { const response = await apiClient.get<ApiEnvelope<Category[], PaginationMeta>>(`${ENDPOINTS.discoveryCategories}${buildQuery(params)}`); return { items: response.data.data, meta: response.data.meta }; },
   getMyPosts: async (params: GetMyPostsParams = {}) => { const response = await apiClient.get<ApiEnvelope<MyPost[], PaginationMeta>>(`${ENDPOINTS.myPosts}${buildQuery({ page: params.page, perPage: params.perPage, "filter[status]": params.status, sort: params.sort })}`); return { items: response.data.data, meta: response.data.meta }; },
   getMyPost: async (id: string) => { const response = await apiClient.get<ApiEnvelope<MyPost>>(ENDPOINTS.myPost(id)); return response.data.data; },
-  create: async (input: CreatePostInput) => { const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.posts, input); return response.data.data; },
+  create: async (input: CreatePostInput) => { const form = await toCreatePostFormData(input); const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.posts, form); return response.data.data; },
   update: async (id: string, input: UpdatePostInput) => { const response = await apiClient.patch<ApiEnvelope<MyPost>>(ENDPOINTS.post(id), input); return response.data.data; },
   delete: async (id: string) => { await apiClient.delete(ENDPOINTS.post(id)); },
   submit: async (id: string) => { const response = await apiClient.post<ApiEnvelope<MyPost>>(ENDPOINTS.submit(id)); return response.data.data; },

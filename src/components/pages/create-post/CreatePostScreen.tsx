@@ -288,18 +288,21 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     if (!requireAuth()) return;
     setIsSavingDraft(true);
     try {
-      let postId = activePostId;
+      const postId = activePostId;
       if (postId) {
         await updateMutation.mutateAsync({ postId, input: buildUpdateInput() });
+        await syncPostImages(postId);
       } else {
-        const created = await createMutation.mutateAsync(buildCreateInput(true));
-        postId = created.id;
-        setActivePostId(postId);
+        const created = await createMutation.mutateAsync({
+          ...buildCreateInput(true),
+          images: selectedImages.filter((uri) => !isRemoteImage(uri)).map(toUploadFile),
+        });
+        setActivePostId(created.id);
+        setSelectedImages(created.images);
       }
-      await syncPostImages(postId);
-      toast.success("تم حفظ بيانات المنشور والصور المرفوعة كمسودة.", "تم حفظ المسودة");
+      toast.success("تم حفظ بيانات المنشور وكل الصور كمسودة.", "تم حفظ المسودة");
     } catch (error) {
-      toast.error(error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE, "تعذر حفظ المسودة");
+      toast.error(error instanceof ApiClientError ? error.message : "تعذر رفع الصور، لذلك لم يتم حفظ المسودة. حاول مرة أخرى.", "تعذر حفظ المسودة");
     } finally {
       setIsSavingDraft(false);
     }
@@ -309,21 +312,22 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     if (!requireAuth() || !canPublish) return;
     setIsPublishing(true);
     try {
-      let postId = activePostId;
+      const postId = activePostId;
       if (postId) {
         await updateMutation.mutateAsync({ postId, input: buildUpdateInput() });
+        await syncPostImages(postId);
+        await submitMutation.mutateAsync(postId);
       } else {
-        const created = await createMutation.mutateAsync(buildCreateInput(true));
-        postId = created.id;
-        setActivePostId(postId);
+        await createMutation.mutateAsync({
+          ...buildCreateInput(false),
+          images: selectedImages.filter((uri) => !isRemoteImage(uri)).map(toUploadFile),
+        });
       }
-      await syncPostImages(postId);
-      await submitMutation.mutateAsync(postId);
-      toast.success("تم إرسال المنشور للمراجعة، وسيظهر بعد موافقة الإدارة.", "تم إرسال المنشور");
+      toast.success("تم إرسال المنشور مع كل الصور للمراجعة، وسيظهر بعد موافقة الإدارة.", "تم إرسال المنشور");
       if (editMode) router.back();
       else router.replace("/(tabs)/profile");
     } catch (error) {
-      toast.error(error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE, "تعذر إرسال المنشور");
+      toast.error(error instanceof ApiClientError ? error.message : "تعذر رفع الصور، لذلك لم يتم إنشاء المنشور. حاول مرة أخرى.", "تعذر إرسال المنشور");
     } finally {
       setIsPublishing(false);
     }
@@ -405,7 +409,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
             <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">صور المنشور</Text>
             <Text size="2xs" className="text-gray-500 dark:text-gray-300">{selectedImages.length}/{MAX_POST_IMAGES}</Text>
           </View>
-          <Text size="2xs" className="mb-3 text-gray-500 dark:text-gray-300">JPEG / PNG / WebP، وبحد أقصى 5MB للصورة. تُرفع الصور منفصلة عن بيانات المنشور.</Text>
+          <Text size="2xs" className="mb-3 text-gray-500 dark:text-gray-300">JPEG / PNG / WebP، وبحد أقصى 5MB للصورة. عند إنشاء منشور جديد تُرسل الصور مع المنشور كعملية واحدة؛ إذا فشل رفع أي صورة فلن يتم إنشاء المنشور.</Text>
           <View className="flex-row-reverse flex-wrap justify-between gap-y-2">
             {selectedImages.map((uri, index) => (
               <View key={`${uri}-${index}`} style={{ width: "48%" }} className="h-24 overflow-hidden rounded-xl bg-gray-200 dark:bg-dark-350">
