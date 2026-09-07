@@ -129,6 +129,7 @@ export function ProfileScreen() {
             post={item}
             authorName={summary.name}
             authorUsername={summary.username}
+            authorAvatarUrl={summary.avatarUrl}
             onDelete={handleDelete}
           />
         )}

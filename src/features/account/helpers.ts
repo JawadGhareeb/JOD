@@ -15,6 +15,7 @@ export function toProfileSummary(
     bio: user.bio?.trim() || "",
     city: user.city?.trim() || "",
     verified: Boolean(user.verified),
+    avatarUrl: user.avatarUrl?.trim() || undefined,
     stats: {
       postsCount: overrides?.postsCount ?? user.stats?.postsCount ?? 0,
       savedCount: overrides?.savedCount ?? user.stats?.savedCount ?? 0,

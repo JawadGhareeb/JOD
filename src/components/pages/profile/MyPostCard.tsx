@@ -29,10 +29,11 @@ type Props = {
   post: MyPost;
   authorName: string;
   authorUsername?: string | null;
+  authorAvatarUrl?: string | null;
   onDelete: (id: string) => Promise<void>;
 };
 
-export function MyPostCard({ post, authorName, authorUsername, onDelete }: Props) {
+export function MyPostCard({ post, authorName, authorUsername, authorAvatarUrl, onDelete }: Props) {
   const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -45,7 +46,7 @@ export function MyPostCard({ post, authorName, authorUsername, onDelete }: Props
     <View className="mb-0 border-b border-gray-100 bg-transparent px-3 py-3 dark:border-dark-400">
         <View className="mb-3 flex-row-reverse items-start justify-between gap-3">
           <View className="min-w-0 flex-1 flex-row-reverse items-center gap-2">
-            <Avatar name={authorName} size={42} />
+            <Avatar name={authorName} imageUrl={authorAvatarUrl} size={42} />
             <View className="min-w-0 flex-1 items-end">
               <Text numberOfLines={1} weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
                 {authorName}
