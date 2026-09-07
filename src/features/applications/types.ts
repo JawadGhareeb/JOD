@@ -1,7 +1,8 @@
 export interface CampaignApplicationInput { phone?: string | null; city?: string | null }
 export interface CampaignApplication {
   id: string;
-  campaignId: string;
+  campaignId: string | null;
+  postId: string | null;
   campaignTitle: string;
   organizationName: string | null;
   status: string;

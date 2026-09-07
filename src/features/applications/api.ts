@@ -7,6 +7,10 @@ export const applicationsApi = {
     const response = await apiClient.post<ApiEnvelope<CampaignApplication>>(`/campaigns/${campaignId}/applications`, input);
     return response.data.data;
   },
+  applyToPost: async (postId: string, input: CampaignApplicationInput) => {
+    const response = await apiClient.post<ApiEnvelope<CampaignApplication>>(`/posts/${postId}/applications`, input);
+    return response.data.data;
+  },
   list: async (params: ApplicationsParams = {}) => {
     const response = await apiClient.get<ApiEnvelope<CampaignApplication[], PaginationMeta>>(`/me/applications${buildQuery(params)}`);
     return { items: response.data.data, meta: response.data.meta };

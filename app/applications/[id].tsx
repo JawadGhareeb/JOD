@@ -22,7 +22,7 @@ export default function ApplicationDetailsPage() {
 
   const handleWithdraw = () => {
     if (!item) return;
-    Alert.alert("سحب الطلب", `هل تريد سحب طلبك من حملة «${item.campaignTitle}»؟`, [
+    Alert.alert("سحب الطلب", `هل تريد سحب طلبك من «${item.campaignTitle}»؟`, [
       { text: "إلغاء", style: "cancel" },
       { text: "سحب الطلب", style: "destructive", onPress: async () => {
         try {
@@ -51,7 +51,7 @@ export default function ApplicationDetailsPage() {
           <Row label="آخر تحديث" value={item.updatedAt ? new Date(item.updatedAt).toLocaleString("ar") : "-"} />
         </View>
       </Card>
-      <View className="gap-2">{canWithdraw ? <Button fullWidth loading={withdraw.isPending} disabled={withdraw.isPending} onPress={handleWithdraw}>سحب الطلب</Button> : null}<Button fullWidth variant="tertiary" onPress={() => router.push({ pathname: "/campaigns/[id]", params: { id: item.campaignId } })}>فتح الحملة</Button></View>
+      <View className="gap-2">{canWithdraw ? <Button fullWidth loading={withdraw.isPending} disabled={withdraw.isPending} onPress={handleWithdraw}>سحب الطلب</Button> : null}{item.postId ? <Button fullWidth variant="tertiary" onPress={() => router.push({ pathname: "/posts/[id]", params: { id: item.postId! } })}>فتح فرصة التطوع</Button> : item.campaignId ? <Button fullWidth variant="tertiary" onPress={() => router.push({ pathname: "/campaigns/[id]", params: { id: item.campaignId! } })}>فتح الحملة</Button> : null}</View>
     </> : null}
   </ScrollView></View>;
 }
