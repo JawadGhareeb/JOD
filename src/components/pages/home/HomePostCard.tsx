@@ -21,12 +21,12 @@ import { showOrganizationVerifiedBadge, VerifiedBadge } from "@/src/components/s
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
 import { HeartBurst, useHeartBurst } from "@/src/components/shared/HeartBurst";
 import { FullScreenImageGallery } from "@/src/components/shared/FullScreenImageGallery";
-import { HomePostTypeEnum } from "@/src/constants/global";
 import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
+import { getPostActionLabel } from "@/src/features/posts/contact";
 import { useLikePost, useReportPost, useSavePost } from "@/src/features/posts/queries";
 import { useReportReasons } from "@/src/features/lookups/queries";
 import { useRecommendationFeedback } from "@/src/features/personalization/queries";
-import type { CreatePostType, HomePost } from "@/src/features/posts/types";
+import type { HomePost } from "@/src/features/posts/types";
 import { useRTL } from "@/src/providers/RTLProvider";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
@@ -79,13 +79,6 @@ const reportTypeOptions: SelectionOption[] = [
     hint: "اكتب سببًا مخصصًا غير الخيارات السابقة.",
   },
 ];
-
-const mapPostTypeToCreateType = (postType: HomePost["postType"]): CreatePostType => {
-  if (postType === HomePostTypeEnum.DonationCampaign) return "donation";
-  if (postType === HomePostTypeEnum.HelpRequest) return "help";
-  if (postType === HomePostTypeEnum.ServiceOffer) return "service";
-  return "volunteer";
-};
 
 export function HomePostCard({
   post,
@@ -152,6 +145,9 @@ export function HomePostCard({
   const canOpenAuthorProfile = enableAuthorNavigation && Boolean(post.publisher.id);
   const isOwnPost = mode === "own";
   const isSavedPostList = mode === "saved";
+  const workflowCtaLabel = ["donate", "apply"].includes(post.cta.type) && post.cta.state && post.cta.state !== "open"
+    ? getPostActionLabel(post)
+    : "عرض التفاصيل";
   const canEditRejectedPost = isOwnPost && ownPostStatus === "unposted";
   const actionItemClassName = isRTL ? "flex-row-reverse" : "flex-row";
   const estimatedOptionsMenuHeight =
@@ -340,7 +336,6 @@ export function HomePostCard({
       params: {
         mode: "edit",
         postId: post.id,
-        postType: mapPostTypeToCreateType(post.postType),
         title: post.title || "",
         details: post.content,
         city: post.publisher.city || "",
@@ -632,7 +627,7 @@ export function HomePostCard({
       {showCta ? (
         <View className="mt-3">
           <Button fullWidth size="small" variant="primary" onPress={handleOpenDetails}>
-            عرض التفاصيل
+            {workflowCtaLabel}
           </Button>
         </View>
       ) : null}

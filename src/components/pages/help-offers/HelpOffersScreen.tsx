@@ -1,112 +1,95 @@
 import { useMemo, useState } from "react";
+import { Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
-import { FlatList, Pressable, View } from "react-native";
+import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
-import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Text from "@/src/components/ui/Text";
+import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
+import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useHelpOffers } from "@/src/features/help-offers/queries";
-import type { HelpOfferStatus } from "@/src/features/help-offers/types";
+import type { HelpOffer, HelpOfferStatus } from "@/src/features/help-offers/types";
 
 const STATUS_LABELS: Record<HelpOfferStatus, string> = {
-  pending: "بانتظار الرد",
-  accepted: "مقبول",
+  pending: "بانتظار الموافقة",
+  accepted: "تم القبول",
   contacting: "جاري التواصل",
   agreed: "تم الاتفاق",
   completed: "مكتمل",
   rejected: "مرفوض",
   cancelled: "ملغي",
 };
+const STATUS_TABS: { value: HelpOfferStatus | "all"; label: string }[] = [
+  { value: "all", label: "الكل" },
+  { value: "pending", label: "بانتظار الموافقة" },
+  { value: "accepted", label: "تم القبول" },
+  { value: "contacting", label: "جاري التواصل" },
+  { value: "agreed", label: "تم الاتفاق" },
+  { value: "completed", label: "مكتمل" },
+  { value: "cancelled", label: "ملغي" },
+];
 
-const FLOW_TABS = [
-  { value: "made", label: "العروض التي قدمتها" },
-  { value: "received", label: "العروض الواردة" },
-] as const;
+function ProgressLine({ done, text }: { done: boolean; text: string }) {
+  return <Text size="2xs" className={done ? "text-primary-400" : "text-gray-400"}>{done ? "✓" : "○"} {text}</Text>;
+}
+
+function OfferCard({ offer }: { offer: HelpOffer }) {
+  const router = useRouter();
+  return (
+    <Pressable onPress={() => router.push({ pathname: "/help-offers/[id]", params: { id: offer.id } })}>
+      <Card padding="md" className="gap-2 border-gray-200 dark:border-dark-400">
+        <View className="flex-row-reverse items-start justify-between gap-2">
+          <View className="min-w-0 flex-1 items-end">
+            <Text numberOfLines={1} weight="semibold" size="sm">{offer.post?.title || "طلب مساعدة"}</Text>
+            <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">المساعد: {offer.helper.name}</Text>
+          </View>
+          <View className="rounded-full bg-primary-400/10 px-2.5 py-1"><Text size="2xs" className="text-primary-400">{STATUS_LABELS[offer.status]}</Text></View>
+        </View>
+        <View className="mt-1 border-t border-gray-100 pt-2 dark:border-dark-400">
+          <ProgressLine done={Boolean(offer.createdAt)} text="تم إرسال عرض المساعدة" />
+          <ProgressLine done={Boolean(offer.acceptedAt)} text="تم قبول العرض" />
+          <ProgressLine done={Boolean(offer.contactedAt)} text="تم بدء التواصل" />
+          <ProgressLine done={Boolean(offer.agreedAt)} text="تم تأكيد الاتفاق من الطرفين" />
+          <ProgressLine done={Boolean(offer.completedAt)} text="تم تقديم واستلام المساعدة" />
+        </View>
+      </Card>
+    </Pressable>
+  );
+}
 
 export function HelpOffersScreen() {
-  const router = useRouter();
   const [flow, setFlow] = useState<"made" | "received">("made");
-  const query = useHelpOffers({ flow });
-  const items = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data]);
+  const [status, setStatus] = useState<HelpOfferStatus | "all">("all");
+  const query = useHelpOffers({ flow, status: status === "all" ? undefined : status, perPage: 20 });
+  const offers = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data]);
 
   return (
-    <View className="flex-1 bg-light-100 px-4 pt-6 dark:bg-dark-300">
-      <Text variant="heading" weight="bold" rtlAlign="right">
-        عروض المساعدة
-      </Text>
-
-      <View className="my-4 flex-row-reverse gap-2">
-        {FLOW_TABS.map((tab) => (
-          <Pressable
-            key={tab.value}
-            onPress={() => setFlow(tab.value)}
-            className={`flex-1 rounded-xl border px-3 py-3 ${
-              flow === tab.value
-                ? "border-primary-400 bg-primary-400/10"
-                : "border-gray-200 dark:border-dark-400"
-            }`}
-          >
-            <Text
-              size="xs"
-              weight="medium"
-              rtlAlign="center"
-              className={flow === tab.value ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}
-            >
-              {tab.label}
-            </Text>
-          </Pressable>
-        ))}
+    <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
+      <MenuPageHeader title="طلبات المساعدة" />
+      <View className="mb-3 flex-row-reverse gap-2">
+        <Button size="small" variant={flow === "made" ? "primary" : "tertiary"} onPress={() => { setFlow("made"); setStatus("all"); }} className="flex-1">العروض التي قدمتها</Button>
+        <Button size="small" variant={flow === "received" ? "primary" : "tertiary"} onPress={() => { setFlow("received"); setStatus("all"); }} className="flex-1">العروض الواردة</Button>
       </View>
 
-      <FlatList
-        data={items}
-        keyExtractor={(item) => item.id}
-        refreshing={query.isRefetching && !query.isFetchingNextPage}
-        onRefresh={() => void query.refetch()}
-        onEndReached={() => {
-          if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
-        }}
-        renderItem={({ item }) => (
-          <Card
-            padding="md"
-            className="mb-3 gap-2 border-gray-200 dark:border-dark-400"
-            onPress={() => router.push({ pathname: "/help-offers/[id]", params: { id: item.id } })}
-          >
-            <View className="flex-row-reverse items-center justify-between">
-              <Text size="sm" weight="semibold" className="flex-1 text-dark-100 dark:text-light-50">
-                {item.post?.title || "طلب مساعدة"}
-              </Text>
-              <View className="rounded-full bg-primary-400/10 px-3 py-1">
-                <Text size="2xs" className="text-primary-400">
-                  {STATUS_LABELS[item.status]}
-                </Text>
-              </View>
-            </View>
-            <Text size="xs" className="text-gray-500 dark:text-gray-300">
-              {flow === "received" ? `من ${item.helper.name}` : `نوع المساعدة: ${item.type}`}
-            </Text>
-            {item.amount ? (
-              <Text size="xs" weight="semibold" className="text-primary-400">
-                {item.amount.toLocaleString("ar-SY")} ل.س
-              </Text>
-            ) : null}
-          </Card>
-        )}
-        ListEmptyComponent={
-          query.isLoading ? (
-            <View className="gap-3">
-              {[0, 1, 2].map((index) => (
-                <CardSkeleton key={index} height={110} margin={0} />
-              ))}
-            </View>
-          ) : (
-            <View className="items-center py-10">
-              <Text size="sm" className="text-gray-500 dark:text-gray-300">
-                لا توجد عروض مساعدة حالياً.
-              </Text>
-            </View>
-          )
-        }
-      />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 12 }} style={{ flexGrow: 0 }}>
+        {STATUS_TABS.map((tab) => {
+          const active = status === tab.value;
+          return (
+            <Pressable key={tab.value} onPress={() => setStatus(tab.value)} className={`rounded-full border px-3 py-2 ${active ? "border-primary-400 bg-primary-400/10" : "border-gray-200 dark:border-dark-400"}`}>
+              <Text size="2xs" className={active ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}>{tab.label}</Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      <ScrollView className="flex-1" contentContainerStyle={{ gap: 10, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+        {query.isLoading ? <><CardSkeleton /><CardSkeleton /></> : null}
+        {!query.isLoading && query.isError ? (
+          <View className="items-center gap-3 py-10"><Text size="sm" className="text-gray-500">تعذر تحميل طلبات المساعدة.</Text><Button size="small" onPress={() => void query.refetch()}>إعادة المحاولة</Button></View>
+        ) : null}
+        {!query.isLoading && !query.isError && offers.length === 0 ? <View className="items-center py-12"><Text size="sm" className="text-gray-500 dark:text-gray-300">لا توجد عروض ضمن هذا القسم.</Text></View> : null}
+        {offers.map((offer) => <OfferCard key={offer.id} offer={offer} />)}
+        {query.hasNextPage ? <Button variant="tertiary" loading={query.isFetchingNextPage} onPress={() => void query.fetchNextPage()}>عرض المزيد</Button> : null}
+      </ScrollView>
     </View>
   );
 }

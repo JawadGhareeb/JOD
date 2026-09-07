@@ -1,4 +1,4 @@
-export type DonationStatus = "pending" | "contacting" | "agreed" | "completed" | "cancelled";
+export type DonationStatus = "pending" | "accepted" | "contacting" | "agreed" | "completed" | "cancelled";
 export type ContactMethod = "phone" | "whatsapp" | "email" | "other";
 export type PaymentMethod = "bank_transfer" | "cash" | "other";
 
@@ -33,6 +33,8 @@ export interface Donation {
   campaignTitle: string;
   organizationName: string | null;
   amount: number;
+  requestedAmount: number;
+  confirmedAmount: number | null;
   status: DonationStatus;
   contactMethod: ContactMethod | string | null;
   paymentMethod: PaymentMethod | string | null;
@@ -43,6 +45,7 @@ export interface Donation {
   cancelReason: string | null;
   source: string | null;
   createdAt: string | null;
+  acceptedAt: string | null;
   contactedAt: string | null;
   agreedAt: string | null;
   completedAt: string | null;

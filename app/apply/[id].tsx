@@ -67,7 +67,7 @@ export default function ApplyPage() {
                 <View className="flex-row-reverse items-center gap-2"><BriefcaseBusiness size={20} color="#4A9782" /><Text weight="semibold" size="sm">بيانات التواصل</Text></View>
                 <Input fullWidth showStatusIcon={false} value={phone} onChangeText={setPhone} placeholder="رقم الهاتف - اختياري" keyboardType="phone-pad" />
                 <Pressable onPress={() => setIsCityModalOpen(true)} accessibilityRole="button" accessibilityLabel="اختر المحافظة"><View pointerEvents="none"><Input fullWidth editable={false} showStatusIcon={false} rightIcon={<MapPin size={16} strokeWidth={2.25} />} value={city} placeholder="اختر المحافظة - اختياري" placeholderTextColor="#9CA3AF" /></View></Pressable>
-                <Button fullWidth loading={applyMutation.isPending} disabled={applyMutation.isPending || post.cta.state === "closed" || post.cta.state === "submitted"} onPress={() => void submit()}>{post.cta.state === "submitted" ? "تم إرسال الطلب" : post.cta.state === "closed" ? "الفرصة غير متاحة للتقديم" : "إرسال طلب التقديم"}</Button>
+                <Button fullWidth loading={applyMutation.isPending} disabled={applyMutation.isPending || post.cta.state !== "open"} onPress={() => void submit()}>{post.cta.state === "submitted" ? "بانتظار موافقة المنظمة" : post.cta.state === "accepted" ? "تم قبول طلب التطوع" : post.cta.state === "contacting" ? "جاري التواصل مع المنظمة" : post.cta.state === "completed" ? "اكتملت المشاركة التطوعية" : post.cta.state === "closed" ? "الفرصة غير متاحة للتقديم" : "إرسال طلب التقديم"}</Button>
               </Card>
             </>
           )}

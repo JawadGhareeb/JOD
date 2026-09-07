@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { MapPin, Tag } from "lucide-react-native";
+import { Heart, MapPin, Tag } from "lucide-react-native";
 import { Pressable, View } from "react-native";
 import { Avatar } from "@/src/components/shared/Avatar";
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
@@ -13,7 +13,7 @@ import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
 import Text from "@/src/components/ui/Text";
 import { useCampaignDonors } from "@/src/features/donations/queries";
-import { useCampaign } from "@/src/features/posts/queries";
+import { useCampaign, useLikeCampaign } from "@/src/features/posts/queries";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 
 const formatWesternNumber = (value: number) => value.toLocaleString("en-US");
@@ -25,6 +25,7 @@ export default function CampaignDetailsPage() {
   const { id: raw } = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(raw) ? raw[0] : raw;
   const query = useCampaign(id);
+  const likeMutation = useLikeCampaign();
   const campaign = query.data;
   const donorsQuery = useCampaignDonors(id, { perPage: 10 });
   const donors = donorsQuery.data?.pages.flatMap((page) => page.items) ?? [];
@@ -121,6 +122,19 @@ export default function CampaignDetailsPage() {
             {formatWesternNumber(campaign.donorsCount)} متبرع
             {campaign.beneficiariesCount > 0 ? ` • ${formatWesternNumber(campaign.beneficiariesCount)} مستفيد` : ""}
           </Text>
+          <Pressable
+            onPress={() => {
+              if (!requireAuth() || likeMutation.isPending) return;
+              void likeMutation.mutateAsync({ campaignId: campaign.id, like: !Boolean(campaign.isLiked) });
+            }}
+            disabled={likeMutation.isPending}
+            accessibilityRole="button"
+            accessibilityLabel={campaign.isLiked ? "إلغاء الإعجاب بالحملة" : "إعجاب بالحملة"}
+            className="self-end flex-row-reverse items-center gap-2 rounded-full bg-gray-50 px-3 py-2 dark:bg-dark-350"
+          >
+            <Heart size={18} color={campaign.isLiked ? "#E5484D" : "#9CA3AF"} fill={campaign.isLiked ? "#E5484D" : "transparent"} />
+            <Text size="2xs" className={campaign.isLiked ? "text-error-300" : "text-gray-500 dark:text-gray-300"}>{campaign.stats.likes.toLocaleString("ar-SY")}</Text>
+          </Pressable>
         </Card>
 
         <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">

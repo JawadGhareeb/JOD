@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import Card from "@/src/components/ui/Card";
@@ -9,12 +9,24 @@ import { useApplications } from "@/src/features/applications/queries";
 import type { CampaignApplication } from "@/src/features/applications/types";
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: "قيد الانتظار",
-  approved: "مقبول",
-  accepted: "مقبول",
+  pending: "بانتظار موافقة المنظمة",
+  under_review: "قيد المراجعة",
+  approved: "تم القبول",
+  accepted: "تم القبول",
+  contacting: "جاري التواصل",
+  completed: "اكتملت المشاركة",
   rejected: "مرفوض",
-  withdrawn: "مسحوب",
+  withdrawn: "منسحب",
 };
+
+const STATUS_TABS = [
+  { value: "all", label: "الكل" },
+  { value: "pending", label: "بانتظار الموافقة" },
+  { value: "accepted", label: "تم القبول" },
+  { value: "contacting", label: "جاري التواصل" },
+  { value: "completed", label: "مكتمل" },
+] as const;
+type StatusTab = (typeof STATUS_TABS)[number]["value"];
 
 function ApplicationCard({ item, onPress }: { item: CampaignApplication; onPress: () => void }) {
   return (
@@ -37,13 +49,14 @@ function ApplicationCard({ item, onPress }: { item: CampaignApplication; onPress
 
 export function MyApplicationsScreen() {
   const router = useRouter();
-  const query = useApplications({ perPage: 20 });
+  const [status, setStatus] = useState<StatusTab>("all");
+  const query = useApplications({ perPage: 20, status: status === "all" ? undefined : status });
   const items = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data?.pages]);
   const refreshing = query.isRefetching && !query.isFetchingNextPage;
 
   return (
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
-      <MenuPageHeader title="طلباتي على الحملات" />
+      <MenuPageHeader title="تطوعي وطلباتي" />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
@@ -54,9 +67,15 @@ export function MyApplicationsScreen() {
         }}
         scrollEventThrottle={16}
       >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row-reverse", gap: 8, paddingBottom: 12 }}>
+          {STATUS_TABS.map((tab) => {
+            const active = tab.value === status;
+            return <Pressable key={tab.value} onPress={() => setStatus(tab.value)} className={`rounded-full border px-3 py-2 ${active ? "border-primary-400 bg-primary-400/10" : "border-gray-200 dark:border-dark-400"}`}><Text size="2xs" className={active ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}>{tab.label}</Text></Pressable>;
+          })}
+        </ScrollView>
         {query.isLoading ? <Text size="xs" className="py-8 text-center text-gray-500">جارِ تحميل الطلبات...</Text> : null}
         {query.isError ? <Card padding="md" className="border-error-300/30"><Text size="xs" className="text-error-300">تعذر تحميل طلباتك.</Text><View className="mt-3"><Button size="small" onPress={() => void query.refetch()}>إعادة المحاولة</Button></View></Card> : null}
-        {!query.isLoading && !query.isError && items.length === 0 ? <Card padding="md"><Text size="sm" weight="semibold" className="text-center">لا توجد طلبات حالياً</Text><Text size="xs" className="mt-2 text-center text-gray-500">طلبات التطوع التي تقدمها على الحملات ستظهر هنا.</Text></Card> : null}
+        {!query.isLoading && !query.isError && items.length === 0 ? <Card padding="md"><Text size="sm" weight="semibold" className="text-center">لا توجد طلبات في هذه الحالة</Text><Text size="xs" className="mt-2 text-center text-gray-500">طلبات التطوع على الحملات أو بوستات التطوع التابعة للمنظمات ستظهر هنا مع حالة كل طلب.</Text></Card> : null}
         {items.map((item) => <ApplicationCard key={item.id} item={item} onPress={() => router.push({ pathname: "/applications/[id]", params: { id: item.id } })} />)}
         {query.isFetchingNextPage ? <Text size="2xs" className="py-3 text-center text-gray-500">جارِ تحميل المزيد...</Text> : null}
       </ScrollView>

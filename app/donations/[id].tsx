@@ -10,7 +10,8 @@ import type { DonationStatus } from "@/src/features/donations/types";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
 
 const statusLabels: Record<DonationStatus, string> = {
-  pending: "بانتظار التواصل",
+  pending: "بانتظار موافقة المنظمة",
+  accepted: "تم قبول الطلب",
   contacting: "جاري التواصل",
   agreed: "تم الاتفاق",
   completed: "مكتمل",
@@ -59,13 +60,15 @@ export default function DonationDetailsPage() {
               </View>
             </View>
             <Text weight="bold" size="lg" className="text-primary-400">
-              {formatAmount(donation.amount)}
+              {formatAmount(donation.status === "completed" && donation.confirmedAmount != null ? donation.confirmedAmount : donation.requestedAmount ?? donation.amount)}
             </Text>
           </Card>
 
           <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
             <DetailRow label="طريقة التواصل" value={donation.contactMethod} />
             <DetailRow label="طريقة الدفع" value={donation.paymentMethod} />
+            <DetailRow label="المبلغ المطلوب التبرع به" value={formatAmount(donation.requestedAmount ?? donation.amount)} />
+            {donation.confirmedAmount != null ? <DetailRow label="المبلغ الذي أكدت المنظمة استلامه" value={formatAmount(donation.confirmedAmount)} /> : null}
             <DetailRow label="رقم الهاتف" value={donation.phone} />
             <DetailRow label="المدينة" value={donation.city} />
             {donation.notes ? <DetailRow label="ملاحظات" value={donation.notes} /> : null}
@@ -99,6 +102,7 @@ export default function DonationDetailsPage() {
               مسار الطلب
             </Text>
             <TimelineRow label="تم إرسال طلب التبرع" date={donation.createdAt} active />
+            <TimelineRow label="وافقت المنظمة على طلب التبرع" date={donation.acceptedAt} active={Boolean(donation.acceptedAt)} />
             <TimelineRow label="تم بدء التواصل" date={donation.contactedAt} active={Boolean(donation.contactedAt)} />
             <TimelineRow label="تم الاتفاق" date={donation.agreedAt} active={Boolean(donation.agreedAt)} />
             <TimelineRow label="تم تأكيد استلام التبرع" date={donation.completedAt} active={Boolean(donation.completedAt)} success={Boolean(donation.completedAt)} />

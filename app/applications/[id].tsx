@@ -8,7 +8,7 @@ import { useApplication, useWithdrawApplication } from "@/src/features/applicati
 import { ApiClientError } from "@/src/lib/api-client";
 import { useToast } from "@/src/providers/ToastProvider";
 
-const STATUS_LABELS: Record<string, string> = { pending: "قيد الانتظار", approved: "مقبول", accepted: "مقبول", rejected: "مرفوض", withdrawn: "مسحوب" };
+const STATUS_LABELS: Record<string, string> = { pending: "بانتظار موافقة المنظمة", under_review: "قيد المراجعة", approved: "تم القبول", accepted: "تم القبول", contacting: "جاري التواصل", completed: "اكتملت المشاركة", rejected: "مرفوض", withdrawn: "منسحب" };
 
 export default function ApplicationDetailsPage() {
   const raw = useLocalSearchParams<{ id?: string | string[] }>().id;
@@ -18,7 +18,7 @@ export default function ApplicationDetailsPage() {
   const query = useApplication(id);
   const withdraw = useWithdrawApplication();
   const item = query.data;
-  const canWithdraw = !!item && !["rejected", "withdrawn"].includes(item.status);
+  const canWithdraw = !!item && ["pending", "under_review", "accepted", "approved", "contacting"].includes(item.status);
 
   const handleWithdraw = () => {
     if (!item) return;

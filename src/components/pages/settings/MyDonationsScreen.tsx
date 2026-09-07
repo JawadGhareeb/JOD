@@ -17,7 +17,8 @@ const HeartIcon = appIcons.myDonations;
 const formatAmount = (amount: number) =>
   `${amount.toLocaleString("ar-SY", { maximumFractionDigits: 2 })} ل.س`;
 const statusLabels: Record<DonationStatus, string> = {
-  pending: "بانتظار التواصل",
+  pending: "بانتظار موافقة المنظمة",
+  accepted: "تم قبول الطلب",
   contacting: "جاري التواصل",
   agreed: "تم الاتفاق",
   completed: "مكتمل",
@@ -25,7 +26,8 @@ const statusLabels: Record<DonationStatus, string> = {
 };
 const filters: { value: "all" | DonationStatus; label: string }[] = [
   { value: "all", label: "الكل" },
-  { value: "pending", label: "بانتظار التواصل" },
+  { value: "pending", label: "بانتظار الموافقة" },
+  { value: "accepted", label: "تم القبول" },
   { value: "contacting", label: "جاري التواصل" },
   { value: "agreed", label: "تم الاتفاق" },
   { value: "completed", label: "مكتمل" },
@@ -139,7 +141,7 @@ export function MyDonationsScreen() {
             </View>
             <View className="flex-row-reverse items-center justify-between">
               <Text size="sm" weight="semibold" className="text-primary-400">
-                {formatAmount(item.amount)}
+                {formatAmount(item.status === "completed" && item.confirmedAmount != null ? item.confirmedAmount : item.requestedAmount ?? item.amount)}
               </Text>
               <Text size="2xs" className="text-gray-500 dark:text-gray-300">
                 {item.contactMethod || "-"} / {item.paymentMethod || "-"}
@@ -148,6 +150,9 @@ export function MyDonationsScreen() {
             <View className="gap-1 border-t border-gray-100 pt-3 dark:border-dark-400">
               <Text size="2xs" className="text-gray-500 dark:text-gray-300">
                 ✓ تم إرسال طلب التبرع
+              </Text>
+              <Text size="2xs" className={item.acceptedAt ? "text-primary-400" : "text-gray-400"}>
+                {item.acceptedAt ? "✓" : "○"} وافقت المنظمة على طلب التبرع
               </Text>
               <Text size="2xs" className={item.contactedAt ? "text-primary-400" : "text-gray-400"}>
                 {item.contactedAt ? "✓" : "○"} تم بدء التواصل

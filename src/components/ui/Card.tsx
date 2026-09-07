@@ -8,7 +8,7 @@ import {
 } from "react-native";
 
 type CardPadding = "none" | "sm" | "md" | "lg";
-type CardRadius = "sm" | "md" | "lg" | "xl" | "2xl";
+type CardRadius = "none" | "sm" | "md" | "lg" | "xl" | "2xl";
 
 interface CardProps extends ViewProps {
   padding?: CardPadding;
@@ -30,6 +30,7 @@ const paddingToClass: Record<CardPadding, string> = {
 };
 
 const radiusToClass: Record<CardRadius, string> = {
+  none: "rounded-none",
   sm: "rounded-md",
   md: "rounded-lg",
   lg: "rounded-xl",

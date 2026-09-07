@@ -3,7 +3,15 @@ export type HelpOfferStatus = "pending" | "accepted" | "contacting" | "agreed" |
 export type HelpType = "financial" | "supplies" | "service" | "transportation" | "medicine" | "food" | "other";
 export type HelpContactMethod = "phone" | "whatsapp" | "email" | "other";
 
-export interface HelpOfferInput { type: HelpType; amount?: number; description?: string | null; contactMethod?: HelpContactMethod | null; phone?: string | null }
+export interface HelpOfferInput {
+  type: HelpType;
+  amount?: number;
+  description?: string | null;
+  contactMethod: HelpContactMethod;
+  contactValue: string;
+  phone?: string | null;
+}
+
 export interface HelpOffer {
   id: string;
   postId: string;
@@ -14,6 +22,7 @@ export interface HelpOffer {
   description: string | null;
   status: HelpOfferStatus;
   contactMethod: HelpContactMethod | string | null;
+  contactValue: string | null;
   phone: string | null;
   cancelReason: string | null;
   rejectionReason: string | null;
@@ -21,11 +30,27 @@ export interface HelpOffer {
   acceptedAt: string | null;
   contactedAt: string | null;
   agreedAt: string | null;
+  helperAgreedAt: string | null;
+  receiverAgreedAt: string | null;
   helperConfirmedAt: string | null;
   receiverConfirmedAt: string | null;
   completedAt: string | null;
   cancelledAt: string | null;
   rejectedAt: string | null;
-  can: { accept: boolean; reject: boolean; confirmProvided: boolean; confirmReceived: boolean };
+  can: {
+    accept: boolean;
+    reject: boolean;
+    contact: boolean;
+    agree: boolean;
+    confirmProvided: boolean;
+    confirmReceived: boolean;
+  };
 }
-export interface HelpOffersParams { page?: number; perPage?: number; status?: HelpOfferStatus; postId?: string; flow?: "made" | "received" }
+
+export interface HelpOffersParams {
+  page?: number;
+  perPage?: number;
+  status?: HelpOfferStatus;
+  postId?: string;
+  flow?: "made" | "received";
+}

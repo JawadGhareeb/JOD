@@ -13,7 +13,7 @@ import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import { useRecommendationFeedback } from "@/src/features/personalization/queries";
-import { useLikePost } from "@/src/features/posts/queries";
+import { useLikeCampaign } from "@/src/features/posts/queries";
 import type { Campaign } from "@/src/features/posts/types";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
@@ -32,7 +32,7 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
   const { colorScheme } = useColorScheme();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const primaryColor = getPrimaryColor(colorScheme === "dark");
-  const likeMutation = useLikePost();
+  const likeMutation = useLikeCampaign();
   const {
     trigger: triggerHeartBurst,
     scale: heartScale,
@@ -74,7 +74,7 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
   };
 
   const handleToggleLike = async () => {
-    if (!campaign.engagementPostId || !requireAuth() || likeMutation.isPending) return;
+    if (!requireAuth() || likeMutation.isPending) return;
     const wasLiked = isLiked;
     const previousCount = likesCount;
     const nextLiked = !wasLiked;
@@ -83,7 +83,7 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
     setLikesCount((current) => Math.max(0, current + (nextLiked ? 1 : -1)));
 
     try {
-      const result = await likeMutation.mutateAsync({ postId: campaign.engagementPostId, like: nextLiked });
+      const result = await likeMutation.mutateAsync({ campaignId: campaign.id, like: nextLiked });
       setIsLiked(result.isLiked);
       setLikesCount(result.likesCount);
     } catch {
@@ -275,7 +275,7 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
       <View className="mt-3 flex-row-reverse items-center justify-between pt-1">
         <Pressable
           onPress={() => void handleToggleLike()}
-          disabled={!campaign.engagementPostId || likeMutation.isPending}
+          disabled={likeMutation.isPending}
           className="flex-row-reverse items-center gap-1.5 rounded-lg px-2 py-1.5"
           accessibilityRole="button"
           accessibilityLabel={isLiked ? "إلغاء الإعجاب بالحملة" : "إعجاب بالحملة"}

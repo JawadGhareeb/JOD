@@ -5,15 +5,15 @@ import type { ApiEnvelope, PaginationMeta } from "@/src/types/api";
 import type {
   ApiPostType, Campaign, Category, CreatePostInput, CreatePostType, GetCategoriesParams,
   GetDiscoveryCampaignsParams, GetDiscoveryPostsParams, GetMyPostsParams, GetSavedPostsParams,
-  HomePost, LikeToggleResult, MobileImageFile, MyPost, Publisher, ReportPostResult, SavedPost,
+  CampaignLikeToggleResult, HomePost, LikeToggleResult, MobileImageFile, MyPost, Publisher, ReportPostResult, SavedPost,
   SaveToggleResult, UpdatePostInput,
 } from "./types";
 
 export const POST_TYPE_TO_API_TYPE: Record<CreatePostType, ApiPostType> = {
-  volunteer: "volunteer_opportunity", donation: "donation_campaign", help: "help_request", service: "service_offer",
+  volunteer: "volunteer_opportunity", help: "help_request", service: "service_offer",
 };
-export const API_TYPE_TO_POST_TYPE: Record<ApiPostType, CreatePostType> = {
-  volunteer_opportunity: "volunteer", donation_campaign: "donation", help_request: "help", service_offer: "service",
+export const API_TYPE_TO_POST_TYPE: Partial<Record<ApiPostType, CreatePostType>> = {
+  volunteer_opportunity: "volunteer", help_request: "help", service_offer: "service",
 };
 
 const ENDPOINTS = {
@@ -21,7 +21,7 @@ const ENDPOINTS = {
   discoveryPosts: "/discovery/posts", discoveryCampaigns: "/discovery/campaigns", discoveryCategories: "/discovery/categories",
   publisher: (id: string) => `/discovery/publishers/${id}`, publisherPosts: (id: string) => `/discovery/publishers/${id}/posts`,
   posts: "/posts", post: (id: string) => `/posts/${id}`, submit: (id: string) => `/posts/${id}/submit`,
-  like: (id: string) => `/posts/${id}/like`, save: (id: string) => `/posts/${id}/save`, reports: (id: string) => `/posts/${id}/reports`,
+  like: (id: string) => `/posts/${id}/like`, campaignLike: (id: string) => `/campaigns/${id}/like`, save: (id: string) => `/posts/${id}/save`, reports: (id: string) => `/posts/${id}/reports`,
   myPosts: "/me/posts", myPost: (id: string) => `/me/posts/${id}`, savedPosts: "/me/saved-posts",
 } as const;
 
@@ -75,6 +75,8 @@ export const postsApi = {
   deleteImage: async (id: string, imageId: string) => { const response = await apiClient.delete<ApiEnvelope<MyPost>>(ENDPOINTS.postImage(id, imageId)); return response.data.data; },
   like: async (id: string) => { const response = await apiClient.post<ApiEnvelope<LikeToggleResult>>(ENDPOINTS.like(id)); return response.data.data; },
   unlike: async (id: string) => { const response = await apiClient.delete<ApiEnvelope<LikeToggleResult>>(ENDPOINTS.like(id)); return response.data.data; },
+  likeCampaign: async (id: string) => { const response = await apiClient.post<ApiEnvelope<CampaignLikeToggleResult>>(ENDPOINTS.campaignLike(id)); return response.data.data; },
+  unlikeCampaign: async (id: string) => { const response = await apiClient.delete<ApiEnvelope<CampaignLikeToggleResult>>(ENDPOINTS.campaignLike(id)); return response.data.data; },
   save: async (id: string) => { const response = await apiClient.post<ApiEnvelope<SaveToggleResult>>(ENDPOINTS.save(id)); return response.data.data; },
   unsave: async (id: string) => { const response = await apiClient.delete<ApiEnvelope<SaveToggleResult>>(ENDPOINTS.save(id)); return response.data.data; },
   getSavedPosts: async (params: GetSavedPostsParams = {}) => { const response = await apiClient.get<ApiEnvelope<SavedPost[], PaginationMeta>>(`${ENDPOINTS.savedPosts}${buildQuery(params)}`); return { items: response.data.data, meta: response.data.meta }; },

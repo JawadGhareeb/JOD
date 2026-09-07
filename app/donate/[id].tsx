@@ -75,7 +75,7 @@ export default function DonatePage() {
           isAnonymous,
         },
       });
-      toast.success("تم إرسال طلب التبرع. بانتظار تواصل المنظمة معك.", "تم إرسال الطلب");
+      toast.success("تم إرسال طلب التبرع. بانتظار موافقة المنظمة، وبعدها يبدأ التنسيق والتواصل.", "تم إرسال الطلب");
       router.replace("/my-donations");
     } catch (error) {
       toast.error(error instanceof ApiClientError ? error.message : "حدث خطأ غير متوقع.", "تعذر إرسال طلب التبرع");

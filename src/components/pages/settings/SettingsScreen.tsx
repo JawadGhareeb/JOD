@@ -66,6 +66,12 @@ const settingsGroups: SettingsGroup[] = [
         route: "/help-offers" as Href,
       },
       {
+        title: "تطوعي وطلباتي",
+        hint: "طلبات التطوع على الحملات وفرص التطوع",
+        Icon: appIcons.volunteer,
+        route: "/my-applications" as Href,
+      },
+      {
         title: "بوستات محفوظة",
         hint: "المنشورات التي قمت بحفظها",
         Icon: appIcons.savedPosts,

@@ -43,7 +43,7 @@ const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة 
 const readParam = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] || "" : value || "";
 const isRemoteImage = (uri: string) => /^https?:\/\//i.test(uri);
 const isCreateType = (value: string): value is ApiPostType =>
-  value === "volunteer_opportunity" || value === "donation_campaign" || value === "help_request" || value === "service_offer";
+  value === "volunteer_opportunity" || value === "help_request" || value === "service_offer";
 
 function toUploadFile(uri: string, index: number): MobileImageFile {
   const filename = uri.split("?")[0].split("/").pop() || `image-${index + 1}.jpg`;
@@ -94,7 +94,10 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   useEffect(() => {
     const post = myPostQuery.data;
     if (!editMode || !post || initializedPostId === post.id) return;
-    if (isCreateType(post.type)) setPostType(API_TYPE_TO_POST_TYPE[post.type]);
+    if (isCreateType(post.type)) {
+      const mappedType = API_TYPE_TO_POST_TYPE[post.type];
+      if (mappedType) setPostType(mappedType);
+    }
     setTitle(post.title ?? "");
     setDetails(post.details ?? "");
     setCityId(post.cityId ?? "");
@@ -113,8 +116,12 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
 
   const postTypeOptions = useMemo(
     () => (postTypesQuery.data ?? [])
-      .filter((item) => item.canCreate)
-      .flatMap((item) => isCreateType(item.code) ? [{ key: API_TYPE_TO_POST_TYPE[item.code], label: item.label, hint: item.hint }] : []),
+      .filter((item) => item.canCreate && item.code !== "donation_campaign")
+      .flatMap((item) => {
+        if (!isCreateType(item.code)) return [];
+        const mappedType = API_TYPE_TO_POST_TYPE[item.code];
+        return mappedType ? [{ key: mappedType, label: item.label, hint: item.hint }] : [];
+      }),
     [postTypesQuery.data],
   );
   const cityOptions: SelectionOption[] = useMemo(

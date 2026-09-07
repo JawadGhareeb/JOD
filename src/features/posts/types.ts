@@ -1,6 +1,6 @@
 import { HomePostTypeEnum } from "@/src/constants/global";
 
-export type CreatePostType = "volunteer" | "donation" | "help" | "service";
+export type CreatePostType = "volunteer" | "help" | "service";
 export type ApiPostType = "volunteer_opportunity" | "donation_campaign" | "help_request" | "service_offer";
 export type HomePostType = HomePostTypeEnum;
 
@@ -40,7 +40,7 @@ export interface ActiveHelpOfferSummary {
 }
 
 export type HomePostActionType = "apply" | "donate" | "contact" | "details" | "none";
-export type HomePostActionState = "open" | "submitted" | "closed";
+export type HomePostActionState = "open" | "submitted" | "accepted" | "contacting" | "agreed" | "completed" | "closed";
 export interface HomePostAction { type: HomePostActionType; label: string; targetId?: string; state?: HomePostActionState }
 
 export interface RecommendationPresentation { reasons: string[]; source?: string; isExploration?: boolean; feedbackRequested?: boolean }
@@ -134,6 +134,7 @@ export interface GetMyPostsParams { page?: number; perPage?: number; status?: My
 
 export interface MobileImageFile { uri: string; name: string; type: string }
 export interface LikeToggleResult { postId: string; isLiked: boolean; likesCount: number }
+export interface CampaignLikeToggleResult { campaignId: string; isLiked: boolean; likesCount: number }
 export interface SaveToggleResult { postId: string; isSaved: boolean; savesCount: number }
 export interface ReportPostResult { id: string; postId: string | null; status: string }
 export type SavedPost = HomePost & { savedAt?: string | null };

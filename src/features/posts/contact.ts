@@ -23,6 +23,13 @@ export function getPostDisplayTitle(post?: HomePost): string {
 export function getPostActionLabel(post?: HomePost): string {
   if (!post) return "عرض";
 
+  if (post.cta.state === "closed") return "غير متاح";
+  if (post.cta.state === "submitted") return "بانتظار موافقة المنظمة";
+  if (post.cta.state === "accepted") return "تم قبول الطلب";
+  if (post.cta.state === "contacting") return "جاري التواصل";
+  if (post.cta.state === "agreed") return "تم الاتفاق";
+  if (post.cta.state === "completed") return post.cta.type === "donate" ? "تم التبرع" : "اكتملت المشاركة";
+
   switch (post.cta.type) {
     case "donate":
       return "تبرّع الآن";
