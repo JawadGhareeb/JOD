@@ -1,6 +1,6 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, Pressable, View } from "react-native";
+import { Animated, Pressable, ScrollView, View } from "react-native";
 import Button from "@/src/components/ui/Button";
 import Text from "@/src/components/ui/Text";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
@@ -146,7 +146,12 @@ export function ProfileScreen() {
             </View>
 
             <View className="mb-1 border-y border-gray-100 dark:border-dark-400">
-              <View className="flex-row-reverse">
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ flexGrow: 0 }}
+                contentContainerStyle={{ flexDirection: "row-reverse", flexWrap: "nowrap", paddingHorizontal: 12 }}
+              >
                 {STATUS_TABS.map((tab) => {
                   const isActive = activeTab === tab.key;
                   const count = getTabCount(tab.key);
@@ -157,7 +162,7 @@ export function ProfileScreen() {
                       accessibilityRole="tab"
                       accessibilityState={{ selected: isActive }}
                       accessibilityLabel={`${tab.label} ${count}`}
-                      className="relative flex-1 items-center py-3"
+                      className="relative min-w-24 shrink-0 items-center px-4 py-3"
                     >
                       <View className="flex-row-reverse items-center gap-1">
                         <Text
@@ -189,7 +194,7 @@ export function ProfileScreen() {
                     </Pressable>
                   );
                 })}
-              </View>
+              </ScrollView>
             </View>
           </View>
         }

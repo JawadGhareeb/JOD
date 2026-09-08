@@ -70,12 +70,12 @@ export function HelpOffersScreen() {
         <Button size="small" variant={flow === "received" ? "primary" : "tertiary"} onPress={() => { setFlow("received"); setStatus("all"); }} className="flex-1">العروض الواردة</Button>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 12 }} style={{ flexGrow: 0 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row-reverse", flexWrap: "nowrap", gap: 8, paddingBottom: 12 }} style={{ flexGrow: 0 }}>
         {STATUS_TABS.map((tab) => {
           const active = status === tab.value;
           return (
             <Pressable key={tab.value} onPress={() => setStatus(tab.value)} className={`rounded-full border px-3 py-2 ${active ? "border-primary-400 bg-primary-400/10" : "border-gray-200 dark:border-dark-400"}`}>
-              <Text size="2xs" className={active ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}>{tab.label}</Text>
+              <Text numberOfLines={1} size="2xs" className={active ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}>{tab.label}</Text>
             </Pressable>
           );
         })}

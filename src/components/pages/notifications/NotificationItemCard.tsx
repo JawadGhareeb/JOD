@@ -6,6 +6,7 @@ import { appIcons } from "@/src/components/layout/iconMap";
 import { notificationTarget } from "@/src/features/notifications/navigation";
 import type { MobileNotification } from "@/src/features/notifications/types";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
+import { notificationReferenceLabel } from "@/src/helpers/display";
 import { getPrimaryColor } from "@/src/theme";
 
 type Props = {
@@ -28,8 +29,7 @@ export function NotificationItemCard({ item, isNew = false, onPress }: Props) {
           : item.category === "post"
             ? appIcons.campaign
             : appIcons.notification;
-  const actionLabel =
-    item.referenceLabel ?? item.actionLabel ?? item.action?.label ?? null;
+  const actionLabel = notificationReferenceLabel(item);
   const createdAt = item.createdAt ?? item.sentAt;
 
   const open = () => {

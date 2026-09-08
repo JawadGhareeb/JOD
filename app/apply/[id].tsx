@@ -18,6 +18,7 @@ import { useApplyToPost } from "@/src/features/applications/queries";
 import { usePost } from "@/src/features/posts/queries";
 import { useAuthStatus } from "@/src/features/auth/queries";
 import { ApiClientError } from "@/src/lib/api-client";
+import { localizeSyrianLocation } from "@/src/helpers/display";
 
 export default function ApplyPage() {
   const router = useRouter();
@@ -60,7 +61,7 @@ export default function ApplyPage() {
             <>
               <Card padding="md" className="gap-2 border-gray-200 dark:border-dark-400">
                 <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">{post.title}</Text>
-                <Text size="xs" className="text-gray-500 dark:text-gray-300">{post.publisher.name}{post.location ? ` • ${post.location}` : ""}</Text>
+                <Text size="xs" className="text-gray-500 dark:text-gray-300">{post.publisher.name}{post.location ? ` • ${localizeSyrianLocation(post.location)}` : ""}</Text>
                 <Text size="xs" className="leading-6 text-gray-600 dark:text-gray-200">{post.content}</Text>
               </Card>
               <Card padding="lg" className="gap-3 border-gray-200 dark:border-dark-400">

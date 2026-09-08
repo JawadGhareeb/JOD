@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { donationsApi } from "./api";
 import { donationKeys } from "./query-keys";
+import { postKeys } from "@/src/features/posts/query-keys";
 import type { CampaignDonorsParams, DonationInput, DonationParams } from "./types";
 
 export function useDonations(
@@ -37,9 +38,12 @@ export function useDonateToCampaign() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ campaignId, input }: { campaignId: string; input: DonationInput }) => donationsApi.donate(campaignId, input),
-    onSuccess: () => {
-      // Creating an intent never changes campaign totals. Only refresh donation history.
+    onSuccess: (_donation, variables) => {
+      // Creating an intent does not change totals, but it changes the viewer-specific CTA state.
       qc.invalidateQueries({ queryKey: donationKeys.all });
+      qc.invalidateQueries({ queryKey: postKeys.feeds() });
+      qc.invalidateQueries({ queryKey: postKeys.campaign(variables.campaignId) });
+      qc.invalidateQueries({ queryKey: postKeys.all });
     },
   });
 }

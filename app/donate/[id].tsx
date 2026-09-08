@@ -19,6 +19,7 @@ import type { ContactMethod, PaymentMethod } from "@/src/features/donations/type
 import { useCampaign } from "@/src/features/posts/queries";
 import { useAuthStatus } from "@/src/features/auth/queries";
 import { ApiClientError } from "@/src/lib/api-client";
+import { formatWesternNumber } from "@/src/helpers/display";
 
 const CONTACT_METHODS: { value: ContactMethod; label: string }[] = [
   { value: "phone", label: "اتصال" },
@@ -93,7 +94,7 @@ export default function DonatePage() {
               <Card padding="md" className="gap-2 border-gray-200 dark:border-dark-400">
                 <Text weight="semibold" size="sm">{campaign.title}</Text>
                 <Text size="xs" className="text-gray-500 dark:text-gray-300">{campaign.organizationName || campaign.publisher.name}</Text>
-                <Text size="xs" className="text-gray-500 dark:text-gray-300">تم جمع {campaign.raisedAmount.toLocaleString("ar-SY")} من {campaign.goalAmount.toLocaleString("ar-SY")}</Text>
+                <Text size="xs" className="text-gray-500 dark:text-gray-300">تم جمع {formatWesternNumber(campaign.raisedAmount)} من {formatWesternNumber(campaign.goalAmount)}</Text>
               </Card>
               <Card padding="lg" className="gap-3 border-gray-200 dark:border-dark-400">
                 <View className="flex-row-reverse items-center gap-2"><HeartHandshake size={20} color="#4A9782" /><Text weight="semibold" size="sm">بيانات طلب التبرع</Text></View>

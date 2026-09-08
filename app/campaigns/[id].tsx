@@ -12,21 +12,33 @@ import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
 import Text from "@/src/components/ui/Text";
-import { useCampaignDonors } from "@/src/features/donations/queries";
+import { useCampaignDonors, useDonations } from "@/src/features/donations/queries";
+import { useAuthStatus } from "@/src/features/auth/queries";
 import { useCampaign, useLikeCampaign } from "@/src/features/posts/queries";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
-
-const formatWesternNumber = (value: number) => value.toLocaleString("en-US");
+import {
+  formatWesternNumber,
+  localizeCategoryName,
+  localizeSyrianLocation,
+} from "@/src/helpers/display";
 
 export default function CampaignDetailsPage() {
   const router = useRouter();
   const { requireAuth } = useAuthGuard();
+  const { isAuthenticated } = useAuthStatus();
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const { id: raw } = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(raw) ? raw[0] : raw;
   const query = useCampaign(id);
   const likeMutation = useLikeCampaign();
   const campaign = query.data;
+  const myDonationsQuery = useDonations(
+    { campaignId: id, perPage: 10 },
+    { enabled: isAuthenticated && Boolean(id) },
+  );
+  const myDonation = myDonationsQuery.data?.pages
+    .flatMap((page) => page.items)
+    .find((item) => item.status !== "cancelled");
   const donorsQuery = useCampaignDonors(id, { perPage: 10 });
   const donors = donorsQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
@@ -68,13 +80,13 @@ export default function CampaignDetailsPage() {
             {categoryName ? (
               <View className="flex-row-reverse items-center gap-1 rounded-full bg-primary-100 px-3 py-1 dark:bg-primary-400/15">
                 <Tag size={12} color="#4A9782" />
-                <Text size="2xs" className="text-primary-400">{categoryName}</Text>
+                <Text size="2xs" className="text-primary-400">{localizeCategoryName(categoryName)}</Text>
               </View>
             ) : null}
             {campaign.location ? (
               <View className="flex-row-reverse items-center gap-1 rounded-full bg-gray-100 px-3 py-1 dark:bg-dark-350">
                 <MapPin size={12} color="#6B7280" />
-                <Text size="2xs" className="text-gray-600 dark:text-gray-200">{campaign.location}</Text>
+                <Text size="2xs" className="text-gray-600 dark:text-gray-200">{localizeSyrianLocation(campaign.location)}</Text>
               </View>
             ) : null}
           </View>
@@ -116,7 +128,7 @@ export default function CampaignDetailsPage() {
             <View className="h-full rounded-full bg-primary-400" style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
           </View>
           <Text size="sm" className="text-primary-400">
-            {campaign.raisedAmount.toLocaleString("ar-SY")} / {campaign.goalAmount.toLocaleString("ar-SY")}
+            {formatWesternNumber(campaign.raisedAmount)} / {formatWesternNumber(campaign.goalAmount)}
           </Text>
           <Text size="2xs" className="text-gray-500 dark:text-gray-300">
             {formatWesternNumber(campaign.donorsCount)} متبرع
@@ -133,7 +145,7 @@ export default function CampaignDetailsPage() {
             className="self-end flex-row-reverse items-center gap-2 rounded-full bg-gray-50 px-3 py-2 dark:bg-dark-350"
           >
             <Heart size={18} color={campaign.isLiked ? "#E5484D" : "#9CA3AF"} fill={campaign.isLiked ? "#E5484D" : "transparent"} />
-            <Text size="2xs" className={campaign.isLiked ? "text-error-300" : "text-gray-500 dark:text-gray-300"}>{campaign.stats.likes.toLocaleString("ar-SY")}</Text>
+            <Text size="2xs" className={campaign.isLiked ? "text-error-300" : "text-gray-500 dark:text-gray-300"}>{formatWesternNumber(campaign.stats.likes)}</Text>
           </Pressable>
         </Card>
 
@@ -168,7 +180,7 @@ export default function CampaignDetailsPage() {
                       ) : null}
                     </View>
                     <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-                      {donor.amount.toLocaleString("ar-SY")} • {donor.donatedAt ? new Date(donor.donatedAt).toLocaleDateString("ar") : "-"}
+                      {formatWesternNumber(donor.amount)} • {donor.donatedAt ? new Date(donor.donatedAt).toLocaleDateString("en-GB") : "-"}
                     </Text>
                   </View>
                 </View>
@@ -195,9 +207,19 @@ export default function CampaignDetailsPage() {
           )}
         </Card>
 
-        {campaign.status === "active" ? (
+        {myDonation ? (
           <Button
             fullWidth
+            onPress={() =>
+              router.push({ pathname: "/donations/[id]", params: { id: myDonation.id } })
+            }
+          >
+            عرض تفاصيل التبرع
+          </Button>
+        ) : campaign.status === "active" ? (
+          <Button
+            fullWidth
+            disabled={isAuthenticated && myDonationsQuery.isLoading}
             onPress={() => {
               if (!requireAuth()) return;
               router.push({ pathname: "/donate/[id]", params: { id } });

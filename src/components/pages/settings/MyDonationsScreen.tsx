@@ -10,12 +10,12 @@ import { appIcons } from "@/src/components/layout/iconMap";
 import { useDonations } from "@/src/features/donations/queries";
 import type { DonationStatus } from "@/src/features/donations/types";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
+import { donationContactMethodLabel, donationPaymentMethodLabel, formatWesternAmount } from "@/src/helpers/display";
 import { getPrimaryColor } from "@/src/theme";
 import { MenuPageHeader } from "./MenuPageHeader";
 
 const HeartIcon = appIcons.myDonations;
-const formatAmount = (amount: number) =>
-  `${amount.toLocaleString("ar-SY", { maximumFractionDigits: 2 })} ل.س`;
+const formatAmount = formatWesternAmount;
 const statusLabels: Record<DonationStatus, string> = {
   pending: "بانتظار موافقة المنظمة",
   accepted: "تم قبول الطلب",
@@ -144,7 +144,7 @@ export function MyDonationsScreen() {
                 {formatAmount(item.status === "completed" && item.confirmedAmount != null ? item.confirmedAmount : item.requestedAmount ?? item.amount)}
               </Text>
               <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-                {item.contactMethod || "-"} / {item.paymentMethod || "-"}
+                {donationContactMethodLabel(item.contactMethod)} / {donationPaymentMethodLabel(item.paymentMethod)}
               </Text>
             </View>
             <View className="gap-1 border-t border-gray-100 pt-3 dark:border-dark-400">

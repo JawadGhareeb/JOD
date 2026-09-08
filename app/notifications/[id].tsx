@@ -8,6 +8,11 @@ import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useNotification } from "@/src/features/notifications/queries";
 import { notificationReferenceTarget } from "@/src/features/notifications/navigation";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
+import {
+  notificationCategoryLabel,
+  notificationEventLabel,
+  notificationReferenceLabel,
+} from "@/src/helpers/display";
 
 export default function NotificationDetailsPage() {
   const router = useRouter();
@@ -50,11 +55,11 @@ export default function NotificationDetailsPage() {
             </Text>
             <View className="border-t border-gray-100 pt-3 dark:border-dark-400">
               <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-                التصنيف: {item.category || "-"}
+                التصنيف: {notificationCategoryLabel(item.category)}
               </Text>
               {item.eventType ? (
                 <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">
-                  النوع: {item.eventType}
+                  النوع: {notificationEventLabel(item.eventType)}
                 </Text>
               ) : null}
             </View>
@@ -62,7 +67,7 @@ export default function NotificationDetailsPage() {
 
           {linkedTarget ? (
             <Button fullWidth onPress={() => router.push(linkedTarget as never)}>
-              {item.referenceLabel ?? item.actionLabel ?? item.action?.label ?? "فتح العنصر المرتبط"}
+              {notificationReferenceLabel(item) ?? "فتح العنصر المرتبط"}
             </Button>
           ) : null}
         </View>

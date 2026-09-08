@@ -20,15 +20,29 @@ export function getPostDisplayTitle(post?: HomePost): string {
   return post.title || HOME_POST_TYPE_LABELS[post.postType] || "تفاصيل المنشور";
 }
 
-export function getPostActionLabel(post?: HomePost): string {
-  if (!post) return "عرض";
-
+export function getPostActionStateLabel(post?: HomePost): string {
+  if (!post) return "";
   if (post.cta.state === "closed") return "غير متاح";
   if (post.cta.state === "submitted") return "بانتظار موافقة المنظمة";
   if (post.cta.state === "accepted") return "تم قبول الطلب";
   if (post.cta.state === "contacting") return "جاري التواصل";
   if (post.cta.state === "agreed") return "تم الاتفاق";
   if (post.cta.state === "completed") return post.cta.type === "donate" ? "تم التبرع" : "اكتملت المشاركة";
+  return "متاح";
+}
+
+export function getPostActionLabel(post?: HomePost): string {
+  if (!post) return "عرض";
+
+  if (post.cta.type === "donate" && post.cta.state && post.cta.state !== "open") {
+    return "عرض تفاصيل التبرع";
+  }
+  if (post.cta.state === "closed") return "غير متاح";
+  if (post.cta.state === "submitted") return "بانتظار موافقة المنظمة";
+  if (post.cta.state === "accepted") return "تم قبول الطلب";
+  if (post.cta.state === "contacting") return "جاري التواصل";
+  if (post.cta.state === "agreed") return "تم الاتفاق";
+  if (post.cta.state === "completed") return "اكتملت المشاركة";
 
   switch (post.cta.type) {
     case "donate":

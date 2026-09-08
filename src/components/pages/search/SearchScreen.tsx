@@ -17,6 +17,7 @@ import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useGlobalSearch } from "@/src/features/search/queries";
 import type { GlobalSearchType, SearchAccount } from "@/src/features/search/types";
 import { getPrimaryColor } from "@/src/theme";
+import { formatWesternNumber, localizeSyrianLocation } from "@/src/helpers/display";
 
 const SearchIcon = appIcons.search;
 const TYPES: { value: GlobalSearchType; label: string }[] = [
@@ -259,7 +260,7 @@ export function SearchScreen() {
                       </Text>
                       <Text size="xs" className="mt-1 text-gray-500 dark:text-gray-300">
                         {campaign.organizationName || campaign.publisher.name}
-                        {campaign.location ? ` • ${campaign.location}` : ""}
+                        {campaign.location ? ` • ${localizeSyrianLocation(campaign.location)}` : ""}
                       </Text>
                       {campaign.summary ? (
                         <Text size="xs" className="mt-2 leading-6 text-gray-600 dark:text-gray-200">
@@ -270,7 +271,7 @@ export function SearchScreen() {
                         <View style={{ width: `${progress}%` }} className="h-full bg-primary-400" />
                       </View>
                       <Text size="2xs" className="mt-2 text-gray-500 dark:text-gray-300">
-                        {campaign.raisedAmount.toLocaleString("ar-SY")} / {campaign.goalAmount.toLocaleString("ar-SY")}
+                        {formatWesternNumber(campaign.raisedAmount)} / {formatWesternNumber(campaign.goalAmount)}
                       </Text>
                     </Card>
                   );

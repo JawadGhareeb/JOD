@@ -53,6 +53,7 @@ export interface HomePost {
   content: string;
   createdAt: string | null;
   images: string[];
+  videos: string[];
   cta: HomePostAction;
   stats: { likes: number; comments: number; shares: number };
   viewsCount: number;

@@ -18,6 +18,7 @@ import type { Campaign } from "@/src/features/posts/types";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
 import { getPrimaryColor } from "@/src/theme";
+import { formatWesternNumber, localizeCategoryName, localizeSyrianLocation } from "@/src/helpers/display";
 
 const MAX_CONTENT = 180;
 const ACTION_MENU_WIDTH = 208;
@@ -196,7 +197,7 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
               <View className="flex-row-reverse items-center gap-0.5">
                 <Text size="2xs" className="text-gray-400">•</Text>
                 <MapPin size={11} color="#9CA3AF" strokeWidth={2.25} />
-                <Text size="2xs" className="text-gray-500 dark:text-gray-300">{campaign.location}</Text>
+                <Text size="2xs" className="text-gray-500 dark:text-gray-300">{localizeSyrianLocation(campaign.location)}</Text>
               </View>
             ) : null}
           </View>
@@ -219,7 +220,7 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
             <View className="mt-2 flex-row-reverse flex-wrap items-center gap-2">
               <View className="flex-row-reverse items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 dark:bg-primary-400/15">
                 <Tag size={12} color={primaryColor} strokeWidth={2.2} />
-                <Text size="2xs" className="text-primary-400">{categoryName}</Text>
+                <Text size="2xs" className="text-primary-400">{localizeCategoryName(categoryName)}</Text>
               </View>
             </View>
           ) : null}
@@ -254,7 +255,7 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
         <View className="mt-4 pt-2">
           <View className="mb-2 flex-row-reverse items-center justify-between">
             <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-              تم جمع {campaign.raisedAmount.toLocaleString("ar-SY")}
+              تم جمع {formatWesternNumber(campaign.raisedAmount)}
             </Text>
             <Text size="2xs" weight="semibold" className="text-primary-400">{Math.round(progress)}%</Text>
           </View>
@@ -263,10 +264,10 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
           </View>
           <View className="mt-2 flex-row-reverse items-center justify-between">
             <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-              الهدف {campaign.goalAmount.toLocaleString("ar-SY")}
+              الهدف {formatWesternNumber(campaign.goalAmount)}
             </Text>
             <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-              {campaign.donorsCount} متبرع
+              {formatWesternNumber(campaign.donorsCount)} متبرع
             </Text>
           </View>
         </View>

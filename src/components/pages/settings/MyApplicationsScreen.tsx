@@ -67,10 +67,10 @@ export function MyApplicationsScreen() {
         }}
         scrollEventThrottle={16}
       >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row-reverse", gap: 8, paddingBottom: 12 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ flexDirection: "row-reverse", flexWrap: "nowrap", gap: 8, paddingBottom: 12 }}>
           {STATUS_TABS.map((tab) => {
             const active = tab.value === status;
-            return <Pressable key={tab.value} onPress={() => setStatus(tab.value)} className={`rounded-full border px-3 py-2 ${active ? "border-primary-400 bg-primary-400/10" : "border-gray-200 dark:border-dark-400"}`}><Text size="2xs" className={active ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}>{tab.label}</Text></Pressable>;
+            return <Pressable key={tab.value} onPress={() => setStatus(tab.value)} className={`rounded-full border px-3 py-2 ${active ? "border-primary-400 bg-primary-400/10" : "border-gray-200 dark:border-dark-400"}`}><Text numberOfLines={1} size="2xs" className={active ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}>{tab.label}</Text></Pressable>;
           })}
         </ScrollView>
         {query.isLoading ? <Text size="xs" className="py-8 text-center text-gray-500">جارِ تحميل الطلبات...</Text> : null}

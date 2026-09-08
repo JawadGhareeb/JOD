@@ -1,6 +1,7 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { View } from "react-native";
 import { EyeOff as EyeOffIcon } from "lucide-react-native";
+import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Text from "@/src/components/ui/Text";
@@ -8,6 +9,12 @@ import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useDonation } from "@/src/features/donations/queries";
 import type { DonationStatus } from "@/src/features/donations/types";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
+import {
+  donationContactMethodLabel,
+  donationPaymentMethodLabel,
+  formatWesternAmount,
+  localizeSyrianLocation,
+} from "@/src/helpers/display";
 
 const statusLabels: Record<DonationStatus, string> = {
   pending: "بانتظار موافقة المنظمة",
@@ -18,10 +25,8 @@ const statusLabels: Record<DonationStatus, string> = {
   cancelled: "ملغي",
 };
 
-const formatAmount = (amount: number) =>
-  `${amount.toLocaleString("ar-SY", { maximumFractionDigits: 2 })} ل.س`;
-
 export default function DonationDetailsPage() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
   const donationId = Array.isArray(id) ? id[0] : id;
   const query = useDonation(donationId);
@@ -60,17 +65,17 @@ export default function DonationDetailsPage() {
               </View>
             </View>
             <Text weight="bold" size="lg" className="text-primary-400">
-              {formatAmount(donation.status === "completed" && donation.confirmedAmount != null ? donation.confirmedAmount : donation.requestedAmount ?? donation.amount)}
+              {formatWesternAmount(donation.status === "completed" && donation.confirmedAmount != null ? donation.confirmedAmount : donation.requestedAmount ?? donation.amount)}
             </Text>
           </Card>
 
           <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
-            <DetailRow label="طريقة التواصل" value={donation.contactMethod} />
-            <DetailRow label="طريقة الدفع" value={donation.paymentMethod} />
-            <DetailRow label="المبلغ المطلوب التبرع به" value={formatAmount(donation.requestedAmount ?? donation.amount)} />
-            {donation.confirmedAmount != null ? <DetailRow label="المبلغ الذي أكدت المنظمة استلامه" value={formatAmount(donation.confirmedAmount)} /> : null}
+            <DetailRow label="طريقة التواصل" value={donationContactMethodLabel(donation.contactMethod)} />
+            <DetailRow label="طريقة الدفع" value={donationPaymentMethodLabel(donation.paymentMethod)} />
+            <DetailRow label="المبلغ المطلوب التبرع به" value={formatWesternAmount(donation.requestedAmount ?? donation.amount)} />
+            {donation.confirmedAmount != null ? <DetailRow label="المبلغ الذي أكدت المنظمة استلامه" value={formatWesternAmount(donation.confirmedAmount)} /> : null}
             <DetailRow label="رقم الهاتف" value={donation.phone} />
-            <DetailRow label="المدينة" value={donation.city} />
+            <DetailRow label="المدينة" value={localizeSyrianLocation(donation.city)} />
             {donation.notes ? <DetailRow label="ملاحظات" value={donation.notes} /> : null}
             {donation.cancelReason ? (
               <DetailRow label="سبب الإلغاء" value={donation.cancelReason} error />
@@ -110,6 +115,17 @@ export default function DonationDetailsPage() {
               <TimelineRow label="تم إلغاء الطلب" date={donation.cancelledAt} active error />
             ) : null}
           </Card>
+
+          {donation.status === "completed" ? (
+            <Button
+              fullWidth
+              onPress={() =>
+                router.push({ pathname: "/donate/[id]", params: { id: donation.campaignId } })
+              }
+            >
+              إعادة التبرع
+            </Button>
+          ) : null}
         </View>
       )}
     </View>
