@@ -29,7 +29,8 @@ export function FilterCountSlider<T extends string>({
       inverted={isArabic}
       keyExtractor={(item) => item.key}
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: 8, paddingBottom: 12, paddingHorizontal: 2 }}
+      style={{ flexGrow: 0 }}
+      contentContainerStyle={{ gap: 8, paddingBottom: 12, paddingHorizontal: 2, alignItems: "center" }}
       className="mb-1"
       renderItem={({ item }) => {
         const isActive = selectedKey === item.key;
