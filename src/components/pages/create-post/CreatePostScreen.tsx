@@ -13,6 +13,7 @@ import Input from "@/src/components/ui/Input";
 import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
 import { useCities, usePostTypesLookup } from "@/src/features/lookups/queries";
+import { useGroup } from "@/src/features/groups/queries";
 import { API_TYPE_TO_POST_TYPE, POST_TYPE_TO_API_TYPE } from "@/src/features/posts/api";
 import {
   useCategories,
@@ -43,7 +44,7 @@ const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة 
 const readParam = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] || "" : value || "";
 const isRemoteImage = (uri: string) => /^https?:\/\//i.test(uri);
 const isCreateType = (value: string): value is ApiPostType =>
-  value === "volunteer_opportunity" || value === "help_request" || value === "service_offer";
+  ["volunteer_opportunity", "help_request", "service_offer", "awareness", "poll", "donation_campaign"].includes(value);
 
 function toUploadFile(uri: string, index: number): MobileImageFile {
   const filename = uri.split("?")[0].split("/").pop() || `image-${index + 1}.jpg`;
@@ -55,9 +56,12 @@ function toUploadFile(uri: string, index: number): MobileImageFile {
 type CreatePostScreenProps = { showPageHeader?: boolean };
 
 export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProps = {}) {
-  const params = useLocalSearchParams<{ mode?: string; postId?: string }>();
+  const params = useLocalSearchParams<{ mode?: string; postId?: string; groupId?: string; campaignId?: string }>();
   const editMode = readParam(params.mode) === "edit";
   const editingPostId = readParam(params.postId);
+  const groupId = readParam(params.groupId);
+  const campaignId = readParam(params.campaignId);
+  const isGroupPost = Boolean(groupId);
   const router = useRouter();
   const { requireAuth } = useAuthGuard();
   const toast = useToast();
@@ -79,10 +83,18 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [initializedPostId, setInitializedPostId] = useState<string | null>(null);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const [allowsMultipleChoices, setAllowsMultipleChoices] = useState(false);
+
+  useEffect(() => {
+    if (campaignId) setPostType("campaign");
+  }, [campaignId]);
 
   const citiesQuery = useCities();
   const postTypesQuery = usePostTypesLookup();
   const categoriesQuery = useCategories({ status: "active", target: "post" });
+  const groupQuery = useGroup(groupId || undefined);
   const myPostQuery = useMyPost(activePostId || undefined);
   const createMutation = useCreatePost();
   const updateMutation = useUpdatePost();
@@ -114,16 +126,26 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     if (match) setCityId(match.id);
   }, [cityId, citiesQuery.data, editMode, myPostQuery.data?.city]);
 
-  const postTypeOptions = useMemo(
-    () => (postTypesQuery.data ?? [])
+  const postTypeOptions = useMemo(() => {
+    if (isGroupPost) {
+      const options: { key: CreatePostType; label: string; hint: string }[] = [
+        { key: "volunteer", label: "فرصة تطوع", hint: "دعوة أعضاء أو مستخدمين للتطوع." },
+        { key: "help", label: "طلب مساعدة", hint: "طلب مساعدة يتبع نفس فلو جود." },
+        { key: "service", label: "تقديم مساعدة", hint: "عرض خدمة أو مساعدة من الفريق." },
+        { key: "awareness", label: "منشور عام", hint: "خبر أو إعلان أو محتوى توعوي." },
+        { key: "poll", label: "تصويت", hint: "تصويت بخيارات ونسب مثل تيليجرام." },
+      ];
+      if (groupQuery.data?.canCreateCampaign) options.push({ key: "campaign", label: "حملة", hint: "منشور حملة يملكه مدير الفريق." });
+      return options;
+    }
+    return (postTypesQuery.data ?? [])
       .filter((item) => item.canCreate && item.code !== "donation_campaign")
       .flatMap((item) => {
         if (!isCreateType(item.code)) return [];
         const mappedType = API_TYPE_TO_POST_TYPE[item.code];
-        return mappedType ? [{ key: mappedType, label: item.label, hint: item.hint }] : [];
-      }),
-    [postTypesQuery.data],
-  );
+        return mappedType && ["volunteer", "help", "service"].includes(mappedType) ? [{ key: mappedType, label: item.label, hint: item.hint }] : [];
+      });
+  }, [groupQuery.data?.canCreateCampaign, isGroupPost, postTypesQuery.data]);
   const cityOptions: SelectionOption[] = useMemo(
     () => (citiesQuery.data ?? []).map((item) => ({ label: item.name, value: item.id })),
     [citiesQuery.data],
@@ -136,9 +158,10 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const typeHint = postTypeOptions.find((item) => item.key === postType)?.hint;
   const selectedCityLabel = cityOptions.find((item) => item.value === cityId)?.label ?? "";
   const selectedCategoryLabel = categoryOptions.find((item) => item.value === categoryId)?.label ?? "";
-  const canPublish = title.trim().length >= 4 && details.trim().length >= 10 && cityId.length > 0 && categoryId.length > 0;
+  const pollReady = postType !== "poll" || (pollQuestion.trim().length >= 3 && pollOptions.filter((option) => option.trim()).length >= 2);
+  const canPublish = title.trim().length >= 4 && details.trim().length >= 10 && cityId.length > 0 && categoryId.length > 0 && pollReady;
   const isBusy = isSavingDraft || isPublishing || uploadImageMutation.isPending || reorderImageMutation.isPending || deleteImageMutation.isPending;
-  const pageTitle = editMode ? "تعديل المنشور" : "إنشاء منشور";
+  const pageTitle = editMode ? "تعديل المنشور" : isGroupPost ? `نشر في ${groupQuery.data?.name ?? "الفريق"}` : "إنشاء منشور";
 
   const buildCreateInput = (saveAsDraft: boolean) => ({
     type: POST_TYPE_TO_API_TYPE[postType],
@@ -147,6 +170,11 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
     cityId: cityId || null,
     categoryId: categoryId || null,
     audience,
+    groupId: groupId || null,
+    campaignId: campaignId || null,
+    pollQuestion: postType === "poll" ? pollQuestion.trim() : null,
+    pollOptions: postType === "poll" ? pollOptions.map((option) => option.trim()).filter(Boolean) : undefined,
+    allowsMultipleChoices: postType === "poll" ? allowsMultipleChoices : undefined,
     saveAsDraft,
   });
   const buildUpdateInput = () => ({
@@ -330,8 +358,10 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
           images: selectedImages.filter((uri) => !isRemoteImage(uri)).map(toUploadFile),
         });
       }
-      toast.success("تم إرسال المنشور مع كل الصور للمراجعة، وسيظهر بعد موافقة الإدارة.", "تم إرسال المنشور");
+      const awaitingGroupReview = isGroupPost && Boolean(groupQuery.data?.requiresPostApproval) && !groupQuery.data?.isOwner;
+      toast.success(awaitingGroupReview ? "تم إرسال المنشور لمدير الفريق للمراجعة." : isGroupPost ? "تم نشر المنشور في الفريق." : "تم إرسال المنشور مع كل الصور للمراجعة، وسيظهر بعد موافقة الإدارة.", "تم إرسال المنشور");
       if (editMode) router.back();
+      else if (isGroupPost) router.replace({ pathname: "/groups/[id]", params: { id: groupId } });
       else router.replace("/(tabs)/profile");
     } catch (error) {
       toast.error(error instanceof ApiClientError ? error.message : "تعذر رفع الصور، لذلك لم يتم إنشاء المنشور. حاول مرة أخرى.", "تعذر إرسال المنشور");
@@ -364,7 +394,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <Text weight="semibold" size="sm" className="mb-3 text-dark-100 dark:text-light-50">نوع المنشور</Text>
           {postTypeOptions.length ? (
-            <View className="flex-row-reverse gap-2">
+            <View className="flex-row-reverse flex-wrap gap-2">
               {postTypeOptions.map((item) => {
                 const active = item.key === postType;
                 return (
@@ -408,8 +438,18 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
           <Pressable onPress={() => setIsCategoryModalOpen(true)}><View pointerEvents="none"><Input fullWidth editable={false} showStatusIcon={false} value={selectedCategoryLabel} placeholder="اختر التصنيف *" placeholderTextColor="#9CA3AF" /></View></Pressable>
 
           <Input fullWidth multiline showStatusIcon={false} rightIcon={<DescriptionIcon size={16} strokeWidth={2.25} />} value={details} onChangeText={setDetails} placeholder="اكتب تفاصيل المنشور" placeholderTextColor="#9CA3AF" inputClassName="min-h-[96px] font-noto text-xs" inputContainerClassName="min-h-[120px] items-start py-3" textAlignVertical="top" />
-          {!canPublish ? <Text size="2xs" className="text-error-300">للنشر: العنوان 4 أحرف على الأقل، التفاصيل 10 أحرف على الأقل، ويجب اختيار المحافظة والتصنيف.</Text> : null}
+          {!canPublish ? <Text size="2xs" className="text-error-300">للنشر: العنوان 4 أحرف على الأقل، التفاصيل 10 أحرف على الأقل، ويجب اختيار المحافظة والتصنيف{postType === "poll" ? " وإضافة سؤال وخيارين للتصويت" : ""}.</Text> : null}
         </Card>
+
+        {postType === "poll" ? (
+          <Card padding="md" className="mb-2 gap-3 border-gray-200 dark:border-dark-400">
+            <Text weight="semibold" size="sm">إعداد التصويت</Text>
+            <Input fullWidth value={pollQuestion} onChangeText={setPollQuestion} placeholder="سؤال التصويت" showStatusIcon={false} />
+            {pollOptions.map((option, index) => <View key={`poll-${index}`} className="flex-row-reverse items-center gap-2"><View className="flex-1"><Input fullWidth value={option} onChangeText={(value) => setPollOptions((current) => current.map((item, itemIndex) => itemIndex === index ? value : item))} placeholder={`الخيار ${index + 1}`} showStatusIcon={false} /></View>{pollOptions.length > 2 ? <Pressable onPress={() => setPollOptions((current) => current.filter((_, itemIndex) => itemIndex !== index))}><X size={17} color="#E5484D" /></Pressable> : null}</View>)}
+            {pollOptions.length < 10 ? <Button size="small" variant="tertiary" onPress={() => setPollOptions((current) => [...current, ""])}>إضافة خيار</Button> : null}
+            <Pressable onPress={() => setAllowsMultipleChoices((value) => !value)} className={`rounded-xl border p-3 ${allowsMultipleChoices ? "border-primary-400 bg-primary-400/5" : "border-gray-200 dark:border-dark-400"}`}><Text size="xs" weight="medium">{allowsMultipleChoices ? "✓ " : ""}السماح باختيار أكثر من إجابة</Text></Pressable>
+          </Card>
+        ) : null}
 
         <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">
           <View className="mb-2 flex-row-reverse items-center justify-between">

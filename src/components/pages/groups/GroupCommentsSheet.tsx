@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Modal as RNModal,
@@ -44,6 +45,7 @@ type GroupCommentsSheetProps = {
 type ReplyTarget = { id: string; name: string } | null;
 
 export function GroupCommentsSheet({ post, visible, onClose }: GroupCommentsSheetProps) {
+  const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const primaryColor = getPrimaryColor(isDark);
@@ -87,6 +89,11 @@ export function GroupCommentsSheet({ post, visible, onClose }: GroupCommentsShee
     toggleLike.mutate({ commentId: comment.id, liked: !comment.isLiked });
   };
 
+  const openAuthor = (comment: GroupComment) => {
+    onClose();
+    router.push({ pathname: "/author/[id]", params: { id: comment.author.id } });
+  };
+
   return (
     <RNModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable
@@ -119,6 +126,7 @@ export function GroupCommentsSheet({ post, visible, onClose }: GroupCommentsShee
               primaryColor={primaryColor}
               onLike={like}
               onReply={(comment) => setReplyTarget({ id: comment.id, name: comment.author.name })}
+              onAuthorPress={openAuthor}
             />
 
             <View className="border-t border-gray-200 px-4 py-3 dark:border-dark-400">
@@ -179,12 +187,14 @@ function CommentsBody({
   primaryColor,
   onLike,
   onReply,
+  onAuthorPress,
 }: {
   readonly threads: GroupCommentThread[];
   readonly isLoading: boolean;
   readonly primaryColor: string;
   readonly onLike: (comment: GroupComment) => void;
   readonly onReply: (comment: GroupComment) => void;
+  readonly onAuthorPress: (comment: GroupComment) => void;
 }) {
   if (isLoading) {
     return (
@@ -213,10 +223,10 @@ function CommentsBody({
     >
       {threads.map((thread) => (
         <View key={thread.id} className="gap-3">
-          <CommentRow comment={thread} onLike={onLike} onReply={onReply} />
+          <CommentRow comment={thread} onLike={onLike} onReply={onReply} onAuthorPress={onAuthorPress} />
           {thread.replies.map((reply) => (
             <View key={reply.id} style={{ paddingRight: 34 }}>
-              <CommentRow comment={reply} onLike={onLike} onReply={onReply} />
+              <CommentRow comment={reply} onLike={onLike} onReply={onReply} onAuthorPress={onAuthorPress} />
             </View>
           ))}
         </View>
@@ -229,23 +239,39 @@ function CommentRow({
   comment,
   onLike,
   onReply,
+  onAuthorPress,
 }: {
   readonly comment: GroupComment;
   readonly onLike: (comment: GroupComment) => void;
   readonly onReply: (comment: GroupComment) => void;
+  readonly onAuthorPress: (comment: GroupComment) => void;
 }) {
   const isStaff = comment.author.role !== "member";
 
   return (
     <View className="flex-row-reverse items-start gap-2">
-      <Avatar name={comment.author.name} imageUrl={comment.author.avatarUrl} size={32} />
+      <Pressable
+        onPress={() => onAuthorPress(comment)}
+        accessibilityRole="button"
+        accessibilityLabel={`فتح ملف ${comment.author.name}`}
+        hitSlop={6}
+      >
+        <Avatar name={comment.author.name} imageUrl={comment.author.avatarUrl} size={32} />
+      </Pressable>
 
       <View className="flex-1 gap-1">
         <View className="rounded-2xl bg-gray-50 px-3 py-2 dark:bg-dark-350">
           <View className="flex-row-reverse items-center gap-1.5">
-            <Text size="2xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-              {comment.author.name}
-            </Text>
+            <Pressable
+              onPress={() => onAuthorPress(comment)}
+              accessibilityRole="button"
+              accessibilityLabel={`فتح ملف ${comment.author.name}`}
+              hitSlop={6}
+            >
+              <Text size="2xs" weight="semibold" className="text-dark-100 dark:text-light-50">
+                {comment.author.name}
+              </Text>
+            </Pressable>
             {isStaff ? (
               <View className="rounded-full bg-primary-400/10 px-1.5 py-0.5">
                 <Text size="2xs" className="text-primary-400">

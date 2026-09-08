@@ -1,311 +1,110 @@
 import { useMemo, useState } from "react";
-import { useRouter } from "expo-router";
-import { MapPin, Users, X } from "lucide-react-native";
-import { useColorScheme } from "nativewind";
 import { Pressable, View } from "react-native";
+import { Check, Plus, Trash2, UsersRound } from "lucide-react-native";
+import { useRouter } from "expo-router";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
 import Input from "@/src/components/ui/Input";
-import KeyboardAvoider from "@/src/components/ui/KeyboardAvoider";
-import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
 import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useCreateGroup } from "@/src/features/groups/queries";
-import {
-  GROUP_CATEGORIES,
-  type GroupAdminCandidate,
-} from "@/src/features/groups/types";
+import { GROUP_CATEGORIES, type GroupInviteCandidate } from "@/src/features/groups/types";
 import type { MediaUploadFile } from "@/src/features/media/types";
+import { useToast } from "@/src/providers/ToastProvider";
 import { AdminsPickerModal } from "./AdminsPickerModal";
 import { GroupImagePicker } from "./GroupImagePicker";
-import { useCities } from "@/src/features/lookups/queries";
-import { useToast } from "@/src/providers/ToastProvider";
-import { getPrimaryColor } from "@/src/theme";
-
-const MIN_RULES = 1;
 
 export function CreateGroupScreen() {
   const router = useRouter();
   const toast = useToast();
-  const { colorScheme } = useColorScheme();
-  const primaryColor = getPrimaryColor(colorScheme === "dark");
-  const createMutation = useCreateGroup();
-  const citiesQuery = useCities();
-
+  const mutation = useCreateGroup();
   const [name, setName] = useState("");
-  const [image, setImage] = useState<MediaUploadFile | null>(null);
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
-  const [rulesText, setRulesText] = useState("");
   const [purpose, setPurpose] = useState("");
-  const [proposedAdmins, setProposedAdmins] = useState<GroupAdminCandidate[]>([]);
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-  const [isCityOpen, setIsCityOpen] = useState(false);
-  const [isAdminsOpen, setIsAdminsOpen] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [rules, setRules] = useState<string[]>([""]);
+  const [invitedUsers, setInvitedUsers] = useState<GroupInviteCandidate[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [requiresPostApproval, setRequiresPostApproval] = useState(false);
+  const [image, setImage] = useState<MediaUploadFile | null>(null);
+  const [cover, setCover] = useState<MediaUploadFile | null>(null);
 
-  const categoryOptions: SelectionOption[] = useMemo(
-    () => GROUP_CATEGORIES.map((item) => ({ label: item, value: item })),
-    [],
-  );
-  const cityOptions: SelectionOption[] = useMemo(
-    () => (citiesQuery.data ?? []).map((item) => ({ label: item.name, value: item.name })),
-    [citiesQuery.data],
-  );
+  const cleanRules = useMemo(() => rules.map((rule) => rule.trim()).filter(Boolean), [rules]);
+  const canSubmit = name.trim().length >= 3 && description.trim().length >= 10 && purpose.trim().length >= 10 && categories.length > 0 && cleanRules.length > 0 && !mutation.isPending;
 
-  // One rule per line — simpler than a repeater and matches how people type lists.
-  const rules = useMemo(
-    () => rulesText.split("\n").map((line) => line.trim()).filter(Boolean),
-    [rulesText],
-  );
+  const toggleCategory = (category: string) => setCategories((current) => current.includes(category) ? current.filter((item) => item !== category) : [...current, category]);
+  const updateRule = (index: number, value: string) => setRules((current) => current.map((rule, itemIndex) => itemIndex === index ? value : rule));
+  const removeRule = (index: number) => setRules((current) => current.length === 1 ? [""] : current.filter((_, itemIndex) => itemIndex !== index));
 
-  const canSubmit =
-    name.trim().length >= 3 &&
-    description.trim().length >= 10 &&
-    category.length > 0 &&
-    location.length > 0 &&
-    rules.length >= MIN_RULES &&
-    purpose.trim().length >= 10 &&
-    !createMutation.isPending;
-
-  const submit = () => {
-    if (!canSubmit) return;
-    createMutation.mutate(
-      {
-        name: name.trim(),
-        description: description.trim(),
-        category,
-        location,
-        rules,
-        purpose: purpose.trim(),
-        proposedAdmins,
-        image,
-      },
-      {
-        onSuccess: () => {
-          toast.success("تم إرسال طلب إنشاء الفريق التطوعي. بانتظار موافقة الإدارة.", "تم الإرسال");
-          router.back();
-        },
-        onError: () => toast.error("تعذر إرسال الطلب. حاول مرة أخرى."),
-      },
-    );
+  const submit = async () => {
+    if (!canSubmit) {
+      toast.error("أكمل الاسم والوصف والهدف واختر تصنيفاً واحداً على الأقل وأضف قانوناً.");
+      return;
+    }
+    try {
+      const group = await mutation.mutateAsync({ name: name.trim(), description: description.trim(), categories, location: location.trim(), rules: cleanRules, purpose: purpose.trim(), invitedUsers, requiresPostApproval, image, cover });
+      toast.success("تم إرسال طلب إنشاء الفريق لإدارة جود.");
+      router.replace({ pathname: "/groups/[id]", params: { id: group.id } });
+    } catch {
+      toast.error("تعذر إرسال طلب إنشاء الفريق. تحقق من البيانات وحاول مجدداً.");
+    }
   };
 
   return (
-    <KeyboardAvoider className="flex-1">
-      <Container
-        scrollable
-        className="bg-light-100 dark:bg-dark-300"
-        scrollViewProps={{ contentContainerStyle: { paddingBottom: 36 } }}
-      >
-        <MenuPageHeader title="إنشاء فريق تطوعي" />
+    <Container scrollable className="bg-light-100 px-4 dark:bg-dark-300">
+      <MenuPageHeader title="إنشاء فريق تطوعي" />
+      <View className="gap-4 pb-10">
+        <Card padding="md" className="gap-4 border-gray-200 dark:border-dark-400">
+          <GroupImagePicker image={image} onChange={setImage} label="شعار الفريق" hint="يظهر بجانب اسم الفريق وفي نتائج البحث." />
+          <GroupImagePicker image={cover} onChange={setCover} label="خلفية الفريق" hint="صورة عريضة تظهر أعلى صفحة الفريق." cover />
+        </Card>
 
-        <View className="gap-3 px-4">
-          <Card padding="md" className="gap-1 border-gray-200 dark:border-dark-400">
-            <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-              طلب إنشاء، وليس إنشاءً فورياً
-            </Text>
-            <Text size="2xs" className="leading-5 text-gray-500 dark:text-gray-300">
-              تُراجع الإدارة كل طلب قبل نشر المجموعة. ستظهر لك ضمن «مجموعاتي» بحالة
-              «بانتظار الموافقة» حتى تتم الموافقة.
-            </Text>
-          </Card>
+        <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
+          <Text weight="semibold" size="sm">معلومات الفريق</Text>
+          <Input fullWidth value={name} onChangeText={setName} placeholder="اسم الفريق التطوعي" maxLength={120} showStatusIcon={false} />
+          <Input fullWidth value={description} onChangeText={setDescription} placeholder="وصف الفريق" multiline maxLength={2000} showStatusIcon={false} />
+          <Input fullWidth value={purpose} onChangeText={setPurpose} placeholder="ما الهدف من إنشاء هذا الفريق؟" multiline maxLength={1000} showStatusIcon={false} />
+          <Input fullWidth value={location} onChangeText={setLocation} placeholder="الموقع أو المحافظة (اختياري)" maxLength={255} showStatusIcon={false} />
+        </Card>
 
-          <Card padding="lg" className="gap-3 border-gray-200 dark:border-dark-400">
-            <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-              معلومات المجموعة
-            </Text>
+        <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
+          <Text weight="semibold" size="sm">توجهات الفريق</Text>
+          <Text size="2xs" className="text-gray-500 dark:text-gray-300">يمكن اختيار أكثر من تصنيف.</Text>
+          <View className="flex-row-reverse flex-wrap gap-2">
+            {GROUP_CATEGORIES.map((category) => {
+              const selected = categories.includes(category);
+              return <Pressable key={category} onPress={() => toggleCategory(category)} className={`flex-row-reverse items-center gap-1 rounded-full border px-3 py-2 ${selected ? "border-primary-400 bg-primary-400/10" : "border-gray-200 dark:border-dark-400"}`}>
+                {selected ? <Check size={13} color="#16A34A" /> : null}<Text size="2xs" className={selected ? "text-primary-400" : "text-gray-600 dark:text-gray-300"}>{category}</Text>
+              </Pressable>;
+            })}
+          </View>
+        </Card>
 
-            <GroupImagePicker image={image} onChange={setImage} />
+        <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
+          <View className="flex-row-reverse items-center justify-between"><Text weight="semibold" size="sm">قوانين الفريق</Text><Pressable onPress={() => setRules((current) => [...current, ""])} className="flex-row-reverse items-center gap-1"><Plus size={15} color="#16A34A" /><Text size="2xs" className="text-primary-400">إضافة قانون</Text></Pressable></View>
+          {rules.map((rule, index) => <View key={`rule-${index}`} className="flex-row-reverse items-center gap-2"><View className="flex-1"><Input fullWidth value={rule} onChangeText={(value) => updateRule(index, value)} placeholder={`القانون ${index + 1}`} maxLength={300} showStatusIcon={false} /></View><Pressable onPress={() => removeRule(index)} hitSlop={8}><Trash2 size={17} color="#E5484D" /></Pressable></View>)}
+        </Card>
 
-            <Input
-              fullWidth
-              showStatusIcon={false}
-              value={name}
-              onChangeText={setName}
-              placeholder="اسم المجموعة"
-              maxLength={80}
-            />
-            <Input
-              fullWidth
-              multiline
-              showStatusIcon={false}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="وصف مختصر لهدف المجموعة"
-              maxLength={500}
-            />
+        <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
+          <Text weight="semibold" size="sm">دعوة أعضاء</Text>
+          <Text size="2xs" className="text-gray-500 dark:text-gray-300">اختيارية. ابحث بالاسم أو اسم المستخدم أو البريد. أنت المالك ومدير الفريق بشكل افتراضي.</Text>
+          <Button fullWidth variant="tertiary" onPress={() => setPickerOpen(true)}><UsersRound size={16} />{invitedUsers.length > 0 ? `تم اختيار ${invitedUsers.length} أعضاء` : "اختيار مستخدمين للدعوة"}</Button>
+        </Card>
 
-            <Pressable onPress={() => setIsCategoryOpen(true)}>
-              <View pointerEvents="none">
-                <Input
-                  fullWidth
-                  editable={false}
-                  showStatusIcon={false}
-                  rightIcon={<Users size={16} color={primaryColor} strokeWidth={2.25} />}
-                  value={category}
-                  placeholder="التصنيف"
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
-            </Pressable>
+        <Card padding="md" className="gap-3 border-gray-200 dark:border-dark-400">
+          <Text weight="semibold" size="sm">مراجعة منشورات الأعضاء</Text>
+          <Pressable onPress={() => setRequiresPostApproval((value) => !value)} className={`flex-row-reverse items-center justify-between rounded-xl border p-3 ${requiresPostApproval ? "border-primary-400 bg-primary-400/5" : "border-gray-200 dark:border-dark-400"}`}>
+            <View className="flex-1 pe-3"><Text size="xs" weight="medium">يجب موافقة مدير الفريق قبل النشر</Text><Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">إذا فعلته، منشورات الأعضاء تبقى قيد المراجعة حتى تقبلها. منشوراتك كمالك تنشر مباشرة.</Text></View>
+            <View className={`h-6 w-11 rounded-full p-1 ${requiresPostApproval ? "bg-primary-400" : "bg-gray-300"}`}><View className={`size-4 rounded-full bg-white ${requiresPostApproval ? "self-end" : "self-start"}`} /></View>
+          </Pressable>
+        </Card>
 
-            <Pressable onPress={() => setIsCityOpen(true)}>
-              <View pointerEvents="none">
-                <Input
-                  fullWidth
-                  editable={false}
-                  showStatusIcon={false}
-                  rightIcon={<MapPin size={16} color={primaryColor} strokeWidth={2.25} />}
-                  value={location}
-                  placeholder="المحافظة"
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
-            </Pressable>
-          </Card>
-
-          <Card padding="md" className="gap-1 border-gray-200 dark:border-dark-400">
-            <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-              فريق تطوعي عام
-            </Text>
-            <Text size="2xs" className="leading-5 text-gray-500 dark:text-gray-300">
-              جميع الفرق التطوعية في جود عامة بعد موافقة الإدارة، والانضمام إليها مباشر للمستخدم المسجل بعد الموافقة على القوانين.
-            </Text>
-          </Card>
-
-          <Card padding="lg" className="gap-2 border-gray-200 dark:border-dark-400">
-            <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-              قوانين المجموعة
-            </Text>
-            <Text size="2xs" className="leading-5 text-gray-500 dark:text-gray-300">
-              اكتب كل قانون في سطر مستقل. يوافق عليها الأعضاء قبل الانضمام.
-            </Text>
-            <Input
-              fullWidth
-              multiline
-              showStatusIcon={false}
-              value={rulesText}
-              onChangeText={setRulesText}
-              placeholder={"احترم جميع الأعضاء.\nلا تنشر طلبات تبرع شخصية."}
-              maxLength={1000}
-            />
-            {rules.length > 0 ? (
-              <Text size="2xs" className="text-primary-400">
-                {rules.length} قانون
-              </Text>
-            ) : null}
-          </Card>
-
-          <Card padding="lg" className="gap-3 border-gray-200 dark:border-dark-400">
-            <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-              معلومات للمراجعة
-            </Text>
-            <Text size="2xs" className="leading-5 text-gray-500 dark:text-gray-300">
-              تظهر للإدارة فقط، ولا تُعرض للأعضاء.
-            </Text>
-            <Input
-              fullWidth
-              multiline
-              showStatusIcon={false}
-              value={purpose}
-              onChangeText={setPurpose}
-              placeholder="لماذا تريد إنشاء هذه المجموعة؟"
-              maxLength={500}
-            />
-            <View className="gap-2 border-t border-gray-100 pt-3 dark:border-dark-400">
-              <Text size="2xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-                المشرفون
-              </Text>
-              <Text size="2xs" className="leading-5 text-gray-500 dark:text-gray-300">
-                أنت <Text size="2xs" weight="semibold" className="text-primary-400">مالك</Text> المجموعة.
-                يمكنك اختيار مشرفين يساعدونك في إدارتها.
-              </Text>
-
-              <Pressable
-                onPress={() => setIsAdminsOpen(true)}
-                accessibilityRole="button"
-                accessibilityLabel="اختر المشرفين"
-                className="flex-row-reverse items-center justify-between rounded-xl border border-gray-200 p-3 dark:border-dark-400"
-              >
-                <Text size="xs" className="text-gray-500 dark:text-gray-300">
-                  {proposedAdmins.length > 0
-                    ? `${proposedAdmins.length} مشرف مُختار`
-                    : "اختر المشرفين (اختياري)"}
-                </Text>
-                <Users size={16} color={primaryColor} strokeWidth={2.25} />
-              </Pressable>
-
-              {proposedAdmins.length > 0 ? (
-                <View className="flex-row-reverse flex-wrap gap-2">
-                  {proposedAdmins.map((admin) => (
-                    <Pressable
-                      key={admin.id}
-                      onPress={() =>
-                        setProposedAdmins((current) =>
-                          current.filter((item) => item.id !== admin.id),
-                        )
-                      }
-                      accessibilityRole="button"
-                      accessibilityLabel={`إزالة ${admin.name}`}
-                      className="flex-row-reverse items-center gap-1.5 rounded-full bg-primary-400/10 px-3 py-1.5"
-                    >
-                      <Text size="2xs" className="text-primary-400">
-                        {admin.name}
-                      </Text>
-                      <X size={11} color={primaryColor} strokeWidth={2.5} />
-                    </Pressable>
-                  ))}
-                </View>
-              ) : null}
-            </View>
-          </Card>
-
-          <Button
-            fullWidth
-            loading={createMutation.isPending}
-            disabled={!canSubmit}
-            onPress={submit}
-          >
-            إرسال الطلب
-          </Button>
-        </View>
-      </Container>
-
-      <SelectionModal
-        visible={isCategoryOpen}
-        title="اختر التصنيف"
-        options={categoryOptions}
-        selectedValue={category}
-        onSelect={(value) => {
-          setCategory(value);
-          setIsCategoryOpen(false);
-        }}
-        onClose={() => setIsCategoryOpen(false)}
-      />
-
-      <SelectionModal
-        visible={isCityOpen}
-        title="اختر المحافظة"
-        options={cityOptions}
-        selectedValue={location}
-        onSelect={(value) => {
-          setLocation(value);
-          setIsCityOpen(false);
-        }}
-        onClose={() => setIsCityOpen(false)}
-      />
-
-      <AdminsPickerModal
-        visible={isAdminsOpen}
-        selected={proposedAdmins}
-        onClose={() => setIsAdminsOpen(false)}
-        onConfirm={(next) => {
-          setProposedAdmins(next);
-          setIsAdminsOpen(false);
-        }}
-      />
-    </KeyboardAvoider>
+        <Button fullWidth loading={mutation.isPending} disabled={!canSubmit} onPress={() => void submit()}>إرسال طلب إنشاء الفريق</Button>
+        {!canSubmit && !mutation.isPending ? <Text size="2xs" className="text-center text-gray-500 dark:text-gray-300">الحقول المطلوبة: الاسم، الوصف، الهدف، تصنيف واحد على الأقل، وقانون واحد. الدعوات والصور والموقع اختيارية.</Text> : null}
+      </View>
+      <AdminsPickerModal visible={pickerOpen} selected={invitedUsers} onClose={() => setPickerOpen(false)} onConfirm={(users) => { setInvitedUsers(users); setPickerOpen(false); }} />
+    </Container>
   );
 }

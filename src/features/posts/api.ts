@@ -10,10 +10,10 @@ import type {
 } from "./types";
 
 export const POST_TYPE_TO_API_TYPE: Record<CreatePostType, ApiPostType> = {
-  volunteer: "volunteer_opportunity", help: "help_request", service: "service_offer",
+  volunteer: "volunteer_opportunity", help: "help_request", service: "service_offer", awareness: "awareness", poll: "poll", campaign: "donation_campaign",
 };
 export const API_TYPE_TO_POST_TYPE: Partial<Record<ApiPostType, CreatePostType>> = {
-  volunteer_opportunity: "volunteer", help_request: "help", service_offer: "service",
+  volunteer_opportunity: "volunteer", help_request: "help", service_offer: "service", awareness: "awareness", poll: "poll", donation_campaign: "campaign",
 };
 
 const ENDPOINTS = {
@@ -48,6 +48,12 @@ const toCreatePostFormData = async (input: CreatePostInput) => {
   if (input.cityId != null) form.append("cityId", input.cityId);
   if (input.categoryId != null) form.append("categoryId", input.categoryId);
   if (input.audience != null) form.append("audience", input.audience);
+  if (input.groupId != null) form.append("groupId", input.groupId);
+  if (input.campaignId != null) form.append("campaignId", input.campaignId);
+  if (input.pollQuestion != null) form.append("pollQuestion", input.pollQuestion);
+  input.pollOptions?.forEach((option, index) => form.append(`pollOptions[${index}]`, option));
+  if (input.allowsMultipleChoices != null) form.append("allowsMultipleChoices", input.allowsMultipleChoices ? "1" : "0");
+  if (input.pollEndsAt != null) form.append("pollEndsAt", input.pollEndsAt);
   form.append("saveAsDraft", input.saveAsDraft ? "1" : "0");
   for (const image of input.images ?? []) await appendImage(form, "images[]", image);
   return form;

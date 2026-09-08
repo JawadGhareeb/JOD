@@ -1,7 +1,7 @@
 import { HomePostTypeEnum } from "@/src/constants/global";
 
-export type CreatePostType = "volunteer" | "help" | "service";
-export type ApiPostType = "volunteer_opportunity" | "donation_campaign" | "help_request" | "service_offer";
+export type CreatePostType = "volunteer" | "help" | "service" | "awareness" | "poll" | "campaign";
+export type ApiPostType = "volunteer_opportunity" | "donation_campaign" | "help_request" | "service_offer" | "awareness" | "poll";
 export type HomePostType = HomePostTypeEnum;
 
 // Classifies *who the content is for* (general vs. student) — independent of
@@ -114,6 +114,12 @@ export interface CreatePostInput {
   type: ApiPostType; title?: string | null; details?: string | null; cityId?: string | null; categoryId?: string | null; saveAsDraft?: boolean;
   audience?: ContentAudience;
   images?: MobileImageFile[];
+  groupId?: string | null;
+  campaignId?: string | null;
+  pollQuestion?: string | null;
+  pollOptions?: string[];
+  allowsMultipleChoices?: boolean;
+  pollEndsAt?: string | null;
 }
 export interface UpdatePostInput {
   type?: ApiPostType; title?: string | null; details?: string | null; cityId?: string | null; categoryId?: string | null;

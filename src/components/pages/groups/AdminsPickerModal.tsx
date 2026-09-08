@@ -70,7 +70,7 @@ export function AdminsPickerModal({
         >
           <View className="flex-row-reverse items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-dark-400">
             <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
-              اختر المشرفين
+              دعوة أعضاء للفريق
             </Text>
             <Pressable
               onPress={onClose}
@@ -88,7 +88,7 @@ export function AdminsPickerModal({
               showStatusIcon={false}
               value={search}
               onChangeText={setSearch}
-              placeholder="ابحث بالاسم أو اسم المستخدم"
+              placeholder="ابحث بالاسم أو اسم المستخدم أو البريد"
               placeholderTextColor="#9CA3AF"
             />
             <Text size="2xs" className="text-gray-500 dark:text-gray-300">
