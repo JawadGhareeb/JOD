@@ -8,6 +8,8 @@ export interface CampaignApplication {
   status: string;
   phone: string | null;
   city: string | null;
+  withdrawalReason: string | null;
+  rejectionReason: string | null;
   submittedAt: string | null;
   updatedAt: string | null;
 }

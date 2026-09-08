@@ -19,8 +19,8 @@ export const applicationsApi = {
     const response = await apiClient.get<ApiEnvelope<CampaignApplication>>(`/me/applications/${id}`);
     return response.data.data;
   },
-  withdraw: async (id: string) => {
-    const response = await apiClient.delete<ApiEnvelope<CampaignApplication>>(`/me/applications/${id}`);
+  withdraw: async (id: string, reason: string) => {
+    const response = await apiClient.delete<ApiEnvelope<CampaignApplication>>(`/me/applications/${id}`, { data: { reason } });
     return response.data.data;
   },
 };

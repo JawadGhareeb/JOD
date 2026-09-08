@@ -5,6 +5,7 @@ import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
 import Input from "@/src/components/ui/Input";
+import Dialog from "@/src/components/ui/Dialog";
 import Text from "@/src/components/ui/Text";
 import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useAuthStatus } from "@/src/features/auth/queries";
@@ -52,6 +53,7 @@ export default function HelpOfferDetailsPage() {
   const received = useConfirmReceived();
   const statusUpdate = useUpdateHelpRequestStatus();
   const [reason, setReason] = useState("");
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const busy = accept.isPending || reject.isPending || contact.isPending || agree.isPending || cancel.isPending || provided.isPending || received.isPending || statusUpdate.isPending;
 
   const run = async (promise: Promise<unknown>, message: string) => {
@@ -60,6 +62,19 @@ export default function HelpOfferDetailsPage() {
       toast.success(message);
     } catch {
       toast.error("تعذر تنفيذ الإجراء. حدّث البيانات وحاول مجدداً.");
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!id || reason.trim().length < 3) return;
+    try {
+      await cancel.mutateAsync({ id, reason: reason.trim() });
+      setReason("");
+      setCancelDialogOpen(false);
+      toast.success("تم إلغاء العرض.");
+      await query.refetch();
+    } catch {
+      toast.error("تعذر إلغاء عرض المساعدة. حدّث البيانات وحاول مجدداً.");
     }
   };
 
@@ -83,6 +98,8 @@ export default function HelpOfferDetailsPage() {
           <Text size="xs">النوع: {offer.type}</Text>
           {offer.amount ? <Text size="xs">المبلغ: {offer.amount.toLocaleString("ar-SY")} ل.س</Text> : null}
           {offer.description ? <Text size="xs">{offer.description}</Text> : null}
+          {offer.cancelReason ? <View className="mt-2 rounded-xl border border-error-300/20 bg-error-300/5 p-3"><Text size="2xs" className="text-gray-500 dark:text-gray-300">سبب الإلغاء</Text><Text size="xs" className="mt-1 text-error-300">{offer.cancelReason}</Text></View> : null}
+          {offer.rejectionReason ? <View className="mt-2 rounded-xl border border-error-300/20 bg-error-300/5 p-3"><Text size="2xs" className="text-gray-500 dark:text-gray-300">سبب الرفض</Text><Text size="xs" className="mt-1 text-error-300">{offer.rejectionReason}</Text></View> : null}
           {offer.contactMethod || offer.contactValue ? (
             <View className="mt-2 rounded-xl bg-primary-400/5 p-3">
               <Text size="2xs" className="text-gray-500 dark:text-gray-300">بيانات التواصل الخاصة</Text>
@@ -111,14 +128,12 @@ export default function HelpOfferDetailsPage() {
           {offer.can.confirmProvided ? <Button fullWidth disabled={busy} onPress={() => void run(provided.mutateAsync({ id }), "تم تأكيد تقديم المساعدة.")}>تأكيد أنني قدمت المساعدة</Button> : null}
           {offer.can.confirmReceived ? <Button fullWidth disabled={busy} onPress={() => void run(received.mutateAsync({ id }), "تم تأكيد استلام المساعدة.")}>تأكيد الاستلام أو الاستفادة</Button> : null}
           {offer.post.helpStatus === "fulfilled" && !isHelper ? <Button fullWidth variant="tertiary" disabled={busy} onPress={() => void run(statusUpdate.mutateAsync({ postId: offer.postId, status: "open" }), "تم إعادة فتح طلب المساعدة.")}>إعادة فتح طلب المساعدة</Button> : null}
-          {activeCancelable ? (
-            <Card padding="md" className="gap-2 border-error-300/20">
-              <Input fullWidth value={reason} onChangeText={setReason} multiline placeholder="سبب الإلغاء" maxLength={2000} showStatusIcon={false} />
-              <Button fullWidth variant="tertiary" disabled={busy || !reason.trim()} onPress={() => void run(cancel.mutateAsync({ id, reason: reason.trim() }), "تم إلغاء العرض.")}>إلغاء عرض المساعدة</Button>
-            </Card>
-          ) : null}
+          {activeCancelable ? <Button fullWidth variant="tertiary" disabled={busy} onPress={() => setCancelDialogOpen(true)}>إلغاء عرض المساعدة</Button> : null}
         </View>
       </View>
+      <Dialog visible={cancelDialogOpen} title="إلغاء عرض المساعدة" onClose={() => { if (!cancel.isPending) setCancelDialogOpen(false); }} cancelable={!cancel.isPending}>
+        <View className="gap-3"><Text size="xs" className="leading-6 text-gray-500 dark:text-gray-300">اكتب سبب الإلغاء. سيظهر السبب للطرف الآخر ضمن تفاصيل العرض.</Text><Input fullWidth value={reason} onChangeText={setReason} multiline placeholder="سبب الإلغاء" maxLength={2000} showStatusIcon={false} /><View className="flex-row-reverse gap-2"><View className="flex-1"><Button fullWidth variant="tertiary" disabled={cancel.isPending} onPress={() => setCancelDialogOpen(false)}>رجوع</Button></View><View className="flex-1"><Button fullWidth loading={cancel.isPending} disabled={cancel.isPending || reason.trim().length < 3} onPress={() => void handleCancel()}>تأكيد الإلغاء</Button></View></View></View>
+      </Dialog>
     </Container>
   );
 }

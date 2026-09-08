@@ -1,7 +1,10 @@
-import { Alert, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
+import Input from "@/src/components/ui/Input";
+import Dialog from "@/src/components/ui/Dialog";
 import Text from "@/src/components/ui/Text";
 import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useApplication, useWithdrawApplication } from "@/src/features/applications/queries";
@@ -17,23 +20,22 @@ export default function ApplicationDetailsPage() {
   const toast = useToast();
   const query = useApplication(id);
   const withdraw = useWithdrawApplication();
+  const [withdrawReason, setWithdrawReason] = useState("");
+  const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const item = query.data;
   const canWithdraw = !!item && ["pending", "under_review", "accepted", "approved", "contacting"].includes(item.status);
 
-  const handleWithdraw = () => {
-    if (!item) return;
-    Alert.alert("سحب الطلب", `هل تريد سحب طلبك من «${item.campaignTitle}»؟`, [
-      { text: "إلغاء", style: "cancel" },
-      { text: "سحب الطلب", style: "destructive", onPress: async () => {
-        try {
-          await withdraw.mutateAsync(item.id);
-          toast.success("تم سحب طلب التطوع.", "تم السحب");
-          await query.refetch();
-        } catch (error) {
-          toast.error(error instanceof ApiClientError ? error.message : "تعذر سحب الطلب.", "حدث خطأ");
-        }
-      } },
-    ]);
+  const handleWithdraw = async () => {
+    if (!item || withdrawReason.trim().length < 3) return;
+    try {
+      await withdraw.mutateAsync({ id: item.id, reason: withdrawReason.trim() });
+      setWithdrawReason("");
+      setWithdrawDialogOpen(false);
+      toast.success("تم سحب طلب التطوع.", "تم السحب");
+      await query.refetch();
+    } catch (error) {
+      toast.error(error instanceof ApiClientError ? error.message : "تعذر سحب الطلب.", "حدث خطأ");
+    }
   };
 
   return <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300"><MenuPageHeader title="تفاصيل الطلب" /><ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
@@ -50,10 +52,20 @@ export default function ApplicationDetailsPage() {
           <Row label="تاريخ التقديم" value={item.submittedAt ? new Date(item.submittedAt).toLocaleString("ar") : "-"} />
           <Row label="آخر تحديث" value={item.updatedAt ? new Date(item.updatedAt).toLocaleString("ar") : "-"} />
         </View>
+        {item.withdrawalReason ? <View className="mt-4 rounded-xl border border-error-300/20 bg-error-300/5 p-3"><Text size="2xs" className="text-gray-500 dark:text-gray-300">سبب سحب الطلب</Text><Text size="xs" className="mt-1 text-error-300">{item.withdrawalReason}</Text></View> : null}
+        {item.rejectionReason ? <View className="mt-4 rounded-xl border border-error-300/20 bg-error-300/5 p-3"><Text size="2xs" className="text-gray-500 dark:text-gray-300">سبب رفض الطلب</Text><Text size="xs" className="mt-1 text-error-300">{item.rejectionReason}</Text></View> : null}
       </Card>
-      <View className="gap-2">{canWithdraw ? <Button fullWidth loading={withdraw.isPending} disabled={withdraw.isPending} onPress={handleWithdraw}>سحب الطلب</Button> : null}{item.postId ? <Button fullWidth variant="tertiary" onPress={() => router.push({ pathname: "/posts/[id]", params: { id: item.postId! } })}>فتح فرصة التطوع</Button> : item.campaignId ? <Button fullWidth variant="tertiary" onPress={() => router.push({ pathname: "/campaigns/[id]", params: { id: item.campaignId! } })}>فتح الحملة</Button> : null}</View>
+      <View className="gap-2">{canWithdraw ? <Button fullWidth variant="tertiary" disabled={withdraw.isPending} onPress={() => setWithdrawDialogOpen(true)}>سحب الطلب</Button> : null}{item.postId ? <Button fullWidth variant="tertiary" onPress={() => router.push({ pathname: "/posts/[id]", params: { id: item.postId! } })}>فتح فرصة التطوع</Button> : item.campaignId ? <Button fullWidth variant="tertiary" onPress={() => router.push({ pathname: "/campaigns/[id]", params: { id: item.campaignId! } })}>فتح الحملة</Button> : null}</View>
     </> : null}
-  </ScrollView></View>;
+  </ScrollView>
+  <Dialog visible={withdrawDialogOpen} title="سحب طلب التطوع" onClose={() => { if (!withdraw.isPending) setWithdrawDialogOpen(false); }} cancelable={!withdraw.isPending}>
+    <View className="gap-3">
+      <Text size="xs" className="leading-6 text-gray-500 dark:text-gray-300">اكتب سبب سحب الطلب. سيظهر السبب للجهة التي استلمت طلب التطوع.</Text>
+      <Input fullWidth value={withdrawReason} onChangeText={setWithdrawReason} multiline placeholder="سبب سحب طلب التطوع" maxLength={1000} showStatusIcon={false} />
+      <View className="flex-row-reverse gap-2"><View className="flex-1"><Button fullWidth variant="tertiary" disabled={withdraw.isPending} onPress={() => setWithdrawDialogOpen(false)}>رجوع</Button></View><View className="flex-1"><Button fullWidth loading={withdraw.isPending} disabled={withdraw.isPending || withdrawReason.trim().length < 3} onPress={() => void handleWithdraw()}>تأكيد السحب</Button></View></View>
+    </View>
+  </Dialog>
+  </View>;
 }
 
 function Row({ label, value }: { label: string; value: string }) {
