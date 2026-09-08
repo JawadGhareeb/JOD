@@ -17,7 +17,7 @@ export const personalizationApi = {
     return response.data.data;
   },
   skipOnboarding: async (): Promise<PersonalizationProfile> => personalizationApi.completeOnboarding({}),
-  updatePreferences: async (input: { intent?: CompleteOnboardingInput["intent"]; preferredCity?: string | null; remoteHelpEnabled?: boolean }): Promise<PersonalizationProfile> => {
+  updatePreferences: async (input: { intent?: CompleteOnboardingInput["intent"]; preferredCity?: string | null; preferredCities?: string[]; remoteHelpEnabled?: boolean }): Promise<PersonalizationProfile> => {
     const response = await apiClient.patch<ApiEnvelope<PersonalizationProfile>>("/me/preferences", input);
     return response.data.data;
   },

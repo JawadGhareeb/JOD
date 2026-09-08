@@ -17,6 +17,8 @@ type SelectionModalProps = {
   description?: string;
   options: SelectionOption[];
   selectedValue?: string;
+  selectedValues?: string[];
+  multiple?: boolean;
   onSelect: (value: string) => void;
   onClose: () => void;
 };
@@ -29,6 +31,8 @@ export default function SelectionModal({
   description,
   options,
   selectedValue,
+  selectedValues = [],
+  multiple = false,
   onSelect,
   onClose,
 }: SelectionModalProps) {
@@ -80,7 +84,7 @@ export default function SelectionModal({
 
             <View className="gap-2">
               {options.map((option) => {
-                const isSelected = selectedValue === option.value;
+                const isSelected = multiple ? selectedValues.includes(option.value) : selectedValue === option.value;
 
                 return (
                   <Pressable

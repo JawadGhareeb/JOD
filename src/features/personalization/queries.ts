@@ -24,7 +24,7 @@ export function useCompleteOnboarding() {
     onSuccess: (data, input) => {
       queryClient.setQueryData(personalizationKeys.profile(), data);
       queryClient.invalidateQueries({ queryKey: personalizationKeys.feed("for_you") });
-      if ("preferredCity" in input) queryClient.invalidateQueries({ queryKey: personalizationKeys.feed("nearby") });
+      if ("preferredCity" in input || "preferredCities" in input) queryClient.invalidateQueries({ queryKey: personalizationKeys.feed("nearby") });
     },
   });
 }
@@ -46,7 +46,7 @@ export function useUpdatePersonalization() {
     mutationFn: async (input: UpdatePersonalizationInput) => {
       await personalizationApi.updatePreferences({
         ...(input.intent ? { intent: input.intent } : {}),
-        preferredCity: input.preferredCity,
+        preferredCities: input.preferredCities,
         remoteHelpEnabled: input.remoteHelpEnabled,
       });
       await personalizationApi.updateInterests(input.categoryIds);

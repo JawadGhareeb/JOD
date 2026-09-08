@@ -26,6 +26,7 @@ export interface PersonalizationProfile {
   missingFields: PersonalizationMissingField[];
   intent: UserIntent | null;
   preferredCity: string | null;
+  preferredCities: string[];
   remoteHelpEnabled: boolean;
   interests: UserInterest[];
   capabilities: PersonalizationCapability[];
@@ -36,6 +37,7 @@ export interface CompleteOnboardingInput {
   categoryIds?: string[];
   capabilityIds?: string[];
   preferredCity?: string | null;
+  preferredCities?: string[];
   remoteHelpEnabled?: boolean;
 }
 
@@ -43,7 +45,8 @@ export interface UpdatePersonalizationInput {
   intent: UserIntent | null;
   categoryIds: string[];
   capabilityIds: string[];
-  preferredCity: string | null;
+  preferredCity?: string | null;
+  preferredCities: string[];
   remoteHelpEnabled: boolean;
 }
 

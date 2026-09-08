@@ -5,9 +5,11 @@ import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
 import Input from "@/src/components/ui/Input";
+import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import { SkeletonBlock } from "@/src/components/ui/SkeletonBlock";
 import Text from "@/src/components/ui/Text";
 import { ApiClientError } from "@/src/lib/api-client";
+import { useCities } from "@/src/features/lookups/queries";
 import { usePersonalizationOptions, usePersonalizationProfile, useUpdatePersonalization } from "@/src/features/personalization/queries";
 import type { PersonalizationMissingField, UserIntent } from "@/src/features/personalization/types";
 import { useToast } from "@/src/providers/ToastProvider";
@@ -40,7 +42,7 @@ function Choice({ selected, label, onPress }: { selected: boolean; label: string
 const missingLabels: Record<PersonalizationMissingField, string> = {
   intent: "طريقة استخدام جود",
   interests: "الاهتمامات",
-  preferredCity: "المدينة المفضلة",
+  preferredCity: "مدينة",
   capabilities: "قدرات المساعدة",
 };
 
@@ -58,10 +60,13 @@ export function PersonalizationSettingsScreen() {
   const [intent, setIntent] = useState<UserIntent | null>(null);
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [capabilityIds, setCapabilityIds] = useState<string[]>([]);
-  const [city, setCity] = useState("");
+  const [cities, setCities] = useState<string[]>([]);
+  const [isCityModalOpen, setIsCityModalOpen] = useState(false);
   const [remoteHelpEnabled, setRemoteHelpEnabled] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const categories = useMemo(() => optionsQuery.data?.categories ?? [], [optionsQuery.data]);
+  const citiesQuery = useCities();
+  const cityOptions: SelectionOption[] = useMemo(() => (citiesQuery.data ?? []).map((item) => ({ label: item.name, value: item.name })), [citiesQuery.data]);
   const showCapabilities = intent !== "receiver";
 
   useEffect(() => {
@@ -69,7 +74,7 @@ export function PersonalizationSettingsScreen() {
     setIntent(profileQuery.data.intent);
     setCategoryIds(profileQuery.data.interests.filter((item) => item.selectedByUser).map((item) => item.category.id));
     setCapabilityIds(profileQuery.data.capabilities.map((item) => item.id));
-    setCity(profileQuery.data.preferredCity ?? "");
+    setCities(profileQuery.data.preferredCities?.length ? profileQuery.data.preferredCities : profileQuery.data.preferredCity ? [profileQuery.data.preferredCity] : []);
     setRemoteHelpEnabled(profileQuery.data.remoteHelpEnabled);
     setHydrated(true);
   }, [hydrated, profileQuery.data]);
@@ -104,7 +109,7 @@ export function PersonalizationSettingsScreen() {
         intent,
         categoryIds,
         capabilityIds: showCapabilities ? capabilityIds : [],
-        preferredCity: city.trim() || null,
+        preferredCities: cities,
         remoteHelpEnabled,
       });
       toast.success("تم تحديث تفضيلات المحتوى وستنعكس على الاقتراحات القادمة.");
@@ -244,13 +249,11 @@ export function PersonalizationSettingsScreen() {
         ) : null}
 
         <Card padding="md" className="gap-4 border-gray-200 dark:border-dark-400">
-          <Input
-            label={`المدينة المفضلة${missing.includes("preferredCity") ? " • غير محددة" : ""}`}
-            value={city}
-            onChangeText={setCity}
-            placeholder="مثال: دمشق"
-            fullWidth
-          />
+          <Pressable onPress={() => setIsCityModalOpen(true)} accessibilityRole="button" accessibilityLabel="اختر مدينة">
+            <View pointerEvents="none">
+              <Input label="مدينة" value={cities.join("، ")} editable={false} showStatusIcon={false} placeholder="اختر مدينة أو أكثر" fullWidth />
+            </View>
+          </Pressable>
           <View className="flex-row-reverse items-center justify-between">
             <View className="flex-1 gap-1">
               <Text size="sm" weight="semibold">
@@ -267,6 +270,7 @@ export function PersonalizationSettingsScreen() {
         <Button fullWidth loading={updateMutation.isPending} disabled={updateMutation.isPending} onPress={save}>
           حفظ التغييرات
         </Button>
+        <SelectionModal visible={isCityModalOpen} title="اختر المدن" description="يمكنك اختيار أكثر من مدينة لتخصيص المحتوى القريب منك." options={cityOptions} multiple selectedValues={cities} onSelect={(value) => setCities((current) => current.includes(value) ? current.filter((city) => city !== value) : [...current, value])} onClose={() => setIsCityModalOpen(false)} />
       </View>
     </Container>
   );

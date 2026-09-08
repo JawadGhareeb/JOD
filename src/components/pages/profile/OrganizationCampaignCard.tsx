@@ -203,6 +203,11 @@ export function OrganizationCampaignCard({ campaign }: { campaign: Campaign }) {
           </View>
         </View>
       </Pressable>
+      <View className="mt-2 flex-row-reverse">
+        <View className="rounded-full bg-primary-400/15 px-3 py-1">
+          <Text size="2xs" weight="medium" className="text-primary-400">حملة</Text>
+        </View>
+      </View>
 
       <View ref={contentRef} className="relative">
         <Pressable
