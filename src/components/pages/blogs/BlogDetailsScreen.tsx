@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
-import { Image, ScrollView, View } from "react-native";
+import { Image, Pressable, ScrollView, View } from "react-native";
 import Text from "@/src/components/ui/Text";
 import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
+import { FullScreenImageGallery } from "@/src/components/shared/FullScreenImageGallery";
 import { useArticle } from "@/src/features/articles/queries";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
 
@@ -11,6 +12,7 @@ export function BlogDetailsScreen() {
   const articleId = Array.isArray(id) ? id[0] : id;
   const query = useArticle(articleId);
   const article = query.data;
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const images = useMemo(() => {
     if (!article) return [];
     const mediaImages = [...(article.media ?? [])]
@@ -41,12 +43,19 @@ export function BlogDetailsScreen() {
           {images.length > 0 ? (
             <View className="mt-5 gap-3">
               {images.map((uri, index) => (
-                <Image
+                <Pressable
                   key={`${uri}-${index}`}
-                  source={{ uri }}
-                  className="h-56 w-full rounded-2xl bg-gray-100 dark:bg-dark-350"
-                  resizeMode="cover"
-                />
+                  onPress={() => setGalleryIndex(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`فتح صورة المقال ${index + 1}`}
+                  className="overflow-hidden rounded-2xl"
+                >
+                  <Image
+                    source={{ uri }}
+                    className="h-56 w-full bg-gray-100 dark:bg-dark-350"
+                    resizeMode="cover"
+                  />
+                </Pressable>
               ))}
             </View>
           ) : null}
@@ -54,6 +63,12 @@ export function BlogDetailsScreen() {
           <Text size="sm" className="mt-5 leading-8 text-dark-100 dark:text-light-50">{article.content}</Text>
         </ScrollView>
       )}
+      <FullScreenImageGallery
+        images={images}
+        visible={galleryIndex !== null}
+        initialIndex={galleryIndex ?? 0}
+        onClose={() => setGalleryIndex(null)}
+      />
     </View>
   );
 }

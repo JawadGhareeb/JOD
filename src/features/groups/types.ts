@@ -122,7 +122,7 @@ export interface CreateGroupInput {
   invitedUsers: GroupInviteCandidate[];
   requiresPostApproval: boolean;
   image: MediaUploadFile | null;
-  cover: MediaUploadFile | null;
+  cover?: MediaUploadFile | null;
 }
 export type UpdateGroupInput = Partial<CreateGroupInput>;
 

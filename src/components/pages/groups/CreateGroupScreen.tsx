@@ -63,7 +63,6 @@ const groupFormSchema = z.object({
   invitedUsers: z.array(inviteCandidateSchema).min(1, "اختر مستخدماً واحداً على الأقل لدعوته").max(30, "يمكن دعوة 30 مستخدماً كحد أقصى"),
   requiresPostApproval: z.boolean(),
   image: mediaFileSchema.nullable().refine((value) => value !== null, "شعار الفريق مطلوب"),
-  cover: mediaFileSchema.nullable().refine((value) => value !== null, "خلفية الفريق مطلوبة"),
 });
 
 type GroupFormInput = z.input<typeof groupFormSchema>;
@@ -80,6 +79,7 @@ export function CreateGroupScreen() {
     control,
     handleSubmit,
     setValue,
+    trigger,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<GroupFormInput, unknown, GroupFormValues>({
@@ -94,7 +94,6 @@ export function CreateGroupScreen() {
       invitedUsers: [],
       requiresPostApproval: false,
       image: null,
-      cover: null,
     },
     mode: "onSubmit",
     reValidateMode: "onChange",
@@ -105,7 +104,6 @@ export function CreateGroupScreen() {
   const invitedUsers = watch("invitedUsers");
   const requiresPostApproval = watch("requiresPostApproval");
   const image = watch("image") as MediaUploadFile | null;
-  const cover = watch("cover") as MediaUploadFile | null;
   const location = watch("location");
   const selectedLocationLabel = GOVERNORATE_OPTIONS.find((option) => option.value === location)?.label ?? "";
 
@@ -129,7 +127,7 @@ export function CreateGroupScreen() {
     setValue("rules", next, { shouldDirty: true, shouldValidate: true });
   };
 
-  const onSubmit = handleSubmit(
+  const submitValidForm = handleSubmit(
     async (values) => {
       try {
         const group = await mutation.mutateAsync({
@@ -142,7 +140,6 @@ export function CreateGroupScreen() {
           invitedUsers: values.invitedUsers as GroupInviteCandidate[],
           requiresPostApproval: values.requiresPostApproval,
           image: values.image as MediaUploadFile,
-          cover: values.cover as MediaUploadFile,
         });
         toast.success("تم إرسال طلب إنشاء الفريق لإدارة جود.");
         router.replace({ pathname: "/groups/[id]", params: { id: group.id } });
@@ -150,15 +147,21 @@ export function CreateGroupScreen() {
         toast.error("تعذر إرسال طلب إنشاء الفريق. تحقق من البيانات وحاول مجدداً.");
       }
     },
-    () => {
-      toast.error("راجع الحقول المطلوبة والمحددة باللون الأحمر.");
-    },
   );
+
+  const onSubmit = async () => {
+    const formIsValid = await trigger();
+    if (!formIsValid) {
+      toast.error("راجع الحقول المطلوبة والمحددة باللون الأحمر.");
+      return;
+    }
+    await submitValidForm();
+  };
 
   const busy = isSubmitting || mutation.isPending;
 
   return (
-    <Container scrollable className="bg-light-100 px-4 dark:bg-dark-300">
+    <Container scrollable className="bg-light-100 dark:bg-dark-300">
       <MenuPageHeader title="إنشاء فريق تطوعي" />
       <View className="gap-4 pb-10">
         <Card padding="md" className="gap-4 border-gray-200 dark:border-dark-400">
@@ -170,16 +173,6 @@ export function CreateGroupScreen() {
               hint="مطلوب، ويظهر بجانب اسم الفريق وفي نتائج البحث."
             />
             {errors.image?.message ? <Text size="2xs" className="mt-1 text-error-300">{errors.image.message}</Text> : null}
-          </View>
-          <View>
-            <GroupImagePicker
-              image={cover}
-              onChange={(file) => setValue("cover", file, { shouldDirty: true, shouldValidate: true })}
-              label="خلفية الفريق *"
-              hint="مطلوبة، وهي الصورة العريضة التي تظهر أعلى صفحة الفريق."
-              cover
-            />
-            {errors.cover?.message ? <Text size="2xs" className="mt-1 text-error-300">{errors.cover.message}</Text> : null}
           </View>
         </Card>
 
