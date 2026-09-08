@@ -27,6 +27,18 @@ export function ReelsScreen() {
   const [pageHeight, setPageHeight] = useState(1);
   const listRef = useRef<FlatList<(typeof items)[number]>>(null);
   const activeIdRef = useRef<string | null>(null);
+  const paginationRef = useRef({
+    itemsLength: items.length,
+    hasNextPage: query.hasNextPage,
+    isFetchingNextPage: query.isFetchingNextPage,
+    fetchNextPage: query.fetchNextPage,
+  });
+  paginationRef.current = {
+    itemsLength: items.length,
+    hasNextPage: query.hasNextPage,
+    isFetchingNextPage: query.isFetchingNextPage,
+    fetchNextPage: query.fetchNextPage,
+  };
   const { onScroll: onHeaderScroll, resetHeader } = useCollapsibleHeaderScreen({
     resetOnFocus: false,
     scrollEpsilon: 0.5,
@@ -63,7 +75,7 @@ export function ReelsScreen() {
   const availableHeight = Math.max(430, pageHeight);
   const cardHeight = Math.min(620, Math.max(430, Math.round(availableHeight * 0.76)));
 
-  const onViewableItemsChanged = useCallback(
+  const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken<(typeof items)[number]>[] }) => {
       const visibleEntries = viewableItems.filter((entry) => entry.isViewable);
       const visibleIds = new Set(visibleEntries.map((entry) => entry.item.id));
@@ -79,12 +91,16 @@ export function ReelsScreen() {
       }
 
       const furthestVisibleIndex = Math.max(-1, ...viewableItems.map((entry) => entry.index ?? -1));
-      if (furthestVisibleIndex >= items.length - 3 && query.hasNextPage && !query.isFetchingNextPage) {
-        void query.fetchNextPage();
+      const pagination = paginationRef.current;
+      if (
+        furthestVisibleIndex >= pagination.itemsLength - 3 &&
+        pagination.hasNextPage &&
+        !pagination.isFetchingNextPage
+      ) {
+        void pagination.fetchNextPage();
       }
     },
-    [items.length, query, setActiveReel],
-  );
+  ).current;
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 55 }).current;
   const waitingForSelected = Boolean(selectedId) && selectedQuery.isLoading && !selectedQuery.data;
 

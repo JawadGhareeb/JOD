@@ -93,7 +93,6 @@ export default function RootLayout() {
                       <Stack.Screen name="personalization-settings" />
                       <Stack.Screen name="change-password" />
                       <Stack.Screen name="edit-information" />
-                      <Stack.Screen name="help-center" />
                       <Stack.Screen name="my-donations" />
                       <Stack.Screen name="my-applications" />
                       <Stack.Screen name="notifications/[id]" />

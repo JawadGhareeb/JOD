@@ -3,6 +3,7 @@ import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import { FilterCountSlider } from "@/src/components/shared";
 import Card from "@/src/components/ui/Card";
+import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Text from "@/src/components/ui/Text";
 import Button from "@/src/components/ui/Button";
 import { MenuPageHeader } from "./MenuPageHeader";
@@ -73,11 +74,11 @@ export function MyApplicationsScreen() {
           selectedKey={status}
           onSelect={setStatus}
         />
-        {query.isLoading ? <Text size="xs" className="py-8 text-center text-gray-500">جارِ تحميل الطلبات...</Text> : null}
+        {query.isLoading ? <View className="gap-2 py-2">{[0, 1, 2].map((item) => <CardSkeleton key={item} height={120} margin={0} />)}</View> : null}
         {query.isError ? <Card padding="md" className="border-error-300/30"><Text size="xs" className="text-error-300">تعذر تحميل طلباتك.</Text><View className="mt-3"><Button size="small" onPress={() => void query.refetch()}>إعادة المحاولة</Button></View></Card> : null}
         {!query.isLoading && !query.isError && items.length === 0 ? <Card padding="md"><Text size="sm" weight="semibold" className="text-center">لا توجد طلبات في هذه الحالة</Text><Text size="xs" className="mt-2 text-center text-gray-500">طلبات التطوع على الحملات أو بوستات التطوع التابعة للمنظمات ستظهر هنا مع حالة كل طلب.</Text></Card> : null}
         {items.map((item) => <ApplicationCard key={item.id} item={item} onPress={() => router.push({ pathname: "/applications/[id]", params: { id: item.id } })} />)}
-        {query.isFetchingNextPage ? <Text size="2xs" className="py-3 text-center text-gray-500">جارِ تحميل المزيد...</Text> : null}
+        {query.isFetchingNextPage ? <CardSkeleton height={120} margin={0} /> : null}
       </ScrollView>
     </View>
   );

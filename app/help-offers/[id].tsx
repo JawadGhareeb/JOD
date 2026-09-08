@@ -6,6 +6,7 @@ import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
 import Input from "@/src/components/ui/Input";
 import Dialog from "@/src/components/ui/Dialog";
+import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Text from "@/src/components/ui/Text";
 import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useAuthStatus } from "@/src/features/auth/queries";
@@ -78,7 +79,7 @@ export default function HelpOfferDetailsPage() {
     }
   };
 
-  if (query.isLoading) return <Container className="bg-light-100 px-4 dark:bg-dark-300"><MenuPageHeader title="تفاصيل عرض المساعدة" /><Text>جارِ تحميل العرض...</Text></Container>;
+  if (query.isLoading) return <Container className="bg-light-100 px-4 dark:bg-dark-300"><MenuPageHeader title="تفاصيل عرض المساعدة" /><View className="gap-2"><CardSkeleton height={140} margin={0} /><CardSkeleton height={260} margin={0} /></View></Container>;
   if (!offer || !id) return <Container className="bg-light-100 px-4 dark:bg-dark-300"><MenuPageHeader title="تفاصيل عرض المساعدة" /><Text>تعذر العثور على عرض المساعدة.</Text></Container>;
 
   const isHelper = offer.helper.id === user?.id;

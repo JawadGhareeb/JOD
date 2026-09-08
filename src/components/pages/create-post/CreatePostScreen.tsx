@@ -10,6 +10,8 @@ import { ImageSourceDialog } from "@/src/components/shared/ImageSourceDialog";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Input from "@/src/components/ui/Input";
+import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
+import { SkeletonBlock } from "@/src/components/ui/SkeletonBlock";
 import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import Text from "@/src/components/ui/Text";
 import { useCities, usePostTypesLookup } from "@/src/features/lookups/queries";
@@ -391,7 +393,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   };
 
   if (editMode && myPostQuery.isLoading) {
-    return <View className="flex-1 items-center justify-center bg-light-100 dark:bg-dark-300"><Text size="sm" className="text-gray-500 dark:text-gray-300">جارِ تحميل المنشور...</Text></View>;
+    return <View className="flex-1 gap-3 bg-light-100 px-4 pt-4 dark:bg-dark-300"><CardSkeleton height={180} margin={0} /><CardSkeleton height={320} margin={0} /></View>;
   }
 
   return (
@@ -424,7 +426,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
                 );
               })}
             </View>
-          ) : <Text size="xs" className="text-gray-500 dark:text-gray-300">جارِ تحميل أنواع المنشورات...</Text>}
+          ) : <View className="gap-2"><SkeletonBlock width="100%" height={42} radius={16} /><SkeletonBlock width="76%" height={42} radius={16} /></View>}
           {typeHint ? <Text size="2xs" className="mt-3 text-gray-500 dark:text-gray-300">{typeHint}</Text> : null}
         </Card>
 

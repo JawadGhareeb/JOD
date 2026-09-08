@@ -7,6 +7,7 @@ import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
 import Input from "@/src/components/ui/Input";
 import KeyboardAvoider from "@/src/components/ui/KeyboardAvoider";
+import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Logo from "@/src/components/ui/Logo";
 import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
@@ -89,7 +90,7 @@ export default function DonatePage() {
         <MenuPageHeader title="طلب تبرع" />
         <View className="gap-2">
           <View className="items-center gap-3"><Logo variant="medium" showName /></View>
-          {campaignQuery.isLoading ? <Text size="sm" color="secondary" rtlAlign="center">جارِ تحميل الحملة...</Text> : !campaign ? <Card padding="md"><Text size="sm" rtlAlign="center">تعذر العثور على الحملة المطلوبة.</Text></Card> : (
+          {campaignQuery.isLoading ? <View className="gap-2"><CardSkeleton height={150} margin={0} /><CardSkeleton height={280} margin={0} /></View> : !campaign ? <Card padding="md"><Text size="sm" rtlAlign="center">تعذر العثور على الحملة المطلوبة.</Text></Card> : (
             <>
               <Card padding="md" className="gap-2 border-gray-200 dark:border-dark-400">
                 <Text weight="semibold" size="sm">{campaign.title}</Text>

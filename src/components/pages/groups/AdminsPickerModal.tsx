@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Modal as RNModal, Pressable, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, Modal as RNModal, Platform, Pressable, ScrollView, View } from "react-native";
 import { Check } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
 import Button from "@/src/components/ui/Button";
 import Input from "@/src/components/ui/Input";
+import { SkeletonBlock } from "@/src/components/ui/SkeletonBlock";
 import Text from "@/src/components/ui/Text";
 import { useAdminCandidates } from "@/src/features/groups/queries";
 import type { GroupAdminCandidate } from "@/src/features/groups/types";
@@ -32,7 +33,6 @@ export function AdminsPickerModal({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [draft, setDraft] = useState<GroupAdminCandidate[]>(selected);
 
-  // Re-seed the draft each time the sheet opens so cancelling discards edits.
   useEffect(() => {
     if (visible) {
       setDraft(selected);
@@ -59,97 +59,112 @@ export function AdminsPickerModal({
 
   return (
     <RNModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable
-        className="flex-1 justify-end"
-        style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        onPress={onClose}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={0}
       >
         <Pressable
-          onPress={(event) => event.stopPropagation()}
-          className={`max-h-[78%] w-full rounded-t-3xl ${isDark ? "bg-dark-500" : "bg-white"}`}
+          className="flex-1 justify-end"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          onPress={onClose}
         >
-          <View className="flex-row-reverse items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-dark-400">
-            <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
-              دعوة أعضاء للفريق
-            </Text>
-            <Pressable
-              onPress={onClose}
-              className="h-8 w-8 items-center justify-center rounded-lg"
-              accessibilityRole="button"
-              accessibilityLabel="إغلاق"
+          <Pressable
+            onPress={(event) => event.stopPropagation()}
+            className={`max-h-[78%] w-full rounded-t-3xl ${isDark ? "bg-dark-500" : "bg-white"}`}
+          >
+            <View className="flex-row-reverse items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-dark-400">
+              <Text weight="semibold" size="sm" className="text-dark-100 dark:text-light-50">
+                دعوة أعضاء للفريق
+              </Text>
+              <Pressable
+                onPress={onClose}
+                className="h-8 w-8 items-center justify-center rounded-lg"
+                accessibilityRole="button"
+                accessibilityLabel="إغلاق"
+              >
+                <CloseIcon size={18} color={isDark ? "#E5E7EB" : "#374151"} strokeWidth={2.25} />
+              </Pressable>
+            </View>
+
+            <View className="gap-2 px-4 pt-3">
+              <Input
+                fullWidth
+                showStatusIcon={false}
+                value={search}
+                onChangeText={setSearch}
+                placeholder="ابحث بالاسم أو اسم المستخدم أو البريد"
+                placeholderTextColor="#9CA3AF"
+              />
+              <Text size="2xs" className="text-gray-500 dark:text-gray-300">
+                {draft.length > 0 ? `${draft.length} مُختار` : "لم تختر أحداً بعد"}
+              </Text>
+            </View>
+
+            <ScrollView
+              className="px-4"
+              contentContainerStyle={{ paddingVertical: 8 }}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
             >
-              <CloseIcon size={18} color={isDark ? "#E5E7EB" : "#374151"} strokeWidth={2.25} />
-            </Pressable>
-          </View>
-
-          <View className="gap-2 px-4 pt-3">
-            <Input
-              fullWidth
-              showStatusIcon={false}
-              value={search}
-              onChangeText={setSearch}
-              placeholder="ابحث بالاسم أو اسم المستخدم أو البريد"
-              placeholderTextColor="#9CA3AF"
-            />
-            <Text size="2xs" className="text-gray-500 dark:text-gray-300">
-              {draft.length > 0 ? `${draft.length} مُختار` : "لم تختر أحداً بعد"}
-            </Text>
-          </View>
-
-          <ScrollView className="px-4" contentContainerStyle={{ paddingVertical: 8 }}>
-            {candidates.length === 0 ? (
-              <View className="items-center py-10">
-                <Text size="sm" className="text-gray-500 dark:text-gray-300">
-                  {candidatesQuery.isLoading ? "جارِ البحث..." : "لا توجد نتائج."}
-                </Text>
-              </View>
-            ) : (
-              candidates.map((user) => {
-                const isSelected = draft.some((item) => item.id === user.id);
-                return (
-                  <Pressable
-                    key={user.id}
-                    onPress={() => toggle(user)}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: isSelected }}
-                    accessibilityLabel={user.name}
-                    className={`mb-2 flex-row-reverse items-center gap-3 rounded-xl border p-3 ${
-                      isSelected
-                        ? "border-primary-400 bg-primary-400/5"
-                        : "border-gray-200 dark:border-dark-400"
-                    }`}
-                  >
-                    <Avatar name={user.name} imageUrl={user.avatarUrl} size={36} />
-                    <View className="flex-1">
-                      <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">
-                        {user.name}
-                      </Text>
-                      <Text size="2xs" className="mt-0.5 text-gray-500 dark:text-gray-300">
-                        @{user.username}
-                      </Text>
+              {candidatesQuery.isLoading ? (
+                <View className="gap-2 py-2">
+                  {[0, 1, 2].map((item) => (
+                    <View key={item} className="flex-row-reverse items-center gap-3 rounded-xl border border-gray-200 p-3 dark:border-dark-400">
+                      <SkeletonBlock width={36} height={36} radius={18} />
+                      <View className="flex-1 items-end gap-2">
+                        <SkeletonBlock width="55%" height={12} />
+                        <SkeletonBlock width="35%" height={10} />
+                      </View>
                     </View>
-                    <View
-                      className={`size-5 items-center justify-center rounded-md border ${
+                  ))}
+                </View>
+              ) : candidates.length === 0 ? (
+                <View className="items-center py-10">
+                  <Text size="sm" className="text-gray-500 dark:text-gray-300">لا توجد نتائج.</Text>
+                </View>
+              ) : (
+                candidates.map((user) => {
+                  const isSelected = draft.some((item) => item.id === user.id);
+                  return (
+                    <Pressable
+                      key={user.id}
+                      onPress={() => toggle(user)}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: isSelected }}
+                      accessibilityLabel={user.name}
+                      className={`mb-2 flex-row-reverse items-center gap-3 rounded-xl border p-3 ${
                         isSelected
-                          ? "border-primary-400 bg-primary-400"
-                          : "border-gray-300 dark:border-dark-400"
+                          ? "border-primary-400 bg-primary-400/5"
+                          : "border-gray-200 dark:border-dark-400"
                       }`}
                     >
-                      {isSelected ? <Check size={13} color="#FFFFFF" strokeWidth={3} /> : null}
-                    </View>
-                  </Pressable>
-                );
-              })
-            )}
-          </ScrollView>
+                      <Avatar name={user.name} imageUrl={user.avatarUrl} size={36} />
+                      <View className="flex-1">
+                        <Text size="xs" weight="semibold" className="text-dark-100 dark:text-light-50">{user.name}</Text>
+                        <Text size="2xs" className="mt-0.5 text-gray-500 dark:text-gray-300">@{user.username}</Text>
+                      </View>
+                      <View
+                        className={`size-5 items-center justify-center rounded-md border ${
+                          isSelected
+                            ? "border-primary-400 bg-primary-400"
+                            : "border-gray-300 dark:border-dark-400"
+                        }`}
+                      >
+                        {isSelected ? <Check size={13} color="#FFFFFF" strokeWidth={3} /> : null}
+                      </View>
+                    </Pressable>
+                  );
+                })
+              )}
+            </ScrollView>
 
-          <View className="border-t border-gray-200 px-4 py-3 dark:border-dark-400">
-            <Button fullWidth onPress={() => onConfirm(draft)}>
-              تأكيد
-            </Button>
-          </View>
+            <View className="border-t border-gray-200 px-4 py-3 dark:border-dark-400">
+              <Button fullWidth onPress={() => onConfirm(draft)}>تأكيد</Button>
+            </View>
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </KeyboardAvoidingView>
     </RNModal>
   );
 }

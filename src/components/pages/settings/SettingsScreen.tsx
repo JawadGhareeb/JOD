@@ -95,12 +95,6 @@ const settingsGroups: SettingsGroup[] = [
     title: "الدعم والمعلومات",
     rows: [
       {
-        title: "مركز المساعدة",
-        hint: "الأسئلة الشائعة وطرق التواصل",
-        Icon: appIcons.help,
-        route: "/help-center",
-      },
-      {
         title: "الشروط والخصوصية",
         hint: "سياسة الاستخدام وحماية البيانات",
         Icon: appIcons.shield,

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import {
@@ -133,10 +133,9 @@ export function HomePostCard({
   const [optionsAnchor, setOptionsAnchor] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [pendingOwnPostAction, setPendingOwnPostAction] = useState<"delete" | "edit" | null>(null);
   const shouldTruncate = post.content.length > MAX_CONTENT;
-  const displayContent = useMemo(() => {
-    if (expanded || !shouldTruncate) return post.content;
-    return `${post.content.slice(0, MAX_CONTENT).trim()}...`;
-  }, [expanded, shouldTruncate, post.content]);
+  const collapsedContent = shouldTruncate
+    ? post.content.slice(0, MAX_CONTENT).trimEnd()
+    : post.content;
 
   const BookmarkIcon = appIcons.savedPosts;
   const HeartIcon = appIcons.myDonations;
@@ -457,7 +456,22 @@ export function HomePostCard({
           accessibilityLabel="اضغط مرتين للإعجاب بالمنشور"
         >
           <Text size="sm" className="text-dark-100 dark:text-light-50">
-            {displayContent}
+            {expanded || !shouldTruncate ? post.content : collapsedContent}
+            {!expanded && shouldTruncate ? (
+              <Text
+                size="sm"
+                weight="medium"
+                className="text-primary-400"
+                onPress={(event) => {
+                  event.stopPropagation();
+                  setExpanded(true);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="عرض المزيد من محتوى المنشور"
+              >
+                ... عرض المزيد
+              </Text>
+            ) : null}
           </Text>
 
           {post.category?.name ? (
@@ -470,13 +484,6 @@ export function HomePostCard({
           ) : null}
         </Pressable>
 
-        {shouldTruncate ? (
-          <Pressable onPress={() => setExpanded((prev) => !prev)} className="mt-2 self-end">
-            <Text size="xs" weight="medium" className="text-primary-400">
-              {expanded ? "عرض أقل" : "عرض المزيد"}
-            </Text>
-          </Pressable>
-        ) : null}
 
         <View className="-mx-3">
           <FeedMediaGrid images={post.images} onPress={handleMediaPress} />

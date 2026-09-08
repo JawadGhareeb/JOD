@@ -5,6 +5,7 @@ import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Input from "@/src/components/ui/Input";
 import Dialog from "@/src/components/ui/Dialog";
+import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Text from "@/src/components/ui/Text";
 import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useApplication, useWithdrawApplication } from "@/src/features/applications/queries";
@@ -39,7 +40,7 @@ export default function ApplicationDetailsPage() {
   };
 
   return <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300"><MenuPageHeader title="تفاصيل الطلب" /><ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-    {query.isLoading ? <Text size="xs" className="py-8 text-center text-gray-500">جارِ تحميل الطلب...</Text> : null}
+    {query.isLoading ? <View className="gap-2"><CardSkeleton height={150} margin={0} /><CardSkeleton height={220} margin={0} /></View> : null}
     {query.isError ? <Card padding="md"><Text size="xs" className="text-error-300">تعذر تحميل الطلب.</Text><View className="mt-3"><Button size="small" onPress={() => void query.refetch()}>إعادة المحاولة</Button></View></Card> : null}
     {item ? <>
       <Card padding="md" className="mb-2 border-gray-200 dark:border-dark-400">

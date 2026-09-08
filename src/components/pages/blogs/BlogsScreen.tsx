@@ -1,10 +1,11 @@
 import { useMemo } from "react";
-import { Animated, ActivityIndicator, View } from "react-native";
+import { Animated, View } from "react-native";
 import Text from "@/src/components/ui/Text";
 import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useArticles } from "@/src/features/articles/queries";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import { BlogPostCard } from "./BlogPostCard";
+import { BlogPostCardSkeleton } from "./BlogPostCardSkeleton";
 
 export function BlogsScreen() {
   const { onScroll } = useCollapsibleHeaderScreen();
@@ -26,8 +27,20 @@ export function BlogsScreen() {
         onEndReachedThreshold={0.4}
         refreshing={query.isRefetching && !query.isFetchingNextPage}
         onRefresh={() => void query.refetch()}
-        ListEmptyComponent={query.isLoading ? <View className="items-center py-10"><ActivityIndicator /><Text size="xs" className="mt-3 text-gray-500 dark:text-gray-300">جارِ تحميل المقالات...</Text></View> : <View className="items-center py-10"><Text size="sm" className="text-gray-500 dark:text-gray-300">لا توجد مقالات منشورة حالياً.</Text></View>}
-        ListFooterComponent={query.isFetchingNextPage ? <ActivityIndicator style={{ marginVertical: 16 }} /> : null}
+        ListEmptyComponent={
+          query.isLoading ? (
+            <View>
+              <BlogPostCardSkeleton />
+              <BlogPostCardSkeleton />
+              <BlogPostCardSkeleton />
+            </View>
+          ) : (
+            <View className="items-center py-10">
+              <Text size="sm" className="text-gray-500 dark:text-gray-300">لا توجد مقالات منشورة حالياً.</Text>
+            </View>
+          )
+        }
+        ListFooterComponent={query.isFetchingNextPage ? <BlogPostCardSkeleton /> : null}
       />
     </View>
   );

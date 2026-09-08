@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
-import { FileText, Mail, MapPin, Pencil, Phone } from "lucide-react-native";
+import { FileText, Mail, MapPin, Pencil } from "lucide-react-native";
 import { Pressable, ScrollView, View } from "react-native";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
@@ -10,11 +10,13 @@ import Card from "@/src/components/ui/Card";
 import Input from "@/src/components/ui/Input";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
+import SyrianPhoneInput from "@/src/components/ui/SyrianPhoneInput";
 import Text from "@/src/components/ui/Text";
 import { useCities } from "@/src/features/lookups/queries";
 import { useUpdateProfile } from "@/src/features/account/queries";
 import { useAuthStatus, useRemoveAvatar, useUpdateAvatar } from "@/src/features/auth/queries";
 import { ApiClientError } from "@/src/lib/api-client";
+import { isValidSyrianMobile, normalizeSyrianMobile, SYRIAN_MOBILE_ERROR } from "@/src/lib/syrian-phone";
 import { useToast } from "@/src/providers/ToastProvider";
 import { MenuPageHeader } from "./MenuPageHeader";
 
@@ -44,13 +46,13 @@ export function EditInformationScreen() {
     if (!user) return;
     setFullName(user.name);
     setEmail(user.email);
-    setPhoneNumber(user.phone ?? "");
+    setPhoneNumber(normalizeSyrianMobile(user.phone));
     setCity(user.city ?? "");
     setBio(user.bio ?? "");
   }, [user]);
 
   const isEmailValid = useMemo(() => /\S+@\S+\.\S+/.test(email.trim()), [email]);
-  const isPhoneValid = phoneNumber.trim().length === 0 || phoneNumber.trim().length >= 8;
+  const isPhoneValid = phoneNumber.trim().length === 0 || isValidSyrianMobile(phoneNumber);
   const canSave = fullName.trim().length > 2 && isEmailValid && isPhoneValid && !updateProfileMutation.isPending;
 
   const uploadAvatarAsset = async (asset: ImagePicker.ImagePickerAsset) => {
@@ -168,7 +170,7 @@ export function EditInformationScreen() {
             <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">البريد الإلكتروني *</Text>
             <Input fullWidth showStatusIcon={false} inputClassName="font-noto text-xs" rightIcon={<Mail size={16} strokeWidth={2.25} />} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholder="example@jod.org" placeholderTextColor="#9CA3AF" />
             <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">رقم الجوال (اختياري)</Text>
-            <Input fullWidth showStatusIcon={false} inputClassName="font-noto text-xs" rightIcon={<Phone size={16} strokeWidth={2.25} />} value={phoneNumber} onChangeText={setPhoneNumber} keyboardType="phone-pad" placeholder="+9639XXXXXXXX" placeholderTextColor="#9CA3AF" />
+            <SyrianPhoneInput fullWidth showStatusIcon={false} value={phoneNumber} onChangeText={setPhoneNumber} placeholderTextColor="#9CA3AF" />
             <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">المحافظة</Text>
             <Pressable onPress={() => setIsCityModalOpen(true)} accessibilityRole="button" accessibilityLabel="اختر المحافظة"><View pointerEvents="none"><Input fullWidth editable={false} showStatusIcon={false} inputClassName="font-noto text-xs" rightIcon={<MapPin size={16} strokeWidth={2.25} />} value={city} placeholder="اختر المحافظة" placeholderTextColor="#9CA3AF" /></View></Pressable>
             <Text size="2xs" className="mt-1 text-gray-500 dark:text-gray-300">نبذة تعريفية</Text>
@@ -179,7 +181,7 @@ export function EditInformationScreen() {
 
         <Button fullWidth size="medium" disabled={!canSave} loading={updateProfileMutation.isPending} onPress={handleSave}>حفظ التعديلات</Button>
         {!isEmailValid ? <Text size="2xs" className="mt-2 text-center text-error-300">البريد الإلكتروني غير صالح.</Text> : null}
-        {!isPhoneValid ? <Text size="2xs" className="mt-2 text-center text-error-300">رقم الجوال قصير جداً.</Text> : null}
+        {!isPhoneValid ? <Text size="2xs" className="mt-2 text-center text-error-300">{SYRIAN_MOBILE_ERROR}</Text> : null}
       </ScrollView>
       <ImageSourceDialog
         visible={isAvatarSourceDialogOpen}

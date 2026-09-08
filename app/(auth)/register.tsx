@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { Eye, EyeOff, LockKeyhole, Mail, PhoneCall, UserRound } from "lucide-react-native";
+import { Eye, EyeOff, LockKeyhole, Mail, UserRound } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
@@ -13,14 +13,16 @@ import Input from "@/src/components/ui/Input";
 import KeyboardAvoider from "@/src/components/ui/KeyboardAvoider";
 import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
+import SyrianPhoneInput from "@/src/components/ui/SyrianPhoneInput";
 import { useAuthStatus, useRegister } from "@/src/features/auth/queries";
 import { applyApiFormErrors } from "@/src/lib/api-error-utils";
+import { SYRIAN_MOBILE_ERROR, SYRIAN_MOBILE_PATTERN } from "@/src/lib/syrian-phone";
 import { useToast } from "@/src/providers/ToastProvider";
 
 const registerSchema = z.object({
   name: z.string().trim().min(1, "الاسم مطلوب"),
   email: z.string().trim().min(1, "البريد الإلكتروني مطلوب").email("صيغة البريد الإلكتروني غير صحيحة"),
-  phoneNumber: z.string().trim().min(1, "رقم الموبايل مطلوب").regex(/^\+9639\d{8}$/, "أدخل رقم موبايل سوري صحيحاً بصيغة +9639XXXXXXXX"),
+  phoneNumber: z.string().trim().min(1, "رقم الموبايل مطلوب").regex(SYRIAN_MOBILE_PATTERN, SYRIAN_MOBILE_ERROR),
   password: z.string().trim().min(1, "كلمة المرور مطلوبة").min(8, "كلمة المرور يجب ألا تقل عن 8 أحرف"),
   confirmPassword: z.string().trim().min(1, "تأكيد كلمة المرور مطلوب"),
 }).refine((values) => values.password === values.confirmPassword, { message: "كلمتا المرور غير متطابقتين", path: ["confirmPassword"] });
@@ -60,7 +62,7 @@ export default function RegisterScreen() {
             <Card padding="lg" className="gap-4 rounded-3xl border-gray-200 dark:border-dark-400">
               <Controller control={control} name="name" render={({ field: { onChange, onBlur, value } }) => <Input label="الاسم الكامل" placeholder="أحمد محمد" value={value} onChangeText={onChange} onBlur={onBlur} autoComplete="name" textContentType="name" error={errors.name?.message} leftIcon={<UserRound size={18} />} fullWidth />} />
               <Controller control={control} name="email" render={({ field: { onChange, onBlur, value } }) => <Input label="البريد الإلكتروني" placeholder="ahmad@example.com" value={value} onChangeText={onChange} onBlur={onBlur} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" error={errors.email?.message} leftIcon={<Mail size={18} />} fullWidth />} />
-              <Controller control={control} name="phoneNumber" render={({ field: { onChange, onBlur, value } }) => <Input label="رقم الموبايل" placeholder="9XXXXXXXX" value={value.replace(/^\+963/, "")} onChangeText={(text) => { const digits = text.replace(/\D/g, "").slice(0, 9); onChange(digits ? `+963${digits}` : ""); }} onBlur={onBlur} keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" error={errors.phoneNumber?.message} helperText="يجب أن يكون الرقم مرتبطاً بحساب واتساب للتواصل." leftIcon={<View className="flex-row items-center gap-1"><Text size="xs">🇸🇾</Text><Text size="xs" weight="semibold" className="text-primary-400">+963</Text><PhoneCall size={16} /></View>} inputContainerClassName="flex-row" inputClassName="text-left" style={{ textAlign: "left", writingDirection: "ltr" }} fullWidth />} />
+              <Controller control={control} name="phoneNumber" render={({ field: { onChange, onBlur, value } }) => <SyrianPhoneInput label="رقم الموبايل" value={value} onChangeText={onChange} onBlur={onBlur} autoComplete="tel" textContentType="telephoneNumber" error={errors.phoneNumber?.message} helperText="أدخل 9 أرقام فقط بعد +963 من دون صفر في البداية." fullWidth />} />
               <Controller control={control} name="password" render={({ field: { onChange, onBlur, value } }) => <Input label="كلمة المرور" placeholder="أدخل كلمة المرور" value={value} onChangeText={onChange} onBlur={onBlur} secureTextEntry={!isPasswordVisible} autoComplete="new-password" textContentType="newPassword" error={errors.password?.message} leftIcon={<LockKeyhole size={18} />} rightIcon={isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />} onRightIconPress={() => setIsPasswordVisible((v) => !v)} fullWidth />} />
               <Controller control={control} name="confirmPassword" render={({ field: { onChange, onBlur, value } }) => <Input label="تأكيد كلمة المرور" placeholder="أعد إدخال كلمة المرور" value={value} onChangeText={onChange} onBlur={onBlur} secureTextEntry={!isConfirmPasswordVisible} autoComplete="new-password" textContentType="newPassword" error={errors.confirmPassword?.message} leftIcon={<LockKeyhole size={18} />} rightIcon={isConfirmPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />} onRightIconPress={() => setIsConfirmPasswordVisible((v) => !v)} fullWidth />} />
               {formError ? <Text size="sm" color="error" rtlAlign="center">{formError}</Text> : null}

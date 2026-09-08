@@ -3,6 +3,7 @@ import { useLocalSearchParams } from "expo-router";
 import { Image, Pressable, ScrollView, View } from "react-native";
 import Text from "@/src/components/ui/Text";
 import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
+import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import { FullScreenImageGallery } from "@/src/components/shared/FullScreenImageGallery";
 import { useArticle } from "@/src/features/articles/queries";
 import { formatRelativeDateAr } from "@/src/helpers/dateTime";
@@ -26,8 +27,9 @@ export function BlogDetailsScreen() {
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
       <MenuPageHeader title="المقال" />
       {query.isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <Text size="sm" className="text-gray-500 dark:text-gray-300">جارِ تحميل المقال...</Text>
+        <View className="gap-3">
+          <CardSkeleton height={220} margin={0} />
+          <CardSkeleton height={320} margin={0} />
         </View>
       ) : !article ? (
         <View className="flex-1 items-center justify-center px-4">
