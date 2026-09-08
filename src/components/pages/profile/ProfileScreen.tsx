@@ -1,9 +1,10 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, Pressable, ScrollView, View } from "react-native";
+import { Animated, View } from "react-native";
 import Button from "@/src/components/ui/Button";
 import Text from "@/src/components/ui/Text";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
+import { FilterCountSlider } from "@/src/components/shared";
 import { SectionHeader } from "@/src/components/shared/SectionHeader";
 import { toProfileSummary } from "@/src/features/account/helpers";
 import { useAuthStatus } from "@/src/features/auth/queries";
@@ -144,57 +145,12 @@ export function ProfileScreen() {
               <ProfileHeaderCard summary={summary} followingCount={followingCount} />
               <SectionHeader title="منشوراتي" />
             </View>
-
-            <View className="mb-1 border-y border-gray-100 dark:border-dark-400">
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={{ flexGrow: 0 }}
-                contentContainerStyle={{ flexDirection: "row-reverse", flexWrap: "nowrap", paddingHorizontal: 12 }}
-              >
-                {STATUS_TABS.map((tab) => {
-                  const isActive = activeTab === tab.key;
-                  const count = getTabCount(tab.key);
-                  return (
-                    <Pressable
-                      key={tab.key}
-                      onPress={() => selectTab(tab.key)}
-                      accessibilityRole="tab"
-                      accessibilityState={{ selected: isActive }}
-                      accessibilityLabel={`${tab.label} ${count}`}
-                      className="relative min-w-24 shrink-0 items-center px-4 py-3"
-                    >
-                      <View className="flex-row-reverse items-center gap-1">
-                        <Text
-                          size="xs"
-                          weight={isActive ? "semibold" : "medium"}
-                          className={
-                            isActive
-                              ? "text-primary-400"
-                              : "text-gray-400 dark:text-gray-400"
-                          }
-                        >
-                          {tab.label}
-                        </Text>
-                        <Text
-                          size="xs"
-                          weight={isActive ? "semibold" : "medium"}
-                          className={
-                            isActive
-                              ? "text-primary-400"
-                              : "text-gray-400 dark:text-gray-500"
-                          }
-                        >
-                          {count}
-                        </Text>
-                      </View>
-                      {isActive ? (
-                        <View className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-400" />
-                      ) : null}
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
+            <View className="px-4">
+              <FilterCountSlider
+                items={STATUS_TABS.map((tab) => ({ key: tab.key, label: tab.label, count: getTabCount(tab.key) }))}
+                selectedKey={activeTab}
+                onSelect={selectTab}
+              />
             </View>
           </View>
         }

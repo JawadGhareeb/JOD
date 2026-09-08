@@ -9,7 +9,7 @@ export type FilterCountSliderItem<T extends string> = {
 };
 
 type FilterCountSliderProps<T extends string> = {
-  items: FilterCountSliderItem<T>[];
+  items: readonly FilterCountSliderItem<T>[];
   selectedKey: T;
   onSelect: (key: T) => void;
 };
@@ -29,7 +29,7 @@ export function FilterCountSlider<T extends string>({
       inverted={isArabic}
       keyExtractor={(item) => item.key}
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: 8, paddingBottom: 12 }}
+      contentContainerStyle={{ gap: 8, paddingBottom: 12, paddingHorizontal: 2 }}
       className="mb-1"
       renderItem={({ item }) => {
         const isActive = selectedKey === item.key;
@@ -37,13 +37,14 @@ export function FilterCountSlider<T extends string>({
         return (
           <Pressable
             onPress={() => onSelect(item.key)}
-            className={`flex-row items-center gap-2 rounded-full px-4 py-2 ${
+            className={`shrink-0 flex-row items-center gap-2 rounded-full px-4 py-2 ${
               isActive ? "bg-primary-400/15" : "bg-white dark:bg-dark-500"
             }`}
             accessibilityRole="button"
             accessibilityLabel={item.label}
           >
             <Text
+              numberOfLines={1}
               size="xs"
               weight="medium"
               className={isActive ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}

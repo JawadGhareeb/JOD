@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
+import { FilterCountSlider } from "@/src/components/shared";
 import Button from "@/src/components/ui/Button";
 import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Text from "@/src/components/ui/Text";
@@ -46,9 +47,14 @@ export function GroupsScreen() {
         <Button size="small" onPress={openCreate}>إنشاء فريق</Button>
       </View>
 
-      <View className="mb-4 flex-row-reverse rounded-xl bg-gray-100 p-1 dark:bg-dark-400">
-        {tabs.map((tab) => <Button key={tab.key} size="small" variant={activeTab === tab.key ? "primary" : "tertiary"} className="flex-1" onPress={() => { if (tab.key !== "discover" && !requireAuth()) return; setActiveTab(tab.key); }}>{tab.label}</Button>)}
-      </View>
+      <FilterCountSlider
+        items={tabs}
+        selectedKey={activeTab}
+        onSelect={(key) => {
+          if (key !== "discover" && !requireAuth()) return;
+          setActiveTab(key);
+        }}
+      />
 
       {activeQuery.isLoading ? <View className="gap-3"><CardSkeleton /><CardSkeleton /><CardSkeleton /></View> : null}
       {!activeQuery.isLoading && groups.length === 0 ? <View className="items-center gap-3 rounded-2xl border border-gray-200 p-8 dark:border-dark-400"><Text size="sm" weight="semibold">لا توجد فرق هنا حالياً</Text>{activeTab === "owned" ? <Button size="small" onPress={openCreate}>أنشئ فريقك الأول</Button> : null}</View> : null}

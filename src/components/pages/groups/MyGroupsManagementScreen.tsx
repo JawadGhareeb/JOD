@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View } from "react-native";
+import { FilterCountSlider } from "@/src/components/shared";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Container from "@/src/components/ui/Container";
@@ -25,9 +26,7 @@ export function MyGroupsManagementScreen() {
   return (
     <Container scrollable className="bg-light-100 px-4 dark:bg-dark-300">
       <MenuPageHeader title="مجموعاتي وفرق التطوع" />
-      <View className="mb-4 flex-row-reverse rounded-xl bg-gray-100 p-1 dark:bg-dark-400">
-        {tabs.map((item) => <Button key={item.key} className="flex-1" size="small" variant={tab === item.key ? "primary" : "tertiary"} onPress={() => setTab(item.key)}>{item.label}</Button>)}
-      </View>
+      <FilterCountSlider items={tabs} selectedKey={tab} onSelect={setTab} />
 
       {tab === "owned" ? <View className="gap-3">{(owned.data ?? []).length ? owned.data?.map((group) => <GroupCard key={group.id} group={group} />) : <Empty text="ما عندك فرق أنشأتها بعد." />}</View> : null}
       {tab === "joined" ? <View className="gap-3">{(joined.data ?? []).length ? joined.data?.map((group) => <GroupCard key={group.id} group={group} />) : <Empty text="مو مشترك بأي فريق حالياً." />}</View> : null}

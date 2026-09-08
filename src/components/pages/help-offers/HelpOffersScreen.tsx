@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
+import { FilterCountSlider } from "@/src/components/shared";
 import Button from "@/src/components/ui/Button";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
@@ -66,20 +67,19 @@ export function HelpOffersScreen() {
     <View className="flex-1 bg-light-100 px-4 dark:bg-dark-300">
       <MenuPageHeader title="طلبات المساعدة" />
       <View className="mb-3 flex-row-reverse gap-2">
-        <Button size="small" variant={flow === "made" ? "primary" : "tertiary"} onPress={() => { setFlow("made"); setStatus("all"); }} className="flex-1">العروض التي قدمتها</Button>
-        <Button size="small" variant={flow === "received" ? "primary" : "tertiary"} onPress={() => { setFlow("received"); setStatus("all"); }} className="flex-1">العروض الواردة</Button>
+        <View className="flex-1">
+          <Button fullWidth size="small" variant={flow === "made" ? "primary" : "tertiary"} onPress={() => { setFlow("made"); setStatus("all"); }}>العروض التي قدمتها</Button>
+        </View>
+        <View className="flex-1">
+          <Button fullWidth size="small" variant={flow === "received" ? "primary" : "tertiary"} onPress={() => { setFlow("received"); setStatus("all"); }}>العروض الواردة</Button>
+        </View>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row-reverse", flexWrap: "nowrap", gap: 8, paddingBottom: 12 }} style={{ flexGrow: 0 }}>
-        {STATUS_TABS.map((tab) => {
-          const active = status === tab.value;
-          return (
-            <Pressable key={tab.value} onPress={() => setStatus(tab.value)} className={`rounded-full border px-3 py-2 ${active ? "border-primary-400 bg-primary-400/10" : "border-gray-200 dark:border-dark-400"}`}>
-              <Text numberOfLines={1} size="2xs" className={active ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}>{tab.label}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      <FilterCountSlider
+        items={STATUS_TABS.map((tab) => ({ key: tab.value, label: tab.label }))}
+        selectedKey={status}
+        onSelect={setStatus}
+      />
 
       <ScrollView className="flex-1" contentContainerStyle={{ gap: 10, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
         {query.isLoading ? <><CardSkeleton /><CardSkeleton /></> : null}

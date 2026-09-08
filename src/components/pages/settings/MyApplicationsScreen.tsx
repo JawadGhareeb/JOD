@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
+import { FilterCountSlider } from "@/src/components/shared";
 import Card from "@/src/components/ui/Card";
 import Text from "@/src/components/ui/Text";
 import Button from "@/src/components/ui/Button";
@@ -67,12 +68,11 @@ export function MyApplicationsScreen() {
         }}
         scrollEventThrottle={16}
       >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ flexDirection: "row-reverse", flexWrap: "nowrap", gap: 8, paddingBottom: 12 }}>
-          {STATUS_TABS.map((tab) => {
-            const active = tab.value === status;
-            return <Pressable key={tab.value} onPress={() => setStatus(tab.value)} className={`rounded-full border px-3 py-2 ${active ? "border-primary-400 bg-primary-400/10" : "border-gray-200 dark:border-dark-400"}`}><Text numberOfLines={1} size="2xs" className={active ? "text-primary-400" : "text-gray-500 dark:text-gray-300"}>{tab.label}</Text></Pressable>;
-          })}
-        </ScrollView>
+        <FilterCountSlider
+          items={STATUS_TABS.map((tab) => ({ key: tab.value, label: tab.label }))}
+          selectedKey={status}
+          onSelect={setStatus}
+        />
         {query.isLoading ? <Text size="xs" className="py-8 text-center text-gray-500">جارِ تحميل الطلبات...</Text> : null}
         {query.isError ? <Card padding="md" className="border-error-300/30"><Text size="xs" className="text-error-300">تعذر تحميل طلباتك.</Text><View className="mt-3"><Button size="small" onPress={() => void query.refetch()}>إعادة المحاولة</Button></View></Card> : null}
         {!query.isLoading && !query.isError && items.length === 0 ? <Card padding="md"><Text size="sm" weight="semibold" className="text-center">لا توجد طلبات في هذه الحالة</Text><Text size="xs" className="mt-2 text-center text-gray-500">طلبات التطوع على الحملات أو بوستات التطوع التابعة للمنظمات ستظهر هنا مع حالة كل طلب.</Text></Card> : null}
