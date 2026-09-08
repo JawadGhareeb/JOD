@@ -60,6 +60,12 @@ const settingsGroups: SettingsGroup[] = [
         route: "/my-donations",
       },
       {
+        title: "حملاتي",
+        hint: "إنشاء حملات تبرع شخصية ومتابعة طلبات المتبرعين",
+        Icon: appIcons.campaign,
+        route: "/my-campaigns" as Href,
+      },
+      {
         title: "طلبات المساعدة",
         hint: "العروض التي أرسلتها أو استقبلتها",
         Icon: appIcons.help,

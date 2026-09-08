@@ -34,6 +34,13 @@ export function useDonation(id?: string) {
   return useQuery({ queryKey: donationKeys.detail(id ?? ""), queryFn: () => donationsApi.detail(id!), enabled: Boolean(id) });
 }
 
+function useDonationOwnerAction<T extends { id: string }>(fn: (id: string) => Promise<unknown>) { const qc=useQueryClient(); return useMutation({ mutationFn:(vars:T)=>fn(vars.id), onSuccess:()=>{ qc.invalidateQueries({queryKey:donationKeys.all}); qc.invalidateQueries({queryKey:postKeys.all}); } }); }
+export const useAcceptDonation = () => useDonationOwnerAction(donationsApi.accept);
+export const useContactDonation = () => useDonationOwnerAction(donationsApi.contact);
+export const useAgreeDonation = () => useDonationOwnerAction(donationsApi.agree);
+export function useCompleteDonation(){const qc=useQueryClient();return useMutation({mutationFn:({id,confirmedAmount}:{id:string;confirmedAmount:number})=>donationsApi.complete(id,confirmedAmount),onSuccess:()=>{qc.invalidateQueries({queryKey:donationKeys.all});qc.invalidateQueries({queryKey:postKeys.all});}})}
+export function useCancelDonation(){const qc=useQueryClient();return useMutation({mutationFn:({id,reason}:{id:string;reason:string})=>donationsApi.cancel(id,reason),onSuccess:()=>{qc.invalidateQueries({queryKey:donationKeys.all});qc.invalidateQueries({queryKey:postKeys.all});}})}
+
 export function useDonateToCampaign() {
   const qc = useQueryClient();
   return useMutation({

@@ -69,6 +69,7 @@ export interface HomePost {
   category?: { id: string; name: string } | null;
   helpStatus?: "open" | "in_progress" | "fulfilled" | null;
   canOfferHelp?: boolean;
+  hasFinalAgreement?: boolean;
   activeOffersCount?: number;
   myOffer?: ActiveHelpOfferSummary | null;
   phoneNumber?: string;
@@ -96,7 +97,8 @@ export interface GetDiscoveryCampaignsParams {
 export interface GetCategoriesParams { page?: number; perPage?: number; search?: string; status?: "active"; target?: "post" | "campaign"; sort?: "createdAt" | "-createdAt" }
 
 export interface Campaign {
-  id: string; title: string; summary: string | null; content: string; category: { id: string; name: string } | string | null; status: string;
+  id: string;
+  ownerType?: "organization" | "group" | "personal"; title: string; summary: string | null; content: string; category: { id: string; name: string } | string | null; status: string;
   publisher: Publisher; images: string[]; location: string | null; goalAmount: number; raisedAmount: number;
   beneficiariesCount: number; donorsCount: number; applicantsCount: number;
   stats: { likes: number; comments: number; shares: number };

@@ -7,4 +7,9 @@ export const donationsApi = {
   donate: async (campaignId: string, input: DonationInput) => { const response = await apiClient.post<ApiEnvelope<Donation>>(`/campaigns/${campaignId}/donations`, input); return response.data.data; },
   list: async (params: DonationParams = {}) => { const response = await apiClient.get<ApiEnvelope<Donation[], PaginationMeta>>(`/me/donations${buildQuery(params)}`); return { items: response.data.data, meta: response.data.meta }; },
   detail: async (id: string) => { const response = await apiClient.get<ApiEnvelope<Donation>>(`/me/donations/${id}`); return response.data.data; },
+  accept: async (id: string) => (await apiClient.patch<ApiEnvelope<Donation>>(`/me/donations/${id}/accept`)).data.data,
+  contact: async (id: string) => (await apiClient.patch<ApiEnvelope<Donation>>(`/me/donations/${id}/contact`)).data.data,
+  agree: async (id: string) => (await apiClient.patch<ApiEnvelope<Donation>>(`/me/donations/${id}/agree`)).data.data,
+  complete: async (id: string, confirmedAmount: number) => (await apiClient.patch<ApiEnvelope<Donation>>(`/me/donations/${id}/complete`, { confirmedAmount })).data.data,
+  cancel: async (id: string, reason: string) => (await apiClient.patch<ApiEnvelope<Donation>>(`/me/donations/${id}/cancel`, { reason })).data.data,
 };

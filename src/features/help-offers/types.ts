@@ -37,6 +37,7 @@ export interface HelpOffer {
   completedAt: string | null;
   cancelledAt: string | null;
   rejectedAt: string | null;
+  isSelectedFinalOffer?: boolean;
   can: {
     accept: boolean;
     reject: boolean;

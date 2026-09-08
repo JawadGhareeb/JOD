@@ -104,7 +104,7 @@ export default function CreateHelpOfferPage() {
             ))}
           </View>
           {type === "financial" ? <Input fullWidth value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder="المبلغ" showStatusIcon={false} /> : null}
-          <Input fullWidth multiline value={description} onChangeText={setDescription} placeholder="وصف المساعدة - اختياري" maxLength={3000} showStatusIcon={false} />
+          <Input fullWidth multiline value={description} onChangeText={setDescription} placeholder="شرح عن المساعدة التي تستطيع تقديمها - اختياري" maxLength={3000} showStatusIcon={false} />
           <Text size="xs" weight="semibold">طريقة التواصل</Text>
           <View className="flex-row-reverse flex-wrap gap-2">
             {contacts.map((item) => (

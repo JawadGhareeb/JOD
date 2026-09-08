@@ -194,9 +194,11 @@ export default function PostDetailsPage() {
                   {isHelp
                     ? post.helpStatus === "fulfilled"
                       ? "مُلبّى"
-                      : post.helpStatus === "in_progress"
-                        ? "قيد التنفيذ"
-                        : "مفتوح"
+                      : post.hasFinalAgreement
+                        ? "تم الاتفاق"
+                        : post.helpStatus === "in_progress"
+                          ? "قيد التواصل"
+                          : "مفتوح"
                     : getPostActionStateLabel(post)}
                 </Text>
               </View>
