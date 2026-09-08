@@ -69,7 +69,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const { colorScheme } = useColorScheme();
   const primaryColor = getPrimaryColor(colorScheme === "dark");
 
-  const [postType, setPostType] = useState<CreatePostType>("volunteer");
+  const [postType, setPostType] = useState<CreatePostType>("help");
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   const [cityId, setCityId] = useState("");
@@ -129,23 +129,43 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
   const postTypeOptions = useMemo(() => {
     if (isGroupPost) {
       const options: { key: CreatePostType; label: string; hint: string }[] = [
-        { key: "volunteer", label: "فرصة تطوع", hint: "دعوة أعضاء أو مستخدمين للتطوع." },
         { key: "help", label: "طلب مساعدة", hint: "طلب مساعدة يتبع نفس فلو جود." },
         { key: "service", label: "تقديم مساعدة", hint: "عرض خدمة أو مساعدة من الفريق." },
         { key: "awareness", label: "منشور عام", hint: "خبر أو إعلان أو محتوى توعوي." },
         { key: "poll", label: "تصويت", hint: "تصويت بخيارات ونسب مثل تيليجرام." },
       ];
       if (groupQuery.data?.canCreateCampaign) options.push({ key: "campaign", label: "حملة", hint: "منشور حملة يملكه مدير الفريق." });
+      if (editMode && postType === "volunteer") {
+        options.unshift({ key: "volunteer", label: "فرصة تطوع", hint: "دعوة أعضاء أو مستخدمين للتطوع." });
+      }
       return options;
     }
-    return (postTypesQuery.data ?? [])
-      .filter((item) => item.canCreate && item.code !== "donation_campaign")
+    const options = (postTypesQuery.data ?? [])
+      .filter((item) => item.canCreate && item.code !== "donation_campaign" && item.code !== "volunteer_opportunity")
       .flatMap((item) => {
         if (!isCreateType(item.code)) return [];
         const mappedType = API_TYPE_TO_POST_TYPE[item.code];
-        return mappedType && ["volunteer", "help", "service"].includes(mappedType) ? [{ key: mappedType, label: item.label, hint: item.hint }] : [];
+        return mappedType && ["help", "service"].includes(mappedType)
+          ? [{ key: mappedType, label: item.label, hint: item.hint }]
+          : [];
       });
-  }, [groupQuery.data?.canCreateCampaign, isGroupPost, postTypesQuery.data]);
+    if (editMode && postType === "volunteer") {
+      const volunteerLookup = (postTypesQuery.data ?? []).find((item) => item.code === "volunteer_opportunity");
+      options.unshift({
+        key: "volunteer",
+        label: volunteerLookup?.label ?? "فرصة تطوع",
+        hint: volunteerLookup?.hint ?? "دعوة أعضاء أو مستخدمين للتطوع.",
+      });
+    }
+    return options;
+  }, [editMode, groupQuery.data?.canCreateCampaign, isGroupPost, postType, postTypesQuery.data]);
+
+  useEffect(() => {
+    if (editMode || postTypeOptions.length === 0) return;
+    if (!postTypeOptions.some((item) => item.key === postType)) {
+      setPostType(postTypeOptions[0].key);
+    }
+  }, [editMode, postType, postTypeOptions]);
   const cityOptions: SelectionOption[] = useMemo(
     () => (citiesQuery.data ?? []).map((item) => ({ label: item.name, value: item.id })),
     [citiesQuery.data],
