@@ -1,6 +1,6 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useRef } from "react";
-import { Animated, Easing, type NativeSyntheticEvent, type NativeScrollEvent } from "react-native";
+import { Animated, type NativeSyntheticEvent, type NativeScrollEvent } from "react-native";
 
 const SCROLL_EPSILON = 2;
 const COLLAPSE_AFTER_Y = 28;
@@ -28,15 +28,11 @@ function resetScrollTracking(offsetY = 0) {
 }
 
 function animateHeader(collapsed: boolean) {
-  if (collapsed === isCollapsed) return;
-  isCollapsed = collapsed;
+  if (collapsed) return;
+  if (!isCollapsed) return;
+  isCollapsed = false;
   headerCollapseProgress.stopAnimation();
-  Animated.timing(headerCollapseProgress, {
-    toValue: collapsed ? 1 : 0,
-    duration: collapsed ? 105 : 120,
-    easing: Easing.out(Easing.quad),
-    useNativeDriver: false,
-  }).start();
+  headerCollapseProgress.setValue(0);
 }
 
 export function resetHeader() {
