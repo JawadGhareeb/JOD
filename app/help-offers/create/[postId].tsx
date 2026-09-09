@@ -11,7 +11,7 @@ import { useAuthStatus } from "@/src/features/auth/queries";
 import { useCreateHelpOffer } from "@/src/features/help-offers/queries";
 import type { HelpContactMethod, HelpType } from "@/src/features/help-offers/types";
 import { usePost } from "@/src/features/posts/queries";
-import { ApiClientError } from "@/src/lib/api-client";
+import { APP_ERROR_MESSAGES, getArabicErrorMessage } from "@/src/constants/error-messages";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
 
@@ -74,7 +74,7 @@ export default function CreateHelpOfferPage() {
       toast.success("تم إرسال عرض المساعدة لصاحب الطلب.", "تم إرسال العرض");
       router.replace({ pathname: "/help-offers/[id]", params: { id: offer.id } });
     } catch (error) {
-      toast.error(error instanceof ApiClientError ? error.message : "تعذر إرسال عرض المساعدة.");
+      toast.error(getArabicErrorMessage(error, APP_ERROR_MESSAGES.helpOffers.submit));
       void postQuery.refetch();
     }
   };

@@ -1,7 +1,6 @@
 import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
+import { APP_ERROR_MESSAGES, localizeApiErrorMessage, localizeApiValidationMessage } from "@/src/constants/error-messages";
 import { ApiClientError } from "./api-client";
-
-const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
 /**
  * Maps a 422 validation error's field-level `details` onto react-hook-form
@@ -20,15 +19,7 @@ export function applyApiFormErrors<TFieldValues extends FieldValues>(
   fieldMap: Partial<Record<string, Path<TFieldValues>>> = {},
 ): string | null {
   if (!(error instanceof ApiClientError)) {
-    return GENERIC_ERROR_MESSAGE;
-  }
-
-  if (error.code === "account_inactive") {
-    return "هذا الحساب غير مفعّل. تواصل مع الإدارة.";
-  }
-
-  if (error.code === "organization_inactive") {
-    return "حساب المنظمة غير مفعّل أو غير موثّق بعد.";
+    return APP_ERROR_MESSAGES.generic;
   }
 
   if (error.details) {
@@ -36,9 +27,11 @@ export function applyApiFormErrors<TFieldValues extends FieldValues>(
 
     for (const [serverField, messages] of Object.entries(error.details)) {
       const formField = (fieldMap[serverField] ?? serverField) as Path<TFieldValues>;
-      const message = messages[0];
+      const message = Array.isArray(messages) ? messages[0] : messages;
       if (message) {
-        setError(formField, { message });
+        setError(formField, {
+          message: localizeApiValidationMessage(serverField, message),
+        });
         mappedAny = true;
       }
     }
@@ -46,5 +39,5 @@ export function applyApiFormErrors<TFieldValues extends FieldValues>(
     if (mappedAny) return null;
   }
 
-  return error.message;
+  return localizeApiErrorMessage(error.message, error.status, error.code);
 }

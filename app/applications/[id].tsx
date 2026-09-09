@@ -9,7 +9,7 @@ import { CardSkeleton } from "@/src/components/ui/LoadingSkeleton";
 import Text from "@/src/components/ui/Text";
 import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useApplication, useWithdrawApplication } from "@/src/features/applications/queries";
-import { ApiClientError } from "@/src/lib/api-client";
+import { APP_ERROR_MESSAGES, getArabicErrorMessage } from "@/src/constants/error-messages";
 import { useToast } from "@/src/providers/ToastProvider";
 
 const STATUS_LABELS: Record<string, string> = { pending: "بانتظار موافقة المنظمة", under_review: "قيد المراجعة", approved: "تم القبول", accepted: "تم القبول", contacting: "جاري التواصل", completed: "اكتملت المشاركة", rejected: "مرفوض", withdrawn: "منسحب" };
@@ -35,7 +35,7 @@ export default function ApplicationDetailsPage() {
       toast.success("تم سحب طلب التطوع.", "تم السحب");
       await query.refetch();
     } catch (error) {
-      toast.error(error instanceof ApiClientError ? error.message : "تعذر سحب الطلب.", "حدث خطأ");
+      toast.error(getArabicErrorMessage(error, APP_ERROR_MESSAGES.applications.withdraw), "حدث خطأ");
     }
   };
 

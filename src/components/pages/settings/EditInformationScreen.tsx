@@ -15,13 +15,12 @@ import Text from "@/src/components/ui/Text";
 import { useCities } from "@/src/features/lookups/queries";
 import { useUpdateProfile } from "@/src/features/account/queries";
 import { useAuthStatus, useRemoveAvatar, useUpdateAvatar } from "@/src/features/auth/queries";
-import { ApiClientError } from "@/src/lib/api-client";
+import { APP_ERROR_MESSAGES, getArabicErrorMessage } from "@/src/constants/error-messages";
 import { isValidSyrianMobile, normalizeSyrianMobile, SYRIAN_MOBILE_ERROR } from "@/src/lib/syrian-phone";
 import { useToast } from "@/src/providers/ToastProvider";
 import { MenuPageHeader } from "./MenuPageHeader";
 
 const UserIcon = appIcons.profile;
-const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
 export function EditInformationScreen() {
   const { user, isLoading } = useAuthStatus();
@@ -120,8 +119,7 @@ export function EditInformationScreen() {
       });
       toast.success("تم تحديث بيانات الحساب بنجاح.", "تم حفظ المعلومات");
     } catch (error) {
-      const message = error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
-      toast.error(message, "تعذر حفظ المعلومات");
+      toast.error(getArabicErrorMessage(error, APP_ERROR_MESSAGES.profile.update), "تعذر حفظ المعلومات");
     }
   };
 

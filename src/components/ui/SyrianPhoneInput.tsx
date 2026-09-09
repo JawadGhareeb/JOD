@@ -1,13 +1,14 @@
 import type { ComponentProps } from "react";
-import { PhoneCall } from "lucide-react-native";
 import { View } from "react-native";
 import Input from "./Input";
 import Text from "./Text";
 import { getSyrianPhoneSubscriber, SYRIAN_PHONE_PREFIX } from "@/src/lib/syrian-phone";
 
+const DEFAULT_HELPER_TEXT = "أدخل 9 أرقام فقط بعد +963 من دون صفر في البداية، ويجب أن يكون الرقم مرتبطاً بحساب واتساب.";
+
 type SyrianPhoneInputProps = Omit<
   ComponentProps<typeof Input>,
-  "value" | "onChangeText" | "keyboardType" | "leftIcon" | "maxLength"
+  "value" | "onChangeText" | "keyboardType" | "leftIcon" | "maxLength" | "inputContainerStyle"
 > & {
   value: string;
   onChangeText: (value: string) => void;
@@ -17,6 +18,7 @@ export default function SyrianPhoneInput({
   value,
   onChangeText,
   placeholder = "9XXXXXXXX",
+  helperText = DEFAULT_HELPER_TEXT,
   style,
   ...props
 }: SyrianPhoneInputProps) {
@@ -33,14 +35,21 @@ export default function SyrianPhoneInput({
       keyboardType="phone-pad"
       maxLength={9}
       placeholder={placeholder}
+      helperText={helperText}
+      showStatusIcon={false}
       leftIcon={(
-        <View className="flex-row items-center gap-1">
-          <Text size="xs">🇸🇾</Text>
-          <Text size="xs" weight="semibold" className="text-primary-400">+963</Text>
-          <PhoneCall size={16} />
+        <View style={{ flexDirection: "row" }}>
+          <Text
+            size="xs"
+            weight="semibold"
+            className="text-primary-400"
+            style={{ writingDirection: "ltr" }}
+          >
+            +963
+          </Text>
         </View>
       )}
-      inputContainerClassName="flex-row"
+      inputContainerStyle={{ flexDirection: "row" }}
       inputClassName="text-left"
       style={[{ textAlign: "left", writingDirection: "ltr" }, style]}
     />

@@ -9,7 +9,7 @@ import { SectionHeader } from "@/src/components/shared/SectionHeader";
 import { toProfileSummary } from "@/src/features/account/helpers";
 import { useAuthStatus } from "@/src/features/auth/queries";
 import { useMyFollowing } from "@/src/features/follows/queries";
-import { ApiClientError } from "@/src/lib/api-client";
+import { APP_ERROR_MESSAGES, getArabicErrorMessage } from "@/src/constants/error-messages";
 import { useOnTabReselect } from "@/src/lib/tab-reselect";
 import { useDeletePost, useMyPosts } from "@/src/features/posts/queries";
 import type { MyPost, MyPostStatus } from "@/src/features/posts/types";
@@ -18,8 +18,6 @@ import { MyPostCard } from "./MyPostCard";
 import { MyPostCardSkeleton } from "./MyPostCardSkeleton";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import { useToast } from "@/src/providers/ToastProvider";
-
-const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
 const STATUS_TABS: { key: MyPostStatus; label: string }[] = [
   { key: "published", label: "منشور" },
@@ -87,7 +85,7 @@ export function ProfileScreen() {
       await deleteMutation.mutateAsync(postId);
       toast.success("تم حذف المنشور.", "تم الحذف");
     } catch (error) {
-      toast.error(error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE, "تعذر حذف المنشور");
+      toast.error(getArabicErrorMessage(error, APP_ERROR_MESSAGES.profile.deletePost), "تعذر حذف المنشور");
     }
   };
 

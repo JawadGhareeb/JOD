@@ -18,7 +18,7 @@ import { useCities } from "@/src/features/lookups/queries";
 import { useApplyToPost } from "@/src/features/applications/queries";
 import { usePost } from "@/src/features/posts/queries";
 import { useAuthStatus } from "@/src/features/auth/queries";
-import { ApiClientError } from "@/src/lib/api-client";
+import { APP_ERROR_MESSAGES, getArabicErrorMessage } from "@/src/constants/error-messages";
 import { localizeSyrianLocation } from "@/src/helpers/display";
 
 export default function ApplyPage() {
@@ -48,7 +48,7 @@ export default function ApplyPage() {
       toast.success("تم تسجيل طلبك على فرصة التطوع بنجاح.", "تم إرسال الطلب");
       router.back();
     } catch (error) {
-      toast.error(error instanceof ApiClientError ? error.message : "حدث خطأ غير متوقع.", "تعذر إرسال الطلب");
+      toast.error(getArabicErrorMessage(error, APP_ERROR_MESSAGES.applications.submit), "تعذر إرسال الطلب");
     }
   };
 

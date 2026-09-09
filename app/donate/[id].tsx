@@ -19,7 +19,7 @@ import { useDonateToCampaign } from "@/src/features/donations/queries";
 import type { ContactMethod, PaymentMethod } from "@/src/features/donations/types";
 import { useCampaign } from "@/src/features/posts/queries";
 import { useAuthStatus } from "@/src/features/auth/queries";
-import { ApiClientError } from "@/src/lib/api-client";
+import { APP_ERROR_MESSAGES, getArabicErrorMessage } from "@/src/constants/error-messages";
 import { formatWesternNumber } from "@/src/helpers/display";
 
 const CONTACT_METHODS: { value: ContactMethod; label: string }[] = [
@@ -80,7 +80,7 @@ export default function DonatePage() {
       toast.success("تم إرسال طلب التبرع. بانتظار موافقة المنظمة، وبعدها يبدأ التنسيق والتواصل.", "تم إرسال الطلب");
       router.replace("/my-donations");
     } catch (error) {
-      toast.error(error instanceof ApiClientError ? error.message : "حدث خطأ غير متوقع.", "تعذر إرسال طلب التبرع");
+      toast.error(getArabicErrorMessage(error, APP_ERROR_MESSAGES.donations.submit), "تعذر إرسال طلب التبرع");
     }
   };
 

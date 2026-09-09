@@ -8,11 +8,11 @@ import Text from "@/src/components/ui/Text";
 import VerificationCodeInput, { type VerificationCodeInputHandle } from "@/src/components/ui/VerificationCodeInput";
 import { useToast } from "@/src/providers/ToastProvider";
 import { useChangePassword, useRequestPasswordChangeCode } from "@/src/features/account/queries";
+import { APP_ERROR_MESSAGES, getArabicErrorMessage } from "@/src/constants/error-messages";
 import { ApiClientError } from "@/src/lib/api-client";
 import { MenuPageHeader } from "./MenuPageHeader";
 
 const MIN_PASSWORD_LENGTH = 8;
-const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
 type Step = "password" | "verify";
 
@@ -43,8 +43,7 @@ export function ChangePasswordScreen() {
       setStep("verify");
       toast.success("تم إرسال رمز تحقق من 6 أرقام.", "تحقق من العملية");
     } catch (error) {
-      const message = error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
-      toast.error(message, "تعذر إرسال رمز التحقق");
+      toast.error(getArabicErrorMessage(error, APP_ERROR_MESSAGES.password.sendCode), "تعذر إرسال رمز التحقق");
     }
   };
 
@@ -60,7 +59,7 @@ export function ChangePasswordScreen() {
       setCodeError("");
       setStep("password");
     } catch (error) {
-      const message = error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE;
+      const message = getArabicErrorMessage(error, APP_ERROR_MESSAGES.password.update);
       if (error instanceof ApiClientError && error.code === "invalid_verification_code") {
         setCodeError("رمز التحقق غير صحيح أو منتهي الصلاحية.");
         codeRef.current?.clear();

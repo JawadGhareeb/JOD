@@ -29,7 +29,7 @@ import {
 } from "@/src/features/posts/queries";
 import { CONTENT_AUDIENCE_OPTIONS } from "@/src/features/posts/types";
 import type { ApiPostType, ContentAudience, CreatePostType, MobileImageFile } from "@/src/features/posts/types";
-import { ApiClientError } from "@/src/lib/api-client";
+import { APP_ERROR_MESSAGES, getArabicErrorMessage } from "@/src/constants/error-messages";
 import { getPrimaryColor } from "@/src/theme";
 import { useCollapsibleHeaderScreen } from "@/src/providers/CollapsibleHeaderProvider";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
@@ -41,7 +41,6 @@ const TitleIcon = appIcons.campaign;
 const DescriptionIcon = appIcons.about;
 const MAX_POST_IMAGES = 10;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-const GENERIC_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 
 const readParam = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] || "" : value || "";
 const isRemoteImage = (uri: string) => /^https?:\/\//i.test(uri);
@@ -333,7 +332,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
         setSelectedImages(updated.images);
         return;
       } catch (error) {
-        Alert.alert("تعذر حذف الصورة", error instanceof ApiClientError ? error.message : GENERIC_ERROR_MESSAGE);
+        Alert.alert("تعذر حذف الصورة", getArabicErrorMessage(error, APP_ERROR_MESSAGES.posts.deleteImage));
         return;
       }
     }
@@ -359,7 +358,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
       }
       toast.success("تم حفظ بيانات المنشور وكل الصور كمسودة.", "تم حفظ المسودة");
     } catch (error) {
-      toast.error(error instanceof ApiClientError ? error.message : "تعذر رفع الصور، لذلك لم يتم حفظ المسودة. حاول مرة أخرى.", "تعذر حفظ المسودة");
+      toast.error(getArabicErrorMessage(error, APP_ERROR_MESSAGES.posts.saveDraft), "تعذر حفظ المسودة");
     } finally {
       setIsSavingDraft(false);
     }
@@ -386,7 +385,7 @@ export function CreatePostScreen({ showPageHeader = true }: CreatePostScreenProp
       else if (isGroupPost) router.replace({ pathname: "/groups/[id]", params: { id: groupId } });
       else router.replace("/(tabs)/profile");
     } catch (error) {
-      toast.error(error instanceof ApiClientError ? error.message : "تعذر رفع الصور، لذلك لم يتم إنشاء المنشور. حاول مرة أخرى.", "تعذر إرسال المنشور");
+      toast.error(getArabicErrorMessage(error, APP_ERROR_MESSAGES.posts.publish), "تعذر إرسال المنشور");
     } finally {
       setIsPublishing(false);
     }

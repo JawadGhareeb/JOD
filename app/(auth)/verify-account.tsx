@@ -10,6 +10,7 @@ import Logo from "@/src/components/ui/Logo";
 import Text from "@/src/components/ui/Text";
 import VerificationCodeInput, { type VerificationCodeInputHandle } from "@/src/components/ui/VerificationCodeInput";
 import { useResendAccountVerification, useVerifyAccount } from "@/src/features/auth/queries";
+import { APP_ERROR_MESSAGES, getArabicErrorMessage } from "@/src/constants/error-messages";
 import { ApiClientError } from "@/src/lib/api-client";
 import { useToast } from "@/src/providers/ToastProvider";
 
@@ -59,9 +60,9 @@ export default function VerifyAccountScreen() {
           router.replace("/(auth)/login");
           return;
         }
-        setError(caught.code === "invalid_verification_code" ? "رمز التحقق غير صحيح." : caught.message);
+        setError(getArabicErrorMessage(caught, APP_ERROR_MESSAGES.auth.verifyAccount));
       } else {
-        setError("تعذر التحقق من الرمز. حاول مرة أخرى.");
+        setError(APP_ERROR_MESSAGES.auth.verifyAccount);
       }
     }
   };
@@ -84,9 +85,9 @@ export default function VerifyAccountScreen() {
           router.replace("/(auth)/login");
           return;
         }
-        setError(caught.message);
+        setError(getArabicErrorMessage(caught, APP_ERROR_MESSAGES.auth.resendVerification));
       } else {
-        setError("تعذر إعادة إرسال الرمز.");
+        setError(APP_ERROR_MESSAGES.auth.resendVerification);
       }
     }
   };

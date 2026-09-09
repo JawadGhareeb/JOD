@@ -8,7 +8,7 @@ import Input from "@/src/components/ui/Input";
 import SelectionModal, { type SelectionOption } from "@/src/components/ui/SelectionModal";
 import { SkeletonBlock } from "@/src/components/ui/SkeletonBlock";
 import Text from "@/src/components/ui/Text";
-import { ApiClientError } from "@/src/lib/api-client";
+import { APP_ERROR_MESSAGES, getArabicErrorMessage } from "@/src/constants/error-messages";
 import { useCities } from "@/src/features/lookups/queries";
 import { usePersonalizationOptions, usePersonalizationProfile, useUpdatePersonalization } from "@/src/features/personalization/queries";
 import type { PersonalizationMissingField, UserIntent } from "@/src/features/personalization/types";
@@ -114,7 +114,7 @@ export function PersonalizationSettingsScreen() {
       });
       toast.success("تم تحديث تفضيلات المحتوى وستنعكس على الاقتراحات القادمة.");
     } catch (error) {
-      toast.error(error instanceof ApiClientError ? error.message : "تعذر تحديث التفضيلات. حاول مرة أخرى.");
+      toast.error(getArabicErrorMessage(error, APP_ERROR_MESSAGES.preferences.update));
     }
   };
 

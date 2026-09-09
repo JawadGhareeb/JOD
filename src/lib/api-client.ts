@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import { APP_ERROR_MESSAGES, localizeApiErrorMessage, localizeApiValidationMessage } from "@/src/constants/error-messages";
 import { getApiBaseUrl } from "./env";
 import {
   clearStoredTokens,
@@ -8,7 +9,6 @@ import {
 } from "./token-storage";
 import type { ApiEnvelope, ApiErrorBody, ApiValidationDetails } from "@/src/types/api";
 
-const DEFAULT_ERROR_MESSAGE = "حدث خطأ غير متوقع. حاول مرة أخرى.";
 const ANONYMOUS_ENDPOINTS = [
   "/auth/register",
   "/auth/verify-account",
@@ -57,7 +57,20 @@ function extractErrorMessage(responseData: unknown): string {
     const message = (responseData as { message?: unknown }).message;
     if (typeof message === "string" && message) return message;
   }
-  return DEFAULT_ERROR_MESSAGE;
+  return APP_ERROR_MESSAGES.generic;
+}
+
+function localizeValidationDetails(details?: ApiValidationDetails | null): ApiValidationDetails | null {
+  if (!details) return null;
+
+  return Object.fromEntries(
+    Object.entries(details).map(([field, messages]) => [
+      field,
+      Array.isArray(messages)
+        ? messages.map((message) => localizeApiValidationMessage(field, message))
+        : localizeApiValidationMessage(field, messages),
+    ]),
+  );
 }
 
 export class ApiClientError extends Error {
@@ -164,11 +177,13 @@ function createApiClient(): AxiosInstance {
       }
 
       const errorBody = readErrorBody(error.response?.data);
+      const code = errorBody?.code ?? null;
+      const localizedDetails = localizeValidationDetails(errorBody?.details ?? null);
       throw new ApiClientError(
-        extractErrorMessage(error.response?.data),
+        localizeApiErrorMessage(extractErrorMessage(error.response?.data), status, code),
         status,
-        errorBody?.code ?? null,
-        errorBody?.details ?? null,
+        code,
+        localizedDetails,
       );
     },
   );

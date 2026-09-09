@@ -14,6 +14,8 @@ import {
   TextInputProps,
   TouchableOpacity,
   View,
+  type StyleProp,
+  type ViewStyle,
 } from "react-native";
 import { FONTS } from "../../constants/fonts";
 import { getPrimaryColor } from "@/src/theme";
@@ -36,6 +38,7 @@ interface InputProps extends TextInputProps {
   className?: string;
   inputClassName?: string;
   inputContainerClassName?: string;
+  inputContainerStyle?: StyleProp<ViewStyle>;
   labelClassName?: string;
   errorClassName?: string;
   helperTextClassName?: string;
@@ -55,6 +58,7 @@ const Input: React.FC<InputProps> = ({
   className,
   inputClassName,
   inputContainerClassName,
+  inputContainerStyle,
   labelClassName,
   errorClassName,
   helperTextClassName,
@@ -330,7 +334,7 @@ const Input: React.FC<InputProps> = ({
       <View className="relative">
         <Animated.View
           className={getInputContainerClasses() + " " + inputContainerClassName}
-          style={getAnimatedContainerStyle()}
+          style={[getAnimatedContainerStyle(), inputContainerStyle]}
         >
           {/* Status Icon */}
           {showStatusIcon && !leftIcon && (

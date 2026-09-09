@@ -14,6 +14,7 @@ import Text from "@/src/components/ui/Text";
 import { MenuPageHeader } from "@/src/components/pages/settings/MenuPageHeader";
 import { useCreateGroup } from "@/src/features/groups/queries";
 import { GROUP_CATEGORIES, type GroupInviteCandidate } from "@/src/features/groups/types";
+import { APP_ERROR_MESSAGES, FORM_ERROR_MESSAGES, getArabicErrorMessage } from "@/src/constants/error-messages";
 import type { MediaUploadFile } from "@/src/features/media/types";
 import { useToast } from "@/src/providers/ToastProvider";
 import { AdminsPickerModal } from "./AdminsPickerModal";
@@ -51,18 +52,18 @@ const inviteCandidateSchema = z.object({
 });
 
 const groupFormSchema = z.object({
-  name: z.string().trim().min(3, "اسم الفريق يجب أن يكون 3 أحرف على الأقل").max(120, "اسم الفريق يجب ألا يتجاوز 120 حرفاً"),
-  description: z.string().trim().min(10, "وصف الفريق يجب أن يكون 10 أحرف على الأقل").max(2000, "وصف الفريق يجب ألا يتجاوز 2000 حرف"),
-  purpose: z.string().trim().min(10, "هدف إنشاء الفريق يجب أن يكون 10 أحرف على الأقل").max(1000, "هدف إنشاء الفريق يجب ألا يتجاوز 1000 حرف"),
-  location: z.string().min(1, "المحافظة مطلوبة").refine(
+  name: z.string().trim().min(3, FORM_ERROR_MESSAGES.group.nameMin).max(120, FORM_ERROR_MESSAGES.group.nameMax),
+  description: z.string().trim().min(10, FORM_ERROR_MESSAGES.group.descriptionMin).max(2000, FORM_ERROR_MESSAGES.group.descriptionMax),
+  purpose: z.string().trim().min(10, FORM_ERROR_MESSAGES.group.purposeMin).max(1000, FORM_ERROR_MESSAGES.group.purposeMax),
+  location: z.string().min(1, FORM_ERROR_MESSAGES.group.locationRequired).refine(
     (value) => GOVERNORATE_OPTIONS.some((option) => option.value === value),
-    "اختر محافظة سورية صحيحة",
+    FORM_ERROR_MESSAGES.group.locationInvalid,
   ),
-  categories: z.array(z.string()).min(1, "اختر توجهاً واحداً على الأقل").max(8, "يمكن اختيار 8 توجهات كحد أقصى"),
-  rules: z.array(z.string().trim().min(1, "القانون مطلوب").max(300, "القانون يجب ألا يتجاوز 300 حرف")).min(1, "أضف قانوناً واحداً على الأقل").max(20, "يمكن إضافة 20 قانوناً كحد أقصى"),
-  invitedUsers: z.array(inviteCandidateSchema).min(1, "اختر مستخدماً واحداً على الأقل لدعوته").max(30, "يمكن دعوة 30 مستخدماً كحد أقصى"),
+  categories: z.array(z.string()).min(1, FORM_ERROR_MESSAGES.group.categoryRequired).max(8, FORM_ERROR_MESSAGES.group.categoryMax),
+  rules: z.array(z.string().trim().min(1, FORM_ERROR_MESSAGES.group.ruleRequired).max(300, FORM_ERROR_MESSAGES.group.ruleMaxLength)).min(1, FORM_ERROR_MESSAGES.group.rulesRequired).max(20, FORM_ERROR_MESSAGES.group.rulesMax),
+  invitedUsers: z.array(inviteCandidateSchema).min(1, FORM_ERROR_MESSAGES.group.inviteRequired).max(30, FORM_ERROR_MESSAGES.group.inviteMax),
   requiresPostApproval: z.boolean(),
-  image: mediaFileSchema.nullable().refine((value) => value !== null, "شعار الفريق مطلوب"),
+  image: mediaFileSchema.nullable().refine((value) => value !== null, FORM_ERROR_MESSAGES.group.imageRequired),
 });
 
 type GroupFormInput = z.input<typeof groupFormSchema>;
@@ -143,8 +144,8 @@ export function CreateGroupScreen() {
         });
         toast.success("تم إرسال طلب إنشاء الفريق لإدارة جود.");
         router.replace({ pathname: "/groups/[id]", params: { id: group.id } });
-      } catch {
-        toast.error("تعذر إرسال طلب إنشاء الفريق. تحقق من البيانات وحاول مجدداً.");
+      } catch (error) {
+        toast.error(getArabicErrorMessage(error, APP_ERROR_MESSAGES.groups.create));
       }
     },
   );
@@ -152,7 +153,7 @@ export function CreateGroupScreen() {
   const onSubmit = async () => {
     const formIsValid = await trigger();
     if (!formIsValid) {
-      toast.error("راجع الحقول المطلوبة والمحددة باللون الأحمر.");
+      toast.error(FORM_ERROR_MESSAGES.requiredFields);
       return;
     }
     await submitValidForm();
