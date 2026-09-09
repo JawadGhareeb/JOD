@@ -50,7 +50,8 @@ export function FollowButton({
       size={size}
       fullWidth={fullWidth}
       variant={isOverlay ? "primary" : isFollowing ? "tertiary" : "primary"}
-      className={isOverlay ? "min-h-[32px] rounded-lg border border-white/80 bg-transparent px-3 py-1 shadow-none" : undefined}
+      style={isOverlay ? { alignSelf: "center" } : undefined}
+      className={isOverlay ? "h-8 min-h-0 min-w-[72px] rounded-lg border border-white/80 bg-black/20 px-2.5 py-0 shadow-none" : undefined}
       loading={isPending}
       disabled={isPending}
       onPress={() => void onPress()}

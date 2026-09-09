@@ -38,13 +38,7 @@ export function ReelsScreen() {
     isFetchingNextPage: query.isFetchingNextPage,
     fetchNextPage: query.fetchNextPage,
   };
-  const { onScroll: onHeaderScroll, resetHeader } = useCollapsibleHeaderScreen({
-    resetOnFocus: false,
-    scrollEpsilon: 0.5,
-    collapseAfterY: 18,
-    collapseTravel: 7,
-    expandTravel: 5,
-  });
+  const { resetHeader } = useCollapsibleHeaderScreen();
 
   const setActiveReel = useCallback((id: string | null) => {
     activeIdRef.current = id;
@@ -67,8 +61,9 @@ export function ReelsScreen() {
       return () => {
         setScreenFocused(false);
         setActiveReel(null);
+        resetHeader();
       };
-    }, [selectedId, setActiveReel]),
+    }, [resetHeader, selectedId, setActiveReel]),
   );
 
   const cardHeight = Math.max(1, pageHeight);
@@ -140,13 +135,10 @@ export function ReelsScreen() {
           />
         )}
         showsVerticalScrollIndicator={false}
-        pagingEnabled
-        snapToInterval={cardHeight}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        disableIntervalMomentum
-        onScroll={onHeaderScroll}
-        scrollEventThrottle={16}
+        initialNumToRender={2}
+        maxToRenderPerBatch={2}
+        windowSize={3}
+        getItemLayout={(_, index) => ({ length: cardHeight, offset: cardHeight * index, index })}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         onContentSizeChange={() => {

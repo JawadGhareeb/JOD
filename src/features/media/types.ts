@@ -31,9 +31,18 @@ export interface PublicMediaOrganization {
   logo?: MediaItem | null;
 }
 
+export interface PublicMediaPublisher {
+  id: string;
+  publisherType: "organization" | "user";
+  name: string;
+  username: string;
+  avatarUrl?: string | null;
+  verified?: boolean;
+}
+
 export interface PublicMediaItem {
   id: string;
-  model: "organization";
+  model: "organization" | "post";
   modelId: string;
   prop: "videos";
   url: string;
@@ -54,6 +63,7 @@ export interface PublicMediaItem {
   createdAt: string | null;
   updatedAt: string | null;
   organization?: PublicMediaOrganization | null;
+  publisher?: PublicMediaPublisher | null;
   recommendation?: { reasons: string[]; source?: string; isExploration?: boolean; feedbackRequested?: boolean };
 }
 

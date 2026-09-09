@@ -52,7 +52,10 @@ export function ReelVideoItem({
   const likeMutation = useLikeMedia();
   const saveMutation = useSaveMedia();
   const reportMutation = useReportMedia();
-  const publisherQuery = usePublisher(video.organization?.id);
+  const embeddedPublisher = video.publisher;
+  const fallbackOrganization = video.organization;
+  const publisherId = embeddedPublisher?.id ?? fallbackOrganization?.id;
+  const publisherQuery = usePublisher(publisherId);
   const reportReasons = useReportReasons();
   const [isLiked, setIsLiked] = useState(video.isLiked);
   const [likesCount, setLikesCount] = useState(video.likesCount ?? 0);
@@ -173,9 +176,11 @@ export function ReelVideoItem({
   };
 
   const publisher = publisherQuery.data;
-  const organizationName = publisher?.name || video.organization?.name || "منظمة على جود";
-  const organizationImage = publisher?.avatarUrl || video.organization?.image || video.organization?.logo?.url || null;
-  const organizationVerified = Boolean(publisher?.verified ?? video.organization?.verified);
+  const publisherType = publisher?.publisherType ?? embeddedPublisher?.publisherType ?? (fallbackOrganization ? "organization" : undefined);
+  const publisherName = publisher?.name || embeddedPublisher?.name || fallbackOrganization?.name || "ناشر على جود";
+  const publisherImage = publisher?.avatarUrl || embeddedPublisher?.avatarUrl || fallbackOrganization?.image || fallbackOrganization?.logo?.url || null;
+  const publisherVerified = publisherType === "organization" && Boolean(publisher?.verified ?? embeddedPublisher?.verified ?? fallbackOrganization?.verified);
+  const publisherUsername = publisher?.username || embeddedPublisher?.username || null;
   const playbackUrl = getReelPlaybackUrl(video);
 
   return (
@@ -189,7 +194,7 @@ export function ReelVideoItem({
             muted={isMuted}
             showProgressControls
             progressControlsPlacement="center"
-            contentFit="cover"
+            contentFit="contain"
             style={{ width: "100%", height: "100%" }}
           />
         ) : (
@@ -272,29 +277,31 @@ export function ReelVideoItem({
           <View className="flex-row-reverse items-center gap-2">
             <Pressable
               onPress={() => {
-                if (!video.organization?.id) return;
-                router.push({ pathname: "/author/[id]", params: { id: video.organization.id } });
+                if (!publisherId) return;
+                router.push({ pathname: "/author/[id]", params: { id: publisherId } });
               }}
-              disabled={!video.organization?.id}
+              disabled={!publisherId}
               className="min-w-0 flex-1 flex-row-reverse items-center gap-2"
               accessibilityRole="button"
-              accessibilityLabel={`عرض ملف ${organizationName}`}
+              accessibilityLabel={`عرض ملف ${publisherName}`}
             >
-              <Avatar name={organizationName} imageUrl={organizationImage} size={38} />
+              <Avatar name={publisherName} imageUrl={publisherImage} size={38} />
               <View className="min-w-0 flex-1 items-end">
                 <View className="flex-row-reverse items-center gap-1">
                   <Text weight="semibold" size="sm" className="text-white" numberOfLines={1}>
-                    {organizationName}
+                    {publisherName}
                   </Text>
-                  {organizationVerified ? <VerifiedBadge size={15} /> : null}
+                  {publisherVerified ? <VerifiedBadge size={15} /> : null}
                 </View>
-                <Text size="2xs" className="mt-0.5 text-gray-200">فيديو من جود</Text>
+                <Text size="2xs" className="mt-0.5 text-gray-200" numberOfLines={1}>
+                  {publisherUsername ? `@${publisherUsername}` : publisherType === "organization" ? "منظمة على جود" : "ناشر على جود"}
+                </Text>
               </View>
             </Pressable>
-            {video.organization?.id && publisher ? (
+            {publisherId && publisher && publisherType ? (
               <FollowButton
-                targetType="organization"
-                targetId={video.organization.id}
+                targetType={publisherType}
+                targetId={publisherId}
                 isFollowing={Boolean(publisher.isFollowing)}
                 appearance="overlay"
               />

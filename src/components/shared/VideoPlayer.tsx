@@ -110,7 +110,7 @@ export function VideoPlayer({
   const scheduleCenterControlsHide = () => {
     if (progressControlsPlacement !== "center" || manuallyPaused) return;
     if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
-    controlsTimerRef.current = setTimeout(() => setCenterControlsVisible(false), 1600);
+    controlsTimerRef.current = setTimeout(() => setCenterControlsVisible(false), 2600);
   };
 
   const revealCenterControls = () => {
@@ -130,7 +130,7 @@ export function VideoPlayer({
       setCenterControlsVisible(true);
       if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
       if (!nextPaused) {
-        controlsTimerRef.current = setTimeout(() => setCenterControlsVisible(false), 1600);
+        controlsTimerRef.current = setTimeout(() => setCenterControlsVisible(false), 2600);
       }
     }
   };
@@ -162,16 +162,7 @@ export function VideoPlayer({
 
   return (
     <View style={[{ overflow: "hidden" }, style]}>
-      <Pressable
-        onPress={
-          nativeControls
-            ? undefined
-            : progressControlsPlacement === "center" && active
-              ? revealCenterControls
-              : togglePlayback
-        }
-        className="flex-1"
-      >
+      <View className="flex-1">
         <View className="absolute inset-0 items-center justify-center bg-dark-500">
           <ActivityIndicator color={PRIMARY_COLOR_LIGHT} />
         </View>
@@ -179,20 +170,30 @@ export function VideoPlayer({
           player={player}
           style={{ width: "100%", height: "100%" }}
           nativeControls={nativeControls}
+          pointerEvents={nativeControls ? "auto" : "none"}
           contentFit={contentFit}
           allowsFullscreen
         />
         {!nativeControls && (!active || manuallyPaused) && progressControlsPlacement !== "center" ? (
-          <View className="absolute inset-0 items-center justify-center bg-black/20">
+          <View pointerEvents="none" className="absolute inset-0 items-center justify-center bg-black/20">
             <View className="h-14 w-14 items-center justify-center rounded-full bg-black/65">
               <PlayIcon size={26} color="#FFFFFF" fill="#FFFFFF" />
             </View>
           </View>
         ) : null}
-      </Pressable>
+      </View>
+
+      {!nativeControls ? (
+        <Pressable
+          onPress={progressControlsPlacement === "center" && active ? revealCenterControls : togglePlayback}
+          className="absolute inset-0 z-10"
+          accessibilityRole="button"
+          accessibilityLabel={progressControlsPlacement === "center" ? "إظهار عناصر التحكم بالفيديو" : manuallyPaused ? "تشغيل الفيديو" : "إيقاف الفيديو"}
+        />
+      ) : null}
 
       {centerControlsShown ? (
-        <View pointerEvents="box-none" className="absolute inset-0 items-center justify-center bg-black/15">
+        <View pointerEvents="box-none" className="absolute inset-0 z-20 items-center justify-center bg-black/15">
           <View className="flex-row items-center gap-7">
             <Pressable
               onPress={() => seekBy(-10)}

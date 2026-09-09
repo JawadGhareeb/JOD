@@ -72,6 +72,8 @@ export function GroupJoinButton({
       <Button
         size={size}
         fullWidth={fullWidth}
+        style={fullWidth ? undefined : { alignSelf: "center" }}
+        className={fullWidth ? undefined : "h-9 min-h-0 min-w-[76px] px-3 py-0"}
         variant={isMember ? "tertiary" : "primary"}
         loading={isBusy}
         disabled={isBusy}
