@@ -39,6 +39,9 @@ export interface ActiveHelpOfferSummary {
   status: "pending" | "accepted" | "contacting" | "agreed";
 }
 
+export type HelpRequestStatus = "open" | "in_progress" | "fulfilled" | "partially_fulfilled" | "not_fulfilled" | "expired";
+export type HelpOfferAvailability = "available" | "login_required" | "existing_offer" | "final_agreement" | "fulfilled" | "partially_fulfilled" | "not_fulfilled" | "expired" | "not_eligible";
+
 export type HomePostActionType = "apply" | "donate" | "contact" | "details" | "none";
 export type HomePostActionState = "open" | "submitted" | "accepted" | "contacting" | "agreed" | "completed" | "closed";
 export interface HomePostAction { type: HomePostActionType; label: string; targetId?: string; state?: HomePostActionState }
@@ -67,8 +70,9 @@ export interface HomePost {
   campaignId: string | null;
   location: string | null;
   category?: { id: string; name: string } | null;
-  helpStatus?: "open" | "in_progress" | "fulfilled" | null;
+  helpStatus?: HelpRequestStatus | null;
   canOfferHelp?: boolean;
+  helpOfferAvailability?: HelpOfferAvailability;
   hasFinalAgreement?: boolean;
   activeOffersCount?: number;
   myOffer?: ActiveHelpOfferSummary | null;

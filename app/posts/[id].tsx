@@ -35,6 +35,27 @@ import {
 
 const PlayIcon = appIcons.play;
 
+const HELP_STATUS_LABELS = {
+  open: "مفتوح",
+  in_progress: "قيد التواصل",
+  fulfilled: "مُلبّى",
+  partially_fulfilled: "مُلبّى جزئياً",
+  not_fulfilled: "لم تتم التلبية",
+  expired: "منتهي",
+} as const;
+
+const HELP_AVAILABILITY_LABELS = {
+  available: "تقديم مساعدة",
+  login_required: "تقديم مساعدة",
+  existing_offer: "متابعة عرض المساعدة",
+  final_agreement: "تم الاتفاق مع مقدم مساعدة",
+  fulfilled: "تمت تلبية طلب المساعدة",
+  partially_fulfilled: "تمت تلبية الطلب جزئياً",
+  not_fulfilled: "أُغلق الطلب دون تلبية",
+  expired: "انتهت صلاحية طلب المساعدة",
+  not_eligible: "لا يمكنك تقديم مساعدة لهذا الطلب",
+} as const;
+
 export default function PostDetailsPage() {
   const router = useRouter();
   const { requireAuth } = useAuthGuard();
@@ -65,12 +86,17 @@ export default function PostDetailsPage() {
     if (!post) return;
 
     if (isHelp) {
-      if (!requireAuth()) return;
       if (post.myOffer) {
+        if (!requireAuth()) return;
         router.push({ pathname: "/help-offers/[id]", params: { id: post.myOffer.id } });
         return;
       }
-      if (post.canOfferHelp) {
+      if (post.helpOfferAvailability === "login_required" || (!isAuthenticated && post.cta.state === "open")) {
+        requireAuth();
+        return;
+      }
+      if (!requireAuth()) return;
+      if (post.canOfferHelp || post.helpOfferAvailability === "available") {
         router.push({ pathname: "/help-offers/create/[postId]", params: { postId: post.id } });
       }
       return;
@@ -134,21 +160,31 @@ export default function PostDetailsPage() {
         agreed: "تم الاتفاق - متابعة",
       } as const)[post.myOffer.status]
     : null;
+  const terminalHelpAvailability =
+    post.helpStatus === "fulfilled" ||
+    post.helpStatus === "partially_fulfilled" ||
+    post.helpStatus === "not_fulfilled" ||
+    post.helpStatus === "expired"
+      ? post.helpStatus
+      : null;
+  const fallbackHelpAvailability = post.myOffer
+    ? "existing_offer"
+    : post.hasFinalAgreement
+      ? "final_agreement"
+      : terminalHelpAvailability ?? (!isAuthenticated ? "login_required" : post.canOfferHelp ? "available" : "not_eligible");
+  const helpAvailability = post.helpOfferAvailability ?? fallbackHelpAvailability;
   const actionLabel = isHelp
-    ? post.helpStatus === "fulfilled"
-      ? "تمت تلبية الطلب"
-      : helpOfferActionLabel ?? "تقديم مساعدة"
+    ? helpOfferActionLabel ?? HELP_AVAILABILITY_LABELS[helpAvailability]
     : post.cta.type === "donate" && myDonation
       ? "عرض تفاصيل التبرع"
       : getPostActionLabel(post);
-  const canShowAction = isHelp
-    ? post.helpStatus !== "fulfilled" && (Boolean(post.myOffer) || post.canOfferHelp === true)
-    : ["donate", "apply", "contact"].includes(post.cta.type);
-  const workflowLocked =
-    !isHelp &&
-    ((post.cta.type === "apply" && post.cta.state !== "open") ||
+  const canShowAction = isHelp || ["donate", "apply", "contact"].includes(post.cta.type);
+  const helpWorkflowLocked = isHelp && !post.myOffer && !["available", "login_required"].includes(helpAvailability);
+  const workflowLocked = isHelp
+    ? helpWorkflowLocked
+    : (post.cta.type === "apply" && post.cta.state !== "open") ||
       (post.cta.type === "donate" && !myDonation && post.cta.state !== "open") ||
-      (post.cta.type === "donate" && isAuthenticated && myDonationsQuery.isLoading));
+      (post.cta.type === "donate" && isAuthenticated && myDonationsQuery.isLoading);
 
   return (
     <Container
@@ -192,13 +228,9 @@ export default function PostDetailsPage() {
               <View className="rounded-full bg-gray-100 px-3 py-1 dark:bg-dark-350">
                 <Text size="2xs" weight="medium" className="text-gray-500 dark:text-gray-300">
                   {isHelp
-                    ? post.helpStatus === "fulfilled"
-                      ? "مُلبّى"
-                      : post.hasFinalAgreement
-                        ? "تم الاتفاق"
-                        : post.helpStatus === "in_progress"
-                          ? "قيد التواصل"
-                          : "مفتوح"
+                    ? post.hasFinalAgreement
+                      ? "تم الاتفاق"
+                      : HELP_STATUS_LABELS[post.helpStatus ?? "open"]
                     : getPostActionStateLabel(post)}
                 </Text>
               </View>
@@ -283,8 +315,6 @@ export default function PostDetailsPage() {
         <Button fullWidth disabled={workflowLocked} onPress={() => void handlePrimaryAction()}>
           {actionLabel}
         </Button>
-      ) : isHelp && post.helpStatus === "fulfilled" ? (
-        <Button fullWidth disabled>تمت تلبية طلب المساعدة</Button>
       ) : null}
 
       <FullScreenImageGallery
