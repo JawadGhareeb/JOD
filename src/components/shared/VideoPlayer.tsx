@@ -24,6 +24,7 @@ type VideoPlayerProps = {
   nativeControls?: boolean;
   showProgressControls?: boolean;
   progressControlsPlacement?: "bottom" | "center";
+  contentFit?: "contain" | "cover";
   onRequestPlay?: () => void;
   style?: StyleProp<ViewStyle>;
 };
@@ -44,6 +45,7 @@ export function VideoPlayer({
   nativeControls = false,
   showProgressControls = false,
   progressControlsPlacement = "bottom",
+  contentFit = "contain",
   onRequestPlay,
   style,
 }: VideoPlayerProps) {
@@ -160,7 +162,16 @@ export function VideoPlayer({
 
   return (
     <View style={[{ overflow: "hidden" }, style]}>
-      <Pressable onPress={nativeControls ? undefined : togglePlayback} className="flex-1">
+      <Pressable
+        onPress={
+          nativeControls
+            ? undefined
+            : progressControlsPlacement === "center" && active
+              ? revealCenterControls
+              : togglePlayback
+        }
+        className="flex-1"
+      >
         <View className="absolute inset-0 items-center justify-center bg-dark-500">
           <ActivityIndicator color={PRIMARY_COLOR_LIGHT} />
         </View>
@@ -168,7 +179,7 @@ export function VideoPlayer({
           player={player}
           style={{ width: "100%", height: "100%" }}
           nativeControls={nativeControls}
-          contentFit="contain"
+          contentFit={contentFit}
           allowsFullscreen
         />
         {!nativeControls && (!active || manuallyPaused) && progressControlsPlacement !== "center" ? (

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Volume2, VolumeX, X } from "lucide-react-native";
+import { Volume2, VolumeX } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
-import { Modal, Pressable, Share, useWindowDimensions, View } from "react-native";
+import { Modal, Pressable, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 import { appIcons } from "@/src/components/layout/iconMap";
 import { Avatar } from "@/src/components/shared/Avatar";
@@ -17,14 +17,13 @@ import type { ReportReasonCode } from "@/src/features/lookups/types";
 import { getReelPlaybackUrl } from "@/src/features/media/helpers";
 import { useLikeMedia, useReportMedia, useSaveMedia } from "@/src/features/media/queries";
 import type { PublicMediaItem } from "@/src/features/media/types";
-import { useRecommendationFeedback } from "@/src/features/personalization/queries";
 import { usePublisher } from "@/src/features/posts/queries";
 import { useAuthGuard } from "@/src/providers/AuthGuardProvider";
 import { useToast } from "@/src/providers/ToastProvider";
 import { getPrimaryColor } from "@/src/theme";
 
 const ACTION_MENU_WIDTH = 228;
-const ACTION_MENU_HEIGHT = 164;
+const ACTION_MENU_HEIGHT = 72;
 const ACTION_MENU_GAP = 8;
 const ACTION_MENU_PADDING = 12;
 
@@ -47,14 +46,12 @@ export function ReelVideoItem({
   const primaryColor = getPrimaryColor(colorScheme === "dark");
   const HeartIcon = appIcons.myDonations;
   const BookmarkIcon = appIcons.savedPosts;
-  const ShareIcon = appIcons.shares;
   const MoreIcon = appIcons.moreVertical;
   const ShieldIcon = appIcons.shield;
   const PlayIcon = appIcons.play;
   const likeMutation = useLikeMedia();
   const saveMutation = useSaveMedia();
   const reportMutation = useReportMedia();
-  const feedbackMutation = useRecommendationFeedback();
   const publisherQuery = usePublisher(video.organization?.id);
   const reportReasons = useReportReasons();
   const [isLiked, setIsLiked] = useState(video.isLiked);
@@ -151,30 +148,6 @@ export function ReelVideoItem({
     }
   };
 
-  const shareReel = async () => {
-    try {
-      await Share.share({ message: playbackUrl });
-    } catch {
-      toast.error("تعذر فتح المشاركة الآن.");
-    }
-  };
-
-  const handleRecommendationFeedback = async (action: "interested" | "not_interested") => {
-    closeOptionsMenu();
-    if (!requireAuth() || feedbackMutation.isPending) return;
-    try {
-      await feedbackMutation.mutateAsync({ contentType: "media", contentId: video.id, action });
-      toast.success(
-        action === "interested"
-          ? "سنقترح لك ريلز مشابهة أكثر."
-          : "سنقلل ظهور الريلز المشابهة.",
-        "تم تحديث تفضيلاتك",
-      );
-    } catch {
-      toast.error("تعذر حفظ تفضيلك الآن. حاول مرة أخرى.");
-    }
-  };
-
   const chooseReportReason = (value: string) => {
     const reason = value as ReportReasonCode;
     setReportPickerOpen(false);
@@ -216,6 +189,7 @@ export function ReelVideoItem({
             muted={isMuted}
             showProgressControls
             progressControlsPlacement="center"
+            contentFit="cover"
             style={{ width: "100%", height: "100%" }}
           />
         ) : (
@@ -266,18 +240,6 @@ export function ReelVideoItem({
               />
             </View>
             <Text size="2xs" weight="semibold" className="text-white">{savesCount}</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => void shareReel()}
-            className="items-center gap-1"
-            accessibilityRole="button"
-            accessibilityLabel="مشاركة الريل"
-          >
-            <View className="h-11 w-11 items-center justify-center">
-              <ShareIcon size={23} color="#FFFFFF" strokeWidth={2.25} />
-            </View>
-            <Text size="2xs" weight="semibold" className="text-white">مشاركة</Text>
           </Pressable>
 
           <Pressable
@@ -361,25 +323,6 @@ export function ReelVideoItem({
             onStartShouldSetResponder={() => true}
             onTouchStart={(event) => event.stopPropagation()}
           >
-            <Pressable
-              onPress={() => void handleRecommendationFeedback("interested")}
-              disabled={feedbackMutation.isPending}
-              className="flex-row-reverse items-center justify-between rounded-lg px-3 py-2.5"
-              accessibilityRole="button"
-            >
-              <Text size="xs">مهتم</Text>
-              <Check size={17} color={primaryColor} strokeWidth={2.5} />
-            </Pressable>
-            <Pressable
-              onPress={() => void handleRecommendationFeedback("not_interested")}
-              disabled={feedbackMutation.isPending}
-              className="flex-row-reverse items-center justify-between rounded-lg px-3 py-2.5"
-              accessibilityRole="button"
-            >
-              <Text size="xs" className="text-gray-600 dark:text-gray-200">غير مهتم</Text>
-              <X size={17} color="#9CA3AF" strokeWidth={2.5} />
-            </Pressable>
-            <View className="my-1 h-px bg-gray-100 dark:bg-dark-400" />
             <Pressable
               onPress={() => {
                 closeOptionsMenu();

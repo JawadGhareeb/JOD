@@ -9,7 +9,6 @@ import { ReelVideoItem } from "./ReelVideoItem";
 import { ReelVideoItemSkeleton } from "./ReelVideoItemSkeleton";
 
 const REELS_PAGE_SIZE = 6;
-const REEL_GAP = 12;
 
 export function ReelsScreen() {
   const params = useLocalSearchParams<{ videoId?: string | string[] }>();
@@ -72,8 +71,7 @@ export function ReelsScreen() {
     }, [selectedId, setActiveReel]),
   );
 
-  const availableHeight = Math.max(430, pageHeight);
-  const cardHeight = Math.min(620, Math.max(430, Math.round(availableHeight * 0.76)));
+  const cardHeight = Math.max(1, pageHeight);
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken<(typeof items)[number]>[] }) => {
@@ -107,7 +105,7 @@ export function ReelsScreen() {
   if ((query.isLoading && items.length === 0) || waitingForSelected) {
     return (
       <View
-        className="flex-1 bg-light-100 pt-3 dark:bg-dark-300"
+        className="flex-1 bg-dark-500"
         onLayout={(event) => setPageHeight(Math.max(1, event.nativeEvent.layout.height))}
       >
         <ReelVideoItemSkeleton height={cardHeight} />
@@ -117,7 +115,7 @@ export function ReelsScreen() {
 
   if (query.isError && items.length === 0 && (!selectedId || selectedQuery.isError)) {
     return (
-      <View className="flex-1 items-center justify-center bg-light-100 px-6 dark:bg-dark-300">
+      <View className="flex-1 items-center justify-center bg-dark-500 px-6">
         <Text size="sm" className="text-center text-gray-500 dark:text-gray-300">تعذر تحميل الريلز. حاول مرة أخرى.</Text>
       </View>
     );
@@ -125,15 +123,14 @@ export function ReelsScreen() {
 
   return (
     <View
-      className="flex-1 bg-light-100 dark:bg-dark-300"
+      className="flex-1 bg-dark-500"
       onLayout={(event) => setPageHeight(Math.max(1, event.nativeEvent.layout.height))}
     >
       <FlatList
         ref={listRef}
         data={items}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingVertical: 12 }}
-        ItemSeparatorComponent={() => <View style={{ height: REEL_GAP }} />}
+        contentContainerStyle={{ paddingVertical: 0 }}
         renderItem={({ item }) => (
           <ReelVideoItem
             video={item}
@@ -143,6 +140,11 @@ export function ReelsScreen() {
           />
         )}
         showsVerticalScrollIndicator={false}
+        pagingEnabled
+        snapToInterval={cardHeight}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        disableIntervalMomentum
         onScroll={onHeaderScroll}
         scrollEventThrottle={16}
         onViewableItemsChanged={onViewableItemsChanged}
@@ -156,7 +158,7 @@ export function ReelsScreen() {
           if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
         }}
         onEndReachedThreshold={0.25}
-        ListFooterComponent={query.isFetchingNextPage ? <ReelVideoItemSkeleton height={cardHeight} /> : <View className="h-4" />}
+        ListFooterComponent={query.isFetchingNextPage ? <ReelVideoItemSkeleton height={cardHeight} /> : null}
       />
     </View>
   );

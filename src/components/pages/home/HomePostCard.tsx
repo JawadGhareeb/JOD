@@ -21,6 +21,7 @@ import { showOrganizationVerifiedBadge, VerifiedBadge } from "@/src/components/s
 import { FeedMediaGrid } from "@/src/components/shared/FeedMediaGrid";
 import { HeartBurst, useHeartBurst } from "@/src/components/shared/HeartBurst";
 import { FullScreenImageGallery } from "@/src/components/shared/FullScreenImageGallery";
+import { VideoPlayer } from "@/src/components/shared/VideoPlayer";
 import { HOME_POST_TYPE_LABELS, formatHomePostRelativeDate } from "@/src/features/posts/helpers";
 import { getPostActionLabel } from "@/src/features/posts/contact";
 import { useLikePost, useReportPost, useSavePost } from "@/src/features/posts/queries";
@@ -121,6 +122,7 @@ export function HomePostCard({
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
+  const [activeVideoIndex, setActiveVideoIndex] = useState<number | null>(null);
   const [isOtherReasonDialogOpen, setIsOtherReasonDialogOpen] = useState(false);
 
 
@@ -414,7 +416,7 @@ export function HomePostCard({
         <Pressable
           onPress={handleOpenAuthorProfile}
           disabled={!canOpenAuthorProfile}
-          className="flex-row-reverse items-center gap-2"
+          className="min-w-0 flex-1 flex-row-reverse items-center gap-2"
           accessibilityRole={canOpenAuthorProfile ? "button" : undefined}
           accessibilityLabel={
             canOpenAuthorProfile ? `عرض الملف الشخصي للناشر ${post.publisher.name}` : undefined
@@ -442,8 +444,8 @@ export function HomePostCard({
             </View>
           </View>
         </Pressable>
-        <View className="rounded-full bg-primary-400/15 px-3 py-1">
-          <Text size="2xs" weight="medium" className="text-primary-400">
+        <View className="ml-2 max-w-[42%] shrink-0 rounded-full bg-primary-400/15 px-3 py-1">
+          <Text size="2xs" weight="medium" className="text-primary-400" numberOfLines={1}>
             {HOME_POST_TYPE_LABELS[post.postType]}
           </Text>
         </View>
@@ -485,9 +487,25 @@ export function HomePostCard({
         </Pressable>
 
 
-        <View className="-mx-3">
-          <FeedMediaGrid images={post.images} onPress={handleMediaPress} />
-        </View>
+        {post.images.length > 0 ? (
+          <View className="-mx-3">
+            <FeedMediaGrid images={post.images} onPress={handleMediaPress} />
+          </View>
+        ) : null}
+
+        {(post.videos ?? []).map((videoUrl, index) => (
+          <View key={`${videoUrl}-${index}`} className="-mx-3 mt-2 overflow-hidden bg-dark-350">
+            <VideoPlayer
+              url={videoUrl}
+              active={activeVideoIndex === index}
+              loop={false}
+              showProgressControls
+              progressControlsPlacement="bottom"
+              onRequestPlay={() => setActiveVideoIndex(index)}
+              style={{ width: "100%", height: 220 }}
+            />
+          </View>
+        ))}
 
         <HeartBurst scale={heartScale} opacity={heartOpacity} position={heartPosition} />
       </View>
